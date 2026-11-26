@@ -8,6 +8,7 @@ export const stories: StoryMeta[] = [
     blurb: 'Kuru çaya köprü kuran, Azrail’e kafa tutan yiğit.',
     load: () => import('./deli-dumrul').then((m) => m.default),
     cover: { scene: 1, at: 1 },
+    source: 'Dresden nüshası, beşinci boy: “Duha Koca Oğlu Deli Dumrul Boyu”. Vatikan nüshasında yer almaz.',
   },
   { slug: 'tepegoz', title: 'Basat ile Tepegöz', blurb: 'Aslanların büyüttüğü Basat, tek gözlü deve karşı.' },
   { slug: 'bogac-han', title: 'Boğaç Han', blurb: 'Boğayı yumruğuyla yenip ad alan genç.' },

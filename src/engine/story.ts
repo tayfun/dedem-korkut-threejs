@@ -23,6 +23,8 @@ export interface StoryMeta {
   slug: string;
   title: string;
   blurb: string;
+  /** Kaynaklar sayfasında gösterilir: hangi nüshanın kaçıncı boyu. */
+  source?: string;
   load?: () => Promise<Story>;
   /** Kapak görüntüsü: hangi sahnenin, zaman çizelgesinin hangi anı (0–1). */
   cover?: { scene: number; at: number };

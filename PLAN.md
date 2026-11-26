@@ -44,21 +44,28 @@ Dede Korkut Kitabı'ndaki on iki boy ile 2018'de bulunan on üçüncü boy aras�
 - Çerçeve (React vb.) yok; arayüz düz HTML/CSS.
 - Yayın: GitHub Pages (GitHub Actions ile `main`'den otomatik).
 
-### Klasör yapısı (hedef)
+### Klasör yapısı
 
 ```
 src/
   main.ts              giriş, yönlendirme
-  engine/              ortak sahne altyapısı (renderer, kamera, döngü, zaman çizelgesi)
-  procedural/          yeniden kullanılan parçalar: insan, at, çadır, arazi, gök, ağaç, ateş
+  engine/              sahne altyapısı: stage, direct (yönetmenlik), player, story, ink
+  procedural/          paylaşılan parçalar
+    palette.ts           renkler ve malzemeler
+    sky.ts terrain.ts    gök ve arazi
+    life.ts props.ts     ot/toz/duman/kuş; çadır, ateş, eşyalar
+    sets.ts              ortak mekânlar
+    human.ts head.ts face.ts   insan figürü, baş, çizilmiş yüz
+    animals.ts cast.ts   hayvanlar; hazır kişiler
   stories/
-    index.ts           hikâye listesi
+    index.ts             hikâye listesi (başlık, kapak, kaynak)
     deli-dumrul/
-      story.ts         sahne metinleri (Türkçe)
-      scenes.ts        her sahnenin 3B kurulumu ve animasyonu
-      sets.ts          hikâyeye özel mekânlar ve kişiler
-  ui/                  ana sayfa, hikâye okuyucu, ileri/geri düğmeleri
+      story.ts             sahne metinleri
+      scenes.ts            sahnelerin 3B kurulumu ve animasyonu
+      sets.ts              hikâyeye özel mekânlar ve kişiler
+  ui/                  ana sayfa, okuyucu, kaynaklar
   styles/
+tools/shots.mjs        sahne görüntüsü aracı
 ```
 
 ### Hikâye veri modeli
@@ -75,14 +82,7 @@ interface SceneDef {
 
 Metin ile kod ayrı dosyalarda durur; böylece metin, koda dokunmadan düzeltilebilir.
 
-### Motorun parçaları
-
-- `engine/stage.ts` — renderer, kamera, kare döngüsü; `Mover` (yürüyen figür tabanı), zemine basma.
-- `engine/direct.ts` — yönetmen yardımcıları: `place`, `walkTo`, `faceTo`, `turn`, `cam`, `shakeHead`.
-- `engine/player.ts` — hikâyeyi sahne sahne oynatır.
-- `procedural/world.ts` — gök, arazi, çadır, ateş, flama, ışık hüzmesi, kılıç, kopuz.
-- `procedural/figures.ts` — insan, at, kuş; hazır kılıklar (Dede Korkut, Azrail).
-- Adres yapısı: `#/hikaye/<slug>/<sahne-no>`.
+Modüllerin ayrıntılı dökümü `AGENTS.md` içindeki "Kodun Düzeni" tablosundadır. Adres yapısı: `#/hikaye/<slug>/<sahne-no>`.
 
 ## 5. Görsel Dil
 

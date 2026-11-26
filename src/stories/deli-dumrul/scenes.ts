@@ -1,24 +1,18 @@
 import * as THREE from 'three';
-import { cam, faceTo, place, shakeHead, turn, walkTo } from '../../engine/direct';
+import { armsDown, cam, faceTo, newTimeline, place, plead, pop, shakeHead, sway, turn, vanish, walkTo } from '../../engine/direct';
 import type { SceneDef } from '../../engine/story';
-import { Bird, Horse, KNEEL_KNEE, KNEEL_Y, cast, type Human } from '../../procedural/figures';
+import { Bird, Horse } from '../../procedural/animals';
+import { child, dedeKorkut, villager } from '../../procedural/cast';
+import { KNEEL_KNEE, KNEEL_Y, type Human } from '../../procedural/human';
 import { P } from '../../procedural/palette';
-import { addFire, lightBeam, sword } from '../../procedural/world';
-import { CAMP, addTent, bridgeSet, campSet, child, dumrul, father, mother, mourners, newTimeline, pop, steppeSet, sway, tossCoin, vanish, villager, wife } from './sets';
+import { addFire, lightBeam, sword } from '../../procedural/props';
+import { placeTent, steppeSet } from '../../procedural/sets';
+import { CAMP, azrail, bridgeSet, campSet, dumrul, father, mother, mourners, tossCoin, wife } from './sets';
 
 /** Deli Dumrul — sahnelerin 3B kurulumu ve animasyonu. Metinler `story.ts` içindedir. */
 
 const E = Math.PI / 2; // doğuya (+x) bakış
 const W = -Math.PI / 2; // batıya (-x) bakış
-
-/** Yalvarma: iki kol öne uzanır. */
-function plead(tl: gsap.core.Timeline, m: Human, at: number): void {
-  tl.to([m.armL.rotation, m.armR.rotation], { x: -1.5, duration: 0.5, ease: 'power2.out' }, at);
-}
-
-function armsDown(tl: gsap.core.Timeline, m: Human, at: number): void {
-  tl.to([m.armL.rotation, m.armR.rotation], { x: 0, duration: 0.6, ease: 'power2.inOut' }, at);
-}
 
 export const scenes: SceneDef[] = [
   /* Köprü ve otuz üç akçe */
@@ -152,7 +146,7 @@ export const scenes: SceneDef[] = [
       const tl = newTimeline();
       const beam = stage.add(lightBeam(70, 5));
       beam.position.set(4, 4, -14);
-      const a = stage.track(place(cast.azrail(), 4, -14, 0.3));
+      const a = stage.track(place(azrail(), 4, -14, 0.3));
       a.freeY = true;
       a.flap = 0.5;
       a.group.position.y = 30;
@@ -178,8 +172,8 @@ export const scenes: SceneDef[] = [
     build(stage) {
       steppeSet(stage, 'dusk', 5);
       const tl = newTimeline();
-      addTent(stage, 0, -8, 0, P.white, P.red, 1.6);
-      addTent(stage, -9, -10, 0.4, P.cream, P.indigo, 1.1);
+      placeTent(stage, 0, -8, 0, P.white, P.red, 1.6);
+      placeTent(stage, -9, -10, 0.4, P.cream, P.indigo, 1.1);
       addFire(stage, 0, 0, 1.2);
 
       const d = stage.track(place(dumrul(), 0, -3.2, 0)).sit();
@@ -192,7 +186,7 @@ export const scenes: SceneDef[] = [
         const r = THREE.MathUtils.degToRad(deg);
         men.push(stage.track(place(villager([0, 1, 3, 5, 6, 7][i]), Math.sin(r) * 3.4, Math.cos(r) * 3.4, r + Math.PI)).sit());
       });
-      const a = stage.track(place(cast.azrail(), 4.6, 2.2, -2.0));
+      const a = stage.track(place(azrail(), 4.6, 2.2, -2.0));
       a.flap = 0.12;
       const dove = stage.track(new Bird(P.white, 1.3));
       dove.group.position.set(4.6, 2.0, 2.2);
@@ -272,7 +266,7 @@ export const scenes: SceneDef[] = [
       d.group.position.y = 1.6;
       d.group.visible = false;
 
-      const a = stage.track(place(cast.azrail(), 3.2, 0, W));
+      const a = stage.track(place(azrail(), 3.2, 0, W));
       stage.setCamera([-12, 2.4, 13], [-12, 2.2, 0]);
 
       tl.to(dove.group.position, { x: 40, y: 16, z: -22, duration: 9, ease: 'none' }, 0);
@@ -318,7 +312,7 @@ export const scenes: SceneDef[] = [
       d.freeY = true;
       d.group.position.y = 0.28;
       d.rig.rotation.x = -Math.PI / 2;
-      const a = stage.track(place(cast.azrail(), -3.0, 0.7, 0));
+      const a = stage.track(place(azrail(), -3.0, 0.7, 0));
       a.freeY = true;
       a.group.position.y = 0.3;
       a.flap = 0.6;
@@ -355,7 +349,7 @@ export const scenes: SceneDef[] = [
       d.group.position.y = KNEEL_Y * 1.1;
       d.kneeL.rotation.x = d.kneeR.rotation.x = KNEEL_KNEE;
       d.armL.rotation.x = d.armR.rotation.x = -1.5;
-      const a = stage.track(place(cast.azrail(), 0.6, 0.9, W));
+      const a = stage.track(place(azrail(), 0.6, 0.9, W));
       a.flap = 0.2;
       a.armR.rotation.x = -2.9;
       const beam = stage.add(lightBeam(70, 3.2));
@@ -385,14 +379,14 @@ export const scenes: SceneDef[] = [
     build(stage) {
       steppeSet(stage, 'day', 9);
       const tl = newTimeline();
-      addTent(stage, 2, -6, -0.1, P.white, P.indigo, 1.3);
-      addTent(stage, 11, -9, -0.5, P.cream, P.red);
+      placeTent(stage, 2, -6, -0.1, P.white, P.indigo, 1.3);
+      placeTent(stage, 11, -9, -0.5, P.cream, P.red);
       const f = stage.track(place(father(), 1.4, 0, W));
       stage.track(place(mother(), 5.6, -1.4, -0.9));
       const d = stage.track(place(dumrul(), -16, 3.5, E));
       d.setMood('fear');
       d.walkSpeed = 13;
-      const a = stage.track(place(cast.azrail(), -9, -10, 0.8));
+      const a = stage.track(place(azrail(), -9, -10, 0.8));
       a.flap = 0.08;
       stage.setCamera([-8, 3, 13], [-5, 1.4, 1]);
 
@@ -417,13 +411,13 @@ export const scenes: SceneDef[] = [
     build(stage) {
       steppeSet(stage, 'day', 9);
       const tl = newTimeline();
-      addTent(stage, 2, -6, -0.1, P.white, P.indigo, 1.3);
-      addTent(stage, 11, -9, -0.5, P.cream, P.red);
+      placeTent(stage, 2, -6, -0.1, P.white, P.indigo, 1.3);
+      placeTent(stage, 11, -9, -0.5, P.cream, P.red);
       stage.track(place(father(), 1.4, 0, 2.4));
       const m = stage.track(place(mother(), 5.6, -1.4, -0.9));
       const d = stage.track(place(dumrul(), -0.5, 0.4, E));
       d.setMood('sad');
-      const a = stage.track(place(cast.azrail(), -9, -10, 0.8));
+      const a = stage.track(place(azrail(), -9, -10, 0.8));
       a.flap = 0.08;
       stage.setCamera([0, 2.6, 10.5], [0.6, 1.5, 0]);
 
@@ -452,7 +446,7 @@ export const scenes: SceneDef[] = [
     build(stage) {
       steppeSet(stage, 'dusk', 14);
       const tl = newTimeline();
-      addTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
+      placeTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
       addFire(stage, 5.5, 0.5, 0.9);
       const w = stage.track(place(wife(), 1.2, -1.2, -0.6));
       w.setMood('sad');
@@ -461,7 +455,7 @@ export const scenes: SceneDef[] = [
       kids.forEach((k) => (k.walkSpeed = 14));
       const d = stage.track(place(dumrul(), -7, 2.6, E));
       d.setMood('sad');
-      const a = stage.track(place(cast.azrail(), -9.5, 3.4, E));
+      const a = stage.track(place(azrail(), -9.5, 3.4, E));
       a.flap = 0.15;
       stage.setCamera([-4, 3, 13], [-2, 1.5, 0.5]);
 
@@ -495,7 +489,7 @@ export const scenes: SceneDef[] = [
     build(stage) {
       steppeSet(stage, 'dusk', 14);
       const tl = newTimeline();
-      addTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
+      placeTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
       addFire(stage, 5.5, 0.5, 0.9);
       const w = stage.track(place(wife(), 1.2, -1.2, Math.atan2(-1.8, 1.0)));
       w.setMood('angry');
@@ -503,7 +497,7 @@ export const scenes: SceneDef[] = [
       stage.track(place(child(1), -1.0, -1.0, Math.atan2(0.4, 0.8)));
       const d = stage.track(place(dumrul(), -0.6, -0.2, Math.atan2(1.8, -1.0)));
       d.setMood('sad');
-      const a = stage.track(place(cast.azrail(), -6, 2.6, E));
+      const a = stage.track(place(azrail(), -6, 2.6, E));
       a.flap = 0.15;
       stage.setCamera([0.5, 2.5, 9.5], [0.4, 1.4, -0.6]);
 
@@ -530,7 +524,7 @@ export const scenes: SceneDef[] = [
     build(stage) {
       steppeSet(stage, 'dusk', 14);
       const tl = newTimeline();
-      addTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
+      placeTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
       addFire(stage, 5.5, 0.5, 0.9);
       const w = stage.track(place(wife(), -3.2, 1.2, Math.atan2(-2.8, 1.4)));
       w.setMood('fear');
@@ -541,7 +535,7 @@ export const scenes: SceneDef[] = [
       const d = stage.track(place(dumrul(), -0.6, -0.2, Math.atan2(-2.6, 1.4)));
       d.setMood('fear');
       d.walkSpeed = 13;
-      const a = stage.track(place(cast.azrail(), -6, 2.6, E));
+      const a = stage.track(place(azrail(), -6, 2.6, E));
       a.flap = 0.15;
       stage.setCamera([-1.5, 2.4, 10.5], [-2.6, 1.5, 0.8]);
 
@@ -577,7 +571,7 @@ export const scenes: SceneDef[] = [
     build(stage) {
       const sky = steppeSet(stage, 'dusk', 14);
       const tl = newTimeline();
-      addTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
+      placeTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
       addFire(stage, 5.5, 0.5, 0.9);
       const w = stage.track(place(wife(), -3.2, 1.2, Math.atan2(1.0, 1.0)));
       w.setMood('sad');
@@ -590,7 +584,7 @@ export const scenes: SceneDef[] = [
       d.head.rotation.x = -0.55;
       d.armL.rotation.set(-2.5, 0, -0.35);
       d.armR.rotation.set(-2.5, 0, 0.35);
-      const a = stage.track(place(cast.azrail(), -4.8, 1.9, E));
+      const a = stage.track(place(azrail(), -4.8, 1.9, E));
       a.freeY = true;
       a.flap = 0.15;
       const beam = stage.add(lightBeam(70, 4));
@@ -640,7 +634,7 @@ export const scenes: SceneDef[] = [
       const fx = -15;
       const fz = 6;
       addFire(stage, fx, fz, 1.1);
-      const dede = stage.track(place(cast.dedeKorkut(), fx - 2.6, fz - 0.6, 1.25)).sit();
+      const dede = stage.track(place(dedeKorkut(), fx - 2.6, fz - 0.6, 1.25)).sit();
       const seats: [Human, number][] = [
         [dumrul(), 60],
         [wife(), 95],

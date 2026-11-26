@@ -1,9 +1,12 @@
 import gsap from 'gsap';
 import { place } from '../engine/direct';
 import type { Stage } from '../engine/stage';
-import { cast } from '../procedural/figures';
+import { dedeKorkut } from '../procedural/cast';
 import { P } from '../procedural/palette';
-import { addFire, addSky, addTerrain, makeGround, scatter, tent } from '../procedural/world';
+import { addFire } from '../procedural/props';
+import { placeTent } from '../procedural/sets';
+import { addSky } from '../procedural/sky';
+import { addTerrain, makeGround, scatter } from '../procedural/terrain';
 
 /** Ana sayfanın arka planı: gece bozkırında ateş başında kopuz çalan Dede Korkut. */
 export function buildHomeScene(stage: Stage): gsap.core.Timeline {
@@ -15,14 +18,10 @@ export function buildHomeScene(stage: Stage): gsap.core.Timeline {
     [4, -8, -0.3, P.indigo],
   ];
   for (const [x, z, ry, accent] of spots) {
-    const t = tent(P.cream, accent, 1.2);
-    t.position.set(x, 0, z);
-    t.rotation.y = ry;
-    stage.add(t);
-    stage.keepClear(x, z, 3);
+    placeTent(stage, x, z, ry, P.cream, accent, 1.2);
   }
   addFire(stage, 0, 0, 1.2);
-  const dede = stage.track(place(cast.dedeKorkut(), -2.4, -0.6, 1.3)).sit();
+  const dede = stage.track(place(dedeKorkut(), -2.4, -0.6, 1.3)).sit();
 
   const tl = gsap.timeline();
   tl.to(dede.armR.rotation, { x: -1.15, duration: 0.3, ease: 'sine.inOut', yoyo: true, repeat: -1 }, 0);

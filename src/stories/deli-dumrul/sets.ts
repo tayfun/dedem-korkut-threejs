@@ -1,15 +1,16 @@
 import * as THREE from 'three';
-import gsap from 'gsap';
+import { grieve, place, toss } from '../../engine/direct';
 import type { Stage } from '../../engine/stage';
-import { place } from '../../engine/direct';
-import { Human, type HumanOpts } from '../../procedural/figures';
+import { elderMan, elderWoman, lady, villager, warrior } from '../../procedural/cast';
+import { Human } from '../../procedural/human';
 import { addFlock } from '../../procedural/life';
 import { P, mat, mesh, rng } from '../../procedural/palette';
-import { addBanner, addFire, addSky, addTerrain, coin, mace, makeGround, scatter, tent, type Sky, type SkyPreset } from '../../procedural/world';
+import { addBanner, addFire, coin, mace } from '../../procedural/props';
+import { placeTent } from '../../procedural/sets';
+import { addSky, type Sky, type SkyPreset } from '../../procedural/sky';
+import { addTerrain, makeGround, scatter } from '../../procedural/terrain';
 
-/** Deli Dumrul hikâyesine özel mekânlar, kılıklar ve küçük yardımcılar. */
-
-type TL = gsap.core.Timeline;
+/** Deli Dumrul hikâyesine özel mekânlar ve kişiler: köprü, oba, Dumrul ve ailesi, Azrail. */
 
 /* ----------------------------- Köprü ------------------------------ */
 
@@ -96,37 +97,16 @@ export function campSet(stage: Stage, sky: SkyPreset = 'day'): Sky {
     [33, -9, -0.3, P.white, P.ochre],
   ];
   for (const [x, z, ry, c, a] of tents) {
-    const t = tent(c, a);
-    t.position.set(x, stage.ground(x, z), z);
-    t.rotation.y = ry;
-    stage.add(t);
-    stage.keepClear(x, z, 2.5);
+    placeTent(stage, x, z, ry, c, a);
   }
   addFire(stage, 23, 1.5, 0.9);
   return s;
 }
 
-/** Düz bozkır: çadır önü sahneleri için. */
-export function steppeSet(stage: Stage, sky: SkyPreset, seed = 5): Sky {
-  const s = addSky(stage, sky);
-  addTerrain(stage, makeGround({ seed }), seed + 8);
-  scatter(stage, { seed: seed + 1, rocks: 26, shrubs: 50, trees: 6, keepOut: 9, radius: 70 });
-  if (sky === 'day' || sky === 'dawn') addFlock(stage, 4, seed);
-  return s;
-}
-
-export function addTent(stage: Stage, x: number, z: number, ry = 0, color: number = P.white, accent: number = P.red, scale = 1): void {
-  const t = tent(color, accent, scale);
-  t.position.set(x, stage.ground(x, z), z);
-  t.rotation.y = ry;
-  stage.add(t);
-  stage.keepClear(x, z, 2.5 * scale);
-}
-
 /* ---------------------------- Kişiler ----------------------------- */
 
 export function dumrul(withMace = false): Human {
-  const d = new Human({ robe: P.red, trim: P.ochre, hat: 'bork', hatColor: P.indigo, scale: 1.1, moustache: P.black, hair: P.black, cloak: P.indigo, mood: 'smug' });
+  const d = warrior({ mood: 'smug' });
   if (withMace) {
     const m = mace();
     m.rotation.x = Math.PI / 2;
@@ -136,22 +116,12 @@ export function dumrul(withMace = false): Human {
   return d;
 }
 
-export const wife = () => new Human({ robe: P.teal, trim: P.ochre, hat: 'scarf', hatColor: P.cream, long: true, hair: P.black, blush: true, eyes: 0x7a6a24 });
-export const father = () => new Human({ robe: P.brown, trim: P.cream, hat: 'kalpak', hatColor: P.indigo, beard: P.white, mood: 'sad' });
-export const mother = () => new Human({ robe: P.indigo, trim: P.cream, hat: 'scarf', hatColor: P.white, long: true, hair: P.pale, mood: 'sad', face: 'elder' });
-export const child = (i: number) => new Human({ robe: i ? P.ochre : P.green, trim: P.red, hat: 'bork', hatColor: P.red, scale: i ? 0.55 : 0.66, blush: true, hair: P.darkBrown });
+export const wife = () => lady({ eyes: 0x7a6a24 });
+export const father = () => elderMan({ mood: 'sad' });
+export const mother = () => elderWoman({ mood: 'sad' });
 
-const LOOKS: HumanOpts[] = [
-  { robe: P.teal, trim: P.cream, hat: 'bork', hatColor: P.red, moustache: P.black },
-  { robe: P.brown, trim: P.ochre, hat: 'kalpak', hatColor: P.indigo, hair: P.darkBrown, eyes: 0x4f6a3a },
-  { robe: P.indigo, trim: P.cream, hat: 'scarf', hatColor: P.cream, long: true, hair: P.darkBrown, blush: true, eyes: 0x3f6a7a },
-  { robe: P.green, trim: P.ochre, hat: 'bork', hatColor: P.ochre, moustache: P.darkBrown, hair: P.darkBrown },
-  { robe: P.crimson, trim: P.cream, hat: 'scarf', hatColor: P.ochre, long: true, hair: P.black, blush: true },
-  { robe: P.ochre, trim: P.indigo, hat: 'kalpak', hatColor: P.red, beard: P.black },
-  { robe: P.stoneDark, trim: P.red, hat: 'bork', hatColor: P.teal, beard: P.white },
-  { robe: P.indigo, trim: P.ochre, hat: 'bork', hatColor: P.green, beard: P.black },
-];
-export const villager = (i: number) => new Human(LOOKS[i % LOOKS.length]);
+/** Azrail: koyu giysili, ak sakallı, al kanatlı. */
+export const azrail = () => new Human({ robe: P.black, trim: P.crimson, hat: 'hood', skin: P.pale, beard: P.white, long: true, wings: P.red, scale: 1.15, mood: 'angry', face: 'grim', eyes: 0xb9c6d4 });
 
 /** Ölen yiğit ve çevresinde yas tutanlar. */
 export function mourners(stage: Stage): { list: Human[] } {
@@ -184,41 +154,7 @@ export function mourners(stage: Stage): { list: Human[] } {
   return { list };
 }
 
-/** Yas duruşu: baş öne eğik, eller yüzde. */
-export function grieve(m: Human): void {
-  m.setMood('sad');
-  m.head.rotation.x = 0.45;
-  m.armL.rotation.set(-2.2, 0, 0.45);
-  m.armR.rotation.set(-2.2, 0, -0.45);
-}
-
-/* --------------------------- Yardımcılar -------------------------- */
-
-/** Nesneyi küçükten büyüterek "belirir" kılar. */
-export function pop(tl: TL, obj: THREE.Object3D, at: number, scale = 1, dur = 0.6): void {
-  tl.fromTo(obj.scale, { x: 0.001, y: 0.001, z: 0.001 }, { x: scale, y: scale, z: scale, duration: dur, ease: 'back.out(1.8)' }, at);
-}
-
-export function vanish(tl: TL, obj: THREE.Object3D, at: number, dur = 0.35): void {
-  tl.to(obj.scale, { x: 0.001, y: 0.001, z: 0.001, duration: dur, ease: 'power2.in' }, at);
-}
-
 /** Bir akçeyi havadan bir noktadan ötekine atar. */
-export function tossCoin(tl: TL, stage: Stage, from: [number, number, number], to: [number, number, number], at: number): void {
-  const c = stage.add(coin());
-  c.position.set(...from);
-  c.visible = false;
-  tl.set(c, { visible: true }, at);
-  tl.to(c.position, { x: to[0], z: to[2], duration: 0.6, ease: 'none' }, at);
-  tl.to(c.position, { y: Math.max(from[1], to[1]) + 0.7, duration: 0.3, ease: 'power1.out' }, at);
-  tl.to(c.position, { y: to[1], duration: 0.3, ease: 'power1.in' }, at + 0.3);
-  tl.to(c.rotation, { z: 9, duration: 0.6, ease: 'none' }, at);
-  tl.set(c, { visible: false }, at + 0.62);
+export function tossCoin(tl: gsap.core.Timeline, stage: Stage, from: [number, number, number], to: [number, number, number], at: number): void {
+  toss(tl, stage.add(coin()), from, to, at);
 }
-
-/** Hafif, yinelenen bir sallanma (ağlama, nefes alma). */
-export function sway(tl: TL, m: Human, at: number, repeats = 9): void {
-  tl.to(m.rig.rotation, { x: 0.1, duration: 0.5 + Math.random() * 0.3, ease: 'sine.inOut', yoyo: true, repeat: repeats }, at);
-}
-
-export const newTimeline = () => gsap.timeline();

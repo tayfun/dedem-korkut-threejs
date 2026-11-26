@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { noInk } from '../engine/ink';
-import { type Mood, dir, headPoint } from './figures';
+import { dir, headPoint } from './head';
 import { toonRamp } from './palette';
 
 /**
@@ -13,6 +13,8 @@ const YAW = 0.98;
 const P0 = -0.9;
 const P1 = 0.62;
 const SIZE = 384;
+
+export type Mood = 'neutral' | 'happy' | 'smug' | 'angry' | 'sad' | 'fear';
 
 /** Yüz tipi: göz büyüklüğü, kaş kalınlığı, kirpik, dudak ve kırışıklıkları belirler. */
 export type FaceKind = 'man' | 'woman' | 'child' | 'elder' | 'grim';

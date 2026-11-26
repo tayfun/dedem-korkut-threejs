@@ -1,4 +1,5 @@
 import type { Stage } from '../engine/stage';
+import { stories } from '../stories';
 import { buildHomeScene } from './home-scene';
 
 /** Kaynaklar sayfası: yazmalar, yararlanılan yayınlar ve uyarlama ilkeleri. */
@@ -41,8 +42,7 @@ export function showSources(app: HTMLElement, stage: Stage): () => void {
       <section>
         <h2>Hikâyelerin kaynağı</h2>
         <dl>
-          <dt>Deli Dumrul</dt>
-          <dd>Dresden nüshası, beşinci boy: “Duha Koca Oğlu Deli Dumrul Boyu”. Vatikan nüshasında yer almaz.</dd>
+          ${stories.filter((x) => x.source).map((x) => `<dt>${x.title}</dt><dd>${x.source}</dd>`).join('')}
         </dl>
       </section>
 

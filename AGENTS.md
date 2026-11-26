@@ -19,12 +19,30 @@ Dede Korkut hikâyelerini yetişkin okura, özgün metne sadık kalarak günüm�
 - Arayüz çerçevesi (React, Vue vb.) kullanma; düz HTML/CSS yeterli.
 - Yeni bağımlılık eklemeden önce gerçekten gerekli mi diye düşün; eklersen `PLAN.md`'deki listeyi güncelle.
 
+## Kodun Düzeni
+
+Yeni bir hikâye yazarken önce buradaki hazır parçaları kullan; yalnızca o hikâyeye özel olanı hikâyenin kendi klasörüne koy. Bir parça ikinci bir hikâyede de gerekirse ortak modüle taşı.
+
+| Yer | İçinde ne var |
+|-----|---------------|
+| `src/engine/stage.ts` | Renderer, kamera, kare döngüsü; `Mover` (yürüyen her şeyin tabanı), `keepClear`, `snapshot`. |
+| `src/engine/direct.ts` | Yönetmenlik: `place`, `walkTo`, `faceTo`, `turn`, `cam`, `pop`, `vanish`, `toss`, `mood`, `plead`, `raiseArms`, `armsDown`, `kneelDown`, `standUp`, `shakeHead`, `grieve`, `sway`. |
+| `src/engine/player.ts`, `story.ts`, `ink.ts` | Sahne oynatıcı, hikâye tipleri, mürekkep çizgisi geçişi. |
+| `src/procedural/palette.ts` | Renkler (`P`), malzemeler (`mat`, `toon`, `glow`, `kilim`), `rng`, `mesh`. |
+| `src/procedural/sky.ts`, `terrain.ts`, `life.ts` | Gök, dağ sıraları, bulut; arazi ve serpiştirme; ot, toz, duman, kuş sürüsü. |
+| `src/procedural/props.ts` | Çadır, ateş, flama, ışık hüzmesi, akçe, kılıç, topuz, kopuz. |
+| `src/procedural/sets.ts` | Ortak mekânlar: `steppeSet`, `placeTent`. |
+| `src/procedural/human.ts`, `head.ts`, `face.ts` | İnsan figürü, yontulmuş baş, çizilmiş yüz. |
+| `src/procedural/animals.ts` | At, kuş; yeni hayvanlar buraya. |
+| `src/procedural/cast.ts` | Hazır kişiler: `dedeKorkut`, `villager(i)`, `warrior`, `lady`, `elderMan`, `elderWoman`, `child`. |
+| `src/stories/<slug>/` | `story.ts` (metin), `scenes.ts` (sahneler), `sets.ts` (o hikâyeye özel mekân ve kişiler), `index.ts`. |
+| `tools/shots.mjs` | Sahnelerin ekran görüntüsünü alan araç. |
+
 ## Görseller
 
 - Bütün görseller kodla üretilir. Hazır 3B model, resim ya da video ekleme. Kodla çizilen dokular (`kilim()` gibi canvas dokuları) serbesttir.
 - Görünüm "canlanan minyatür"dür: köşeli low-poly çevre, çizgi film tarzı karakterler, sınırlı palet; üstüne mürekkep çizgisi, kâğıt dokusu ve kenar kararması (`src/engine/ink.ts`). Yeni renk eklemek yerine ortak paletten (`P`) seç.
 - Mürekkep çizgisi almaması gereken nesneleri (alev, ışık hüzmesi, yıldız, ot, duman) `noInk()` ile işaretle.
-- Ortak parçalar `src/procedural/` altında durur ve hikâyeler arasında yeniden kullanılır: `world.ts` (gök, dağ sıraları, bulut, arazi, çadır, ateş, eşyalar), `figures.ts` (insan, at, kuş), `life.ts` (ot, toz, duman, kuş sürüsü). Bir hikâyeye özel olanlar o hikâyenin `sets.ts` dosyasında kalır.
 - İnsanlar çizgi film tarzındadır: iri baş, iri gözler, yuvarlak hatlar, basamaklı gölge (`toon()` malzemesi). Çevre ise köşeli low-poly kalır; karakterler bu sayede öne çıkar. Yeni kişi ve hayvanları da `toon()` ile, yuvarlak geometrilerle (küre, kapsül, lathe) kur.
 - İnsan figürü eklemlidir: kollar `armL/armR` (dirsek kendiliğinden bükülür), bacaklar `legL/legR`, dizler `kneeL/kneeR`. Oturma ve diz çökme için `sit()`, `kneel()` ve `KNEEL_Y`, `KNEEL_KNEE` değerlerini kullan.
 - Baş küre değildir: `headPoint()` ile yontulur (çene, burun, elmacık kemiği, göz çukuru).
@@ -49,22 +67,24 @@ Dede Korkut hikâyelerini yetişkin okura, özgün metne sadık kalarak günüm�
 ## Kaynaklar
 
 - Kaynaklar sayfası `src/ui/sources.ts` içindedir (`#/kaynaklar`).
-- Yeni hikâye eklerken "Hikâyelerin kaynağı" bölümüne hangi nüshanın kaçıncı boyu olduğunu yaz.
+- "Hikâyelerin kaynağı" bölümü `src/stories/index.ts` içindeki `source` alanlarından üretilir; yeni hikâyede bu alanı doldur.
 - Kaynakça bilgisini (yazar, yayınevi, yıl) doğrulamadan ekleme.
 
 ## Yeni Hikâye Ekleme
 
 1. `src/stories/<hikaye-adi>/` klasörünü aç.
 2. `story.ts` içine sahne metinlerini yaz.
-3. `scenes.ts` içinde her sahne için `build(stage)` yaz: nesneleri kurar, GSAP zaman çizelgesini döndürür. Önce `src/procedural/` altındaki hazır parçaları ve `src/engine/direct.ts` yardımcılarını kullan; örnek için `src/stories/deli-dumrul/` klasörüne bak.
-4. Hikâyeyi `src/stories/index.ts` listesine ekle; `cover` alanıyla ana sayfadaki kapak karesini seç (sahne sırası ve zaman çizelgesinin anı).
-5. Tarayıcıda baştan sona izle; masaüstü ve telefon genişliğinde dene.
-6. `PLAN.md`'deki durumu güncelle, commit et, `main`'e push et.
+3. Hikâyeye özel mekânları ve kişileri `sets.ts` içinde kur; kişileri `cast.ts` yardımcılarından türet (ör. `warrior({ robe: P.teal })`).
+4. `scenes.ts` içinde her sahne için `build(stage)` yaz: nesneleri kurar, GSAP zaman çizelgesini döndürür. Jestler ve geçişler için `src/engine/direct.ts` yardımcılarını kullan; örnek için `src/stories/deli-dumrul/` klasörüne bak.
+5. Hikâyeyi `src/stories/index.ts` listesine ekle: `load`, `cover` (ana sayfadaki kapak karesi) ve `source` (Kaynaklar sayfasında görünen nüsha ve boy bilgisi).
+6. Tarayıcıda baştan sona izle; masaüstü ve telefon genişliğinde dene.
+7. `PLAN.md`'deki durumu güncelle, commit et, `main`'e push et.
 
 ## Doğrulama
 
 - Değişiklikleri tarayıcıda gerçekten çalıştırarak dene; yalnızca derlenmesi yetmez.
 - Konsolda hata ya da uyarı bırakma.
 - Geliştirme sunucusu: `npm run dev`. Tek bir sahneyi açmak için `#/hikaye/<slug>/<sahne-no>` adresini kullan.
+- Ekran görüntüsü: sunucu açıkken `node tools/shots.mjs <slug> --at 0.5,1` bütün sahneleri `shots/` klasörüne çeker; `--scenes`, `--mobile` ve yakın çekim için `--cam x,y,z --look x,y,z` seçenekleri var. Konsol hatalarını da yazar.
 - Metin paneli ekranın altını kapatır; kamerayı, olay panelin üstünde kalacak biçimde kur. Telefon genişliğinde (390 piksel) de bak.
 - Bir figürün yüzü `+z` yönüne bakar; `rotation.y = Math.atan2(dx, dz)` onu bir hedefe çevirir.

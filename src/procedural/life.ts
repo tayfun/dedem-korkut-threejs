@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { noInk } from '../engine/ink';
 import type { Stage } from '../engine/stage';
-import { Bird } from './figures';
+import { Bird } from './animals';
 import { P, glow, mat, rng } from './palette';
 
 /** Sahneye canlılık katan küçük şeyler: ot, toz, duman, kıvılcım, kuş sürüsü. */
