@@ -18,7 +18,9 @@ from mathutils import Vector, Matrix
 
 argv = sys.argv[sys.argv.index('--') + 1:]
 SRC, OUT = argv[0], argv[1]
-OPT = dict(a.split('=') for a in argv[2:])
+# Modele özel ayarlar: ham dosyanın yanındaki <ad>.json, sonra komut satırı (anahtar=değer).
+OPT = json.load(open(SRC[:-4] + '.json')) if os.path.exists(SRC[:-4] + '.json') else {}
+OPT.update(dict(a.split('=') for a in argv[2:]))
 TARGET_TRIS = int(OPT.get('tris', 9000))
 NECK_CUT = float(OPT.get('neck', 0))   # > 0 ise baş bu yükseklikten kesilir (baş kodla kurulacaksa)
 TEX = int(OPT.get('tex', 1024))
@@ -110,6 +112,11 @@ rgb = (full * valid[:, :, None]).reshape(TEX, k, TEX, k, 3).sum((1, 3)) / np.max
 covered = cnt > 0
 REF = {'robe': (0x68, 0x29, 0x3a), 'dark': (0x34, 0x29, 0x27), 'brown': (0x62, 0x46, 0x3b), 'tan': (0xc2, 0xa1, 0x83), 'skin': (0xfb, 0xcd, 0xbd), 'grey': (0xbb, 0xba, 0xb8), 'white': (0xea, 0xe8, 0xe5),
        'black': (0x0c, 0x0a, 0x0a), 'gem': (0x20, 0xc8, 0xc8), 'blue': (0x17, 0x36, 0x66)}
+# Model başka renklerle boyanmışsa: "ref.robe": "39737a" gibi ayarlar başvuru rengini değiştirir, "none" o sınıfı kaldırır.
+for name, v in OPT.items():
+    if name.startswith('ref.'):
+        if v == 'none': REF.pop(name[4:], None)
+        else: REF[name[4:]] = tuple(int(v[i:i + 2], 16) for i in (0, 2, 4))
 keys = list(REF); refs = np.array([REF[n] for n in keys], dtype=np.float32)
 cls = np.argmin(((rgb[:, :, None, :] - refs[None, None]) ** 2).sum(-1), -1)
 lum = lambda c: c @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
@@ -119,7 +126,10 @@ luv = np.zeros(len(me.loops) * 2); me.uv_layers.active.data.foreach_get('uv', lu
 lv = np.zeros(len(me.loops), dtype=np.int64); me.loops.foreach_get('vertex_index', lv)
 fuv = luv.reshape(nf, 3, 2) * TEX; fcen = P[lv].reshape(nf, 3, 3).mean(1); fy = fcen[:, 1]
 fc = np.clip(fuv.mean(1).astype(int), 0, TEX - 1); fcls = cls[fc[:, 1], fc[:, 0]]
-belt_y = float(np.median(fy[(fcls == keys.index('brown')) & (fy > 0.8) & (fy < J['Neck'][1] - 0.1)]))
+ki = lambda n: keys.index(n) if n in keys else -1
+# Kemer yüksekliği: bel çevresindeki kemer ya da kuşak renginden.
+waist = ((fcls == ki('brown')) | (fcls == ki(OPT.get('belt', 'brown')))) & (fy > 0.95) & (fy < J['Neck'][1] - 0.15)
+belt_y = float(np.median(fy[waist])) if waist.any() else 1.15
 # Kuşaklar: 0 diz altı, 1 etek, 2 kemer üstü, 3 baş, 4 yüz (gözler ve kaşlar burada "mürekkep"tir, saç değil).
 hf = J['headfront']
 in_face = (np.abs(fcen[:, 0] - hf[0]) < FACE[0]) & (fcen[:, 1] > hf[1] - FACE[1]) & (fcen[:, 1] < hf[1] + FACE[2]) & (fcen[:, 2] > hf[2] - FACE[3])
@@ -145,7 +155,6 @@ rgb = (full * valid[:, :, None]).reshape(TEX, k, TEX, k, 3).sum((1, 3)) / np.max
 covered = cnt > 0
 cls = np.argmin(((rgb[:, :, None, :] - refs[None, None]) ** 2).sum(-1), -1)
 shade = np.clip(lum(rgb) / np.maximum(lum(refs)[cls], 40), 0.55, 1.3)
-ki = keys.index
 # Bölgeler (model.ts ile aynı sıra): 1 kaftan, 2 şerit, 3 ten, 4 saç, 5 şalvar, 6 çizme, 7 kemer, 8 maden, 9 mürekkep, 10 ak, 11 taş, 12 başlık
 NSLOT, STEP = 12, 20
 slot = np.zeros((TEX, TEX), dtype=np.uint8)
@@ -173,7 +182,7 @@ def thin(m, r=4):   # çevresinde azınlıkta kalan noktalar: ince çizgi ve ken
     for dy in range(-r, r + 1):
         for dx in range(-r, r + 1): n += np.roll(m, (dy, dx), (0, 1))
     return m & (n < 0.4 * (2 * r + 1) ** 2)
-edge = thin((zone == 4) & ((cls == ki('tan')) | (cls == ki('grey')) | (cls == ki('brown'))))
+edge = thin((zone == 4) & ~np.isin(cls, [ki('skin'), ki('dark'), ki('black'), ki('white')]))
 slot[edge] = 3; shade[edge] = np.clip(lum(rgb)[edge] / lum(refs)[ki('skin')], 0.55, 1.3)
 slot[~covered] = 0
 sh = (np.round(shade * 16) * 8).clip(0, 255).astype(np.uint8)   # 16 basamak: dosya küçülür

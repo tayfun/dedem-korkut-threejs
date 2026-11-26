@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import hatunUrl from '../models/noble-oguz-hatun.glb?url';
 import beyUrl from '../models/noble-steppe-guardian.glb?url';
+import yigitUrl from '../models/common-steppe-guardian.glb?url';
 import { P, share, toonRamp } from './palette';
 
 /**
@@ -11,9 +12,9 @@ import { P, share, toonRamp } from './palette';
  * böylece aynı model farklı kişilerde farklı renkte giyilir.
  */
 
-export type ModelName = 'hatun' | 'bey';
+export type ModelName = 'hatun' | 'bey' | 'yigit';
 
-const URLS: Record<ModelName, string> = { hatun: hatunUrl, bey: beyUrl };
+const URLS: Record<ModelName, string> = { hatun: hatunUrl, bey: beyUrl, yigit: yigitUrl };
 
 /** Human'ın kemik sırası (`human.ts` içindeki `B` ile aynı). */
 const BONES = ['root', 'armL', 'elbowL', 'armR', 'elbowR', 'legL', 'kneeL', 'legR', 'kneeR', 'head'];
