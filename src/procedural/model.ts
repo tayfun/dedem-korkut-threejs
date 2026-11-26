@@ -4,6 +4,7 @@ import hatunUrl from '../models/noble-oguz-hatun.glb?url';
 import beyUrl from '../models/noble-steppe-guardian.glb?url';
 import yigitUrl from '../models/common-steppe-guardian.glb?url';
 import hanUrl from '../models/bearded-bey.glb?url';
+import koyluUrl from '../models/commoner.glb?url';
 import { P, share, toonRamp } from './palette';
 
 /**
@@ -13,9 +14,9 @@ import { P, share, toonRamp } from './palette';
  * böylece aynı model farklı kişilerde farklı renkte giyilir.
  */
 
-export type ModelName = 'hatun' | 'bey' | 'yigit' | 'han';
+export type ModelName = 'hatun' | 'bey' | 'yigit' | 'han' | 'koylu';
 
-const URLS: Record<ModelName, string> = { hatun: hatunUrl, bey: beyUrl, yigit: yigitUrl, han: hanUrl };
+const URLS: Record<ModelName, string> = { hatun: hatunUrl, bey: beyUrl, yigit: yigitUrl, han: hanUrl, koylu: koyluUrl };
 
 /** Human'ın kemik sırası (`human.ts` içindeki `B` ile aynı). */
 const BONES = ['root', 'armL', 'elbowL', 'armR', 'elbowR', 'legL', 'kneeL', 'legR', 'kneeR', 'head'];

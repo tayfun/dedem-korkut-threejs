@@ -134,6 +134,10 @@ belt_y = float(np.median(fy[waist])) if waist.any() else 1.15
 hf = J['headfront']
 in_face = (np.abs(fcen[:, 0] - hf[0]) < FACE[0]) & (fcen[:, 1] > hf[1] - FACE[1]) & (fcen[:, 1] < hf[1] + FACE[2]) & (fcen[:, 2] > hf[2] - FACE[3])
 zone_f = np.where(in_face, 4, np.where(fy > J['Neck'][1], 3, np.where(fy > belt_y + 0.05, 2, np.where(fy > 0.62, 1, 0)))).astype(np.uint8)
+# Kol yüzleri: dokuda yelekten kola taşan boyayı ayıklamak için ("sleeves" ayarı).
+arm_w = sum(col(f'{sd}{b}') for sd in ('Left', 'Right') for b in ('Arm', 'ForeArm'))
+arm_f = arm_w[lv].reshape(nf, 3).mean(1) > 0.5
+arm_px = np.zeros((TEX, TEX), dtype=bool)
 zone = np.full((TEX, TEX), 255, dtype=np.uint8)
 for f in range(nf):
     t = fuv[f]; lo = np.maximum(np.floor(t.min(0) - 1).astype(int), 0); hi = np.minimum(np.ceil(t.max(0) + 1).astype(int), TEX - 1)
@@ -145,6 +149,7 @@ for f in range(nf):
         a, b = t[i], t[(i + 1) % 3]; L = max(np.hypot(*(b - a)), 1e-6)
         inside &= sg * ((b[0] - a[0]) * (ys - a[1]) - (b[1] - a[1]) * (xs - a[0])) / L >= -0.8
     sub = zone[lo[1]:hi[1] + 1, lo[0]:hi[0] + 1]; sub[inside] = zone_f[f]
+    if arm_f[f]: arm_px[lo[1]:hi[1] + 1, lo[0]:hi[0] + 1][inside] = True
 for _ in range(6):   # yüzlerin kenarında boş kalan noktalar komşu yüzün kuşağını alır
     for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
         nz = np.roll(zone, (dy, dx), (0, 1)); take = (zone == 255) & (nz != 255); zone[take] = nz[take]
@@ -176,6 +181,9 @@ sizes = np.array(sizes); print('FACE_BLOBS', sorted(sizes[1:].tolist(), reverse=
 slot[fmask & (sizes[lab] < INK_MAX * (TEX / 1024) ** 2)] = 9
 slot[pale] = 8; slot[pale & (zone >= 3)] = 10
 slot[cls == ki('gem')] = 11; slot[cls == ki('blue')] = 12
+if OPT.get('sleeves') == 'robe': slot[(slot == 2) & arm_px] = 1   # kollarda şerit yok: şerit rengi taşmadır
+# Yüzde kaftan rengi olmaz: şakaktaki grimsi saç parıltısı kaftan ya da maden sanılmasın, saç olarak kalsın.
+slot[(zone == 4) & ((cls == ki('robe')) | (cls == ki('grey')))] = 4
 # Yüzde çizgi kenarları (kara ile ten karışımı) şerit ya da maden sanılmasın: koyulaşmış ten olarak kalsın.
 def thin(m, r=4):   # çevresinde azınlıkta kalan noktalar: ince çizgi ve kenarlar
     n = np.zeros(m.shape, np.int16)

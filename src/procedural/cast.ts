@@ -35,7 +35,11 @@ const LOOKS: HumanOpts[] = [
   { robe: P.indigo, trim: P.ochre, hat: 'bork', hatColor: P.green, beard: P.black },
 ];
 
-export const villager = (i: number, extra: HumanOpts = {}) => new Human({ ...LOOKS[i % LOOKS.length], ...extra });
+/** Erkek köylüler hazır modelle (yelekli, takkeli) kurulur ve renkleriyle ayrışır; başörtülü kadınlar kodla kurulur. */
+export const villager = (i: number, extra: HumanOpts = {}) => {
+  const look = LOOKS[i % LOOKS.length];
+  return new Human({ ...look, model: look.hat === 'scarf' ? undefined : 'koylu', ...extra });
+};
 
 /** Bey ya da yiğit: börklü, bıyıklı, pelerinli. Renkleri ve ayrıntıları `o` ile değiştir. */
 export const warrior = (o: HumanOpts = {}) => {
