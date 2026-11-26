@@ -1,6 +1,6 @@
 # Dedem Korkut
 
-Dede Korkut hikâyelerini özgün metne sadık kalarak günümüz Türkçesiyle anlatan, her sahnesi kodla canlandırılan bir web sitesi. Hazır resim ya da video yok: bozkır, çadırlar, hayvanlar ve kişilerin bir bölümü Three.js ile prosedürel olarak çizilir. Hatunlar, bıyıklı beyler ve genç yiğitler, Blender betiğiyle sitenin iskeletine uydurulmuş bir modelden gelir (`tools/fit-model.py`).
+Dede Korkut hikâyelerini özgün metne sadık kalarak günümüz Türkçesiyle anlatan, her sahnesi kodla canlandırılan bir web sitesi. Hazır resim ya da video yok: bozkır, çadırlar, hayvanlar ve kişilerin bir bölümü Three.js ile prosedürel olarak çizilir. Hatunlar, sakallı hanlar, bıyıklı beyler ve genç yiğitler, Blender betiğiyle sitenin iskeletine uydurulmuş bir modelden gelir (`tools/fit-model.py`).
 
 ## Hikâyeler
 

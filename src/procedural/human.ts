@@ -364,7 +364,7 @@ export class Human extends Mover {
     this.group.updateMatrixWorld(true);
     const bones = [this.rig, this.armL, this.elbowL, this.armR, this.elbowR, this.legL, this.kneeL, this.legR, this.kneeR];
     const body = model
-      ? new THREE.SkinnedMesh(model.geometry, modelMaterial(o.model!, { robe: robeColor, trim: trimColor, skin: o.skin ?? P.skin, hair: o.hair ?? P.black, hat: o.hatColor ?? trimColor }))
+      ? new THREE.SkinnedMesh(model.geometry, modelMaterial(o.model!, { robe: robeColor, trim: trimColor, skin: o.skin ?? P.skin, hair: o.beard ?? o.hair ?? P.black, hat: o.hatColor ?? trimColor }))
       : new THREE.SkinnedMesh(bodyGeometry(bones, { robe: robeColor, trim: trimColor, skin: o.skin ?? P.skin, long: !!o.long, build }), toonVertex());
     body.castShadow = true;
     body.receiveShadow = false; // esneyen yüzey kendi üstüne gölge düşürünce etekte koyu şeritler oluşuyor
