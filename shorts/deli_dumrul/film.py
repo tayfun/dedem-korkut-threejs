@@ -92,7 +92,7 @@ def s01(u):   # GENİŞ — şölen: Dumrul ortada, kadeh kaldırır, kahkaha
 
 def s02(u):   # YAKIN — Azrail karanlıktan çıkar; kanatlar açılır; kamera vurur
     k = spring(u)
-    a = [azrail(blink(u, 'stern', 1.3), spread=lerp(0.35, 1.05, k), op=min(1, u * 5 + 0.25), y=AZ[1] + (1 - k) * 30)] + [crowd()[5]]
+    a = [azrail(blink(u, 'stern', 1.3), x=lerp(AZ[0] - 420, AZ[0], k), spread=lerp(0.35, 1.05, spring(max(0, u - 0.15))))] + [crowd()[5]]   # karanlıktan kayarak girer
     return world((AZ[0] + 10, lerp(1010, 960, ease(u)), lerp(1.7, 2.1, k)), a, u, sofra=False)
 
 
@@ -153,10 +153,10 @@ def s10(u):   # YAKIN — Azrail kendini bildirir: kanatlar gerilir, gözler iri
 
 def s11(u):   # GENİŞ — Dumrul kara kılıcını sıyırır, üstüne atılır; kamera peşinden kayar
     k = spring(u * 1.2)
-    x = lerp(DUM[0] - 60, 640, ease(u))
-    a = [dumrul('anger', x=x, y=DUM[1] - abs(math.sin(u * 6.283)) * 26, rot=lerp(0, -14, k), armR=lerp(-20, -152, k), armL=lerp(10, 46, k), hr=8, poseR='grip', sword=u > 0.12),
+    x = lerp(DUM[0] + 40, 610, ease(u))
+    a = [dumrul('anger', x=x, y=DUM[1] - abs(math.sin(u * 9.4)) * 44, rot=lerp(4, -19, ease(u)), armR=lerp(-20, -152, k), armL=lerp(10, 46, k), hr=8, poseR='grip', sword=u > 0.12),
          azrail('wrath', x=AZ[0] + 40, spread=1.35, y=AZ[1] - 20)] + [v for i, v in crowd(True).items() if i in (1, 3, 4, 6)]
-    return world((lerp(700, 560, ease(u)), 1150, 1.28), a, u)
+    return world((lerp(780, 560, ease(u)), 1150, lerp(1.2, 1.36, ease(u))), a, u)
 
 
 def s12(u):   # EŞYA — kılıç boşluğu biçer; kanat tüyleri savrulur; içinden bir güvercin çıkar
@@ -225,14 +225,12 @@ def frames_of(i):
 
 
 def whip(img, amount):
-    """Bulanık savrulma geçişi: kare yatayda kayar ve sürünür. amount: -1…1."""
+    """Bulanık savrulma geçişi: kare yatayda sürünür; iki çekimin bulanık uçları birbirine bağlanır. amount: 0…1."""
     a = np.asarray(img).astype(np.float32)
-    k = int(abs(amount) * 260) | 1
+    k = int(abs(amount) * 340) | 1
     if k > 1:
-        c = np.cumsum(np.pad(a, ((0, 0), (k // 2 + 1, k // 2), (0, 0)), mode='edge'), axis=1)
+        c = np.cumsum(np.pad(a, ((0, 0), (k // 2 + 1, k // 2), (0, 0)), mode='reflect'), axis=1)
         a = (c[:, k:] - c[:, :-k]) / k
-    sh = int(amount * 520); w = a.shape[1]                                   # kaydır; açılan kenar son sütunla dolar (sarmaz)
-    a = np.pad(a, ((0, 0), (abs(sh), abs(sh)), (0, 0)), mode='edge')[:, abs(sh) - sh: abs(sh) - sh + w]
     return Image.fromarray(a.clip(0, 255).astype(np.uint8))
 
 
