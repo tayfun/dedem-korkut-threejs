@@ -335,10 +335,10 @@ def dove(flap=0):
     return s
 
 
-def extra(kind=0):
+def extra(kind=0, robe=None, fear=False):
     """Yiğitler: aynı çizgi, daha az iz. Oturur hâlde, belden yukarı tek çizim. Boyun kökü (0,0)."""
     reseed(f'extra{kind}')
-    robe = [COBALT, GOLD, PALE][kind % 3]
+    robe = robe or [COBALT, GOLD, PALE][kind % 3]
     w = [150, 96, 124][kind % 3]
     torso = [(-w * 0.5, -6), (w * 0.5, -6), (w, 40), (w * 1.12, 230), (-w * 1.12, 230), (-w, 40)]
     s = blob(torso, robe, 3.4) + fill([(-w * 1.12, 230), (-w, 40), (-w * 0.5, -6), (-w * 0.2, -6), (-w * 0.4, 230)], INK, 1.0, op=0.3)
@@ -366,6 +366,22 @@ def extra(kind=0):
     s += blob([(w * 0.34, 96), (w * 0.34 + 44, 96), (w * 0.34 + 36, 140), (w * 0.34 + 8, 140)], GOLD, 2.8) + sparkle(w * 0.34 + 30, 108, 6)
     s += blob(ellipse(w * 0.34 + 22, 138, 30, 22, 8, 0.08), SKIN, 3.0) + ''.join(ink([(w * 0.34 + 4 + k * 12, 130), (w * 0.34 + 6 + k * 12, 146)], 1.8, wob=0, smooth=False) for k in range(4))
     for cx in (-26, 28):
-        s += fill(ellipse(cx, hy - 8, 10, 7, 8), PALE, 0.4) + f'<circle cx="{cx + 1}" cy="{hy - 7}" r="3" fill="{INK}"/>' + ink([(cx - 13, hy - 13), (cx, hy - 16), (cx + 13, hy - 13)], 3.6, wob=0.2)
+        if fear: s += fill(ellipse(cx, hy - 10, 15, 15, 9), PALE, 0.4) + ink(ellipse(cx, hy - 10, 15, 15, 9), 2.6, closed=True, wob=0.3) + f'<circle cx="{cx}" cy="{hy - 10}" r="2.4" fill="{INK}"/>'
+        else: s += fill(ellipse(cx, hy - 8, 10, 7, 8), PALE, 0.4) + f'<circle cx="{cx + 1}" cy="{hy - 7}" r="3" fill="{INK}"/>' + ink([(cx - 13, hy - 13), (cx, hy - 16), (cx + 13, hy - 13)], 3.6, wob=0.2)
     s += ink([(2, hy - 8), (10, hy + 14), (0, hy + 20)], 2.8, wob=0.3) + fill(mo, INK, 0.8, smooth=False)
+    if fear: s += fill(ellipse(2, mo[1][1] + 34, 13, 17, 8), FINE, 0.4) + ink(ellipse(2, mo[1][1] + 34, 13, 17, 8), 2.4, closed=True, wob=0.3)
     return s
+
+
+def goblet():
+    """Altın kadeh; ağzı yukarı, (0,0) gövdenin ortası."""
+    reseed('goblet')
+    s = blob([(-30, -46), (30, -46), (18, 18), (34, 40), (-34, 40), (-18, 18)], GOLD, 3.2) + fill(ellipse(0, -45, 26, 8, 8), RED, 0.4)
+    s += fill([(-30, -46), (-8, -46), (-10, 40), (-34, 40), (-18, 18)], COBALT, 0.6, op=0.3) + ink([(-22, -8), (22, -8)], 2.0, wob=0.3) + sparkle(14, -24, 9)
+    return s
+
+
+def feather(col=RED):
+    reseed('feather' + col)
+    f = [(0, -60), (16, -30), (14, 20), (0, 60), (-14, 20), (-16, -30)]
+    return blob(f, col, 2.6) + ink([(0, -56), (2, 58)], 1.8, wob=0.3) + dashrow([(0, -40), (0, 40)], 14, 10, 0.9, 1.8, smooth=False)

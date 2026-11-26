@@ -9,7 +9,7 @@ W, H = 1500, 1920     # kamera kaysın diye sahne kareden geniştir (kare 1080×
 
 def sky():
     reseed('sky')
-    s = f'<rect width="{W}" height="{H}" fill="{NIGHT}"/>'
+    s = f'<rect x="-1500" y="-1500" width="{W + 3000}" height="{H + 3000}" fill="{NIGHT}"/>'
     s += f'<circle cx="1010" cy="330" r="250" fill="url(#halo)"/>' + fill(ellipse(1010, 330, 74, 74, 12, 0.01), PALE, 0.8)
     s += fill(ellipse(990, 312, 16, 12, 7), COBALT, 0.4, op=0.25) + fill(ellipse(1034, 352, 10, 9, 7), COBALT, 0.4, op=0.25)
     for _ in range(60):
@@ -25,9 +25,9 @@ def back():
     """Uzak sırtlar: gölgede kobalt, aya bakan yüzler somon; sert çapraz kenar."""
     reseed('hills')
     s = ''
-    far = [(0, 900), (160, 800), (330, 850), (520, 740), (720, 830), (900, 760), (1100, 850), (1300, 780), (W, 860), (W, 1300), (0, 1300)]
+    far = [(-900, 900), (-500, 780), (-200, 860), (0, 900), (160, 800), (330, 850), (520, 740), (720, 830), (900, 760), (1100, 850), (1300, 780), (W, 860), (W + 300, 790), (W + 900, 880), (W + 900, 1700), (-900, 1700)]
     s += fill(far, COBALT, 1.5, smooth=False) + fill([(520, 740), (720, 830), (640, 830), (560, 790)], SKIN_L, 1, smooth=False) + fill([(900, 760), (1100, 850), (1010, 846), (930, 800)], SKIN_L, 1, smooth=False)
-    s += fill([(1300, 780), (W, 860), (1420, 860), (1330, 820)], SKIN_L, 1, smooth=False) + ink(far[:9], 3.0, smooth=False, wob=0.5, taper=(0, 0))
+    s += fill([(1300, 780), (W, 860), (1420, 860), (1330, 820)], SKIN_L, 1, smooth=False) + ink(far[:-2], 3.0, smooth=False, wob=0.5, taper=(0, 0))
     for x, y in ((230, 870), (470, 860), (800, 880), (1180, 900)): s += cracks(x, y, 70, 1.2, 1, 2.0)
     return s
 
@@ -57,9 +57,9 @@ def yurt(cx=760, base=1230, scale=1.0):
 def ground():
     """Yer: gölgede kobalt; ateşin aydınlattığı yama somon, sert kenarlı."""
     reseed('ground')
-    s = fill([(0, 1210), (W, 1196), (W, H), (0, H)], COBALT, 1.5, smooth=False)
+    s = fill([(-900, 1210), (W + 900, 1196), (W + 900, H + 900), (-900, H + 900)], COBALT, 1.5, smooth=False)
     lit = [(60, 1640), (150, 1400), (420, 1262), (860, 1236), (1240, 1300), (1400, 1470), (1300, 1720), (700, 1790), (200, 1760)]
-    s += fill(lit, SKIN, 1.6, smooth=False) + fill([(170, 1610), (250, 1440), (430, 1380), (640, 1410), (740, 1540), (660, 1690), (420, 1730), (230, 1700)], SKIN_L, 1.4, smooth=False)
+    s += fill(lit, SKIN, 1.6, smooth=False) + fill([(60, 1640), (140, 1470), (320, 1410), (530, 1440), (630, 1570), (550, 1720), (310, 1760), (120, 1730)], SKIN_L, 1.4, smooth=False)
     s += ticks([(0, 1230), (W, 1230), (W, H), (0, H)], 120, (5, 11), 1.57, 0.5, 2.0)
     for x, y in ((180, 1400), (1280, 1620), (90, 1700)): s += blob(ellipse(x, y, 30, 18, 7, 0.2), COBALT, 2.8) + ink([(x - 14, y - 4), (x + 8, y - 8)], 1.9, wob=0.2)
     return s
@@ -95,7 +95,7 @@ def embers(cx=420, cy=1430, t=0.0):
 def sofra():
     """Ön katman: sofra bezi, tabaklar, et, ekmek, kadehler."""
     reseed('sofra')
-    cloth = [(120, 1700), (1380, 1700), (W + 60, H + 20), (-60, H + 20)]
+    cloth = [(120, 1700), (1380, 1700), (W + 300, H + 400), (-300, H + 400)]
     s = fill(cloth, PALE, 1.5, smooth=False) + fill([(120, 1700), (560, 1700), (300, H + 20), (-60, H + 20)], COBALT, 1.2, smooth=False, op=0.4)
     s += ink(cloth[:2], 3.4, smooth=False, wob=0.6, taper=(0, 0))
     s += ''.join(medallion(170 + i * 96, 1740 + (i % 2) * 6, 20, RED, 2.0) for i in range(13)) + ''.join(scroll(140 + i * 110, 1890, 16, COBALT, 2.0, 1 if i % 2 else -1) for i in range(13))
