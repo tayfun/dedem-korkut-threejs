@@ -15,12 +15,12 @@ def sheet(out):
     W, H = 3200, 2500
     b = label(60, 80, 'AZRAİL’E KILIÇ ÇEKEN ADAM — tasarım sayfası', 46, True)
     # palet
-    pal = [('kobalt', cast.COBALT), ('ten', cast.SKIN), ('ten gölge', cast.SKIN_D), ('ten ışık', cast.SKIN_L), ('soluk', cast.PALE), ('altın', cast.GOLD), ('kırmızı', cast.RED), ('gece', sets.NIGHT), ('mürekkep', INK), ('ince çizgi', FINE)]
+    pal = [('kobalt', cast.COBALT), ('ten', cast.SKIN), ('ten gölge', cast.SKIN_D), ('ten ışık', cast.SKIN_L), ('soluk', cast.PALE), ('altın', cast.GOLD), ('kırmızı', cast.RED), ('kara deri', cast.COAT), ('kayış', cast.LEATHER), ('gece', sets.NIGHT), ('mürekkep', INK), ('ince çizgi', FINE)]
     for i, (n, c) in enumerate(pal):
         reseed('pal' + n)
-        b += fill([(1500 + i * 150, 30), (1630 + i * 150, 30), (1630 + i * 150, 100), (1500 + i * 150, 100)], c, 1.5, smooth=False) + label(1500 + i * 150, 128, n, 20)
+        b += fill([(1400 + i * 146, 30), (1528 + i * 146, 30), (1528 + i * 146, 100), (1400 + i * 146, 100)], c, 1.5, smooth=False) + label(1400 + i * 146, 128, n, 20)
     # Deli Dumrul
-    b += label(60, 190, 'DELİ DUMRUL — koca çene, pala bıyık, altın diş', 30, True)
+    b += label(60, 190, 'DELİ DUMRUL — koca çene, gür kara sakal, çatık kaş, kara deri kaftan', 30, True)
     b += group(cast.dumrul('neutral'), 330, 520, 0, 0.72)
     for i, n in enumerate(cast.EXPR):
         b += group(cast.dumrul_head(n), 860 + i * 300, 440, 0, 0.62) + label(790 + i * 300, 640, n, 24)
