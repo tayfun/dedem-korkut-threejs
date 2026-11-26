@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { createNoise2D } from 'simplex-noise';
 import type { GroundFn, Stage } from '../engine/stage';
 import { noInk } from '../engine/ink';
+import { addDust, addGrass, addSmoke } from './life';
 import { P, glow, kilim, mat, mesh, rng } from './palette';
 
 /* ------------------------------------------------------------------ */
@@ -329,6 +330,9 @@ export function addTerrain(stage: Stage, ground: ReturnType<typeof makeGround>, 
   const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, flatShading: true, roughness: 1 }));
   m.receiveShadow = true;
   stage.add(m);
+  // Ot, sahnedeki öteki nesneler yerleştikten sonra ekilir; çadır ve ateşin içine girmez.
+  stage.afterBuild(() => addGrass(stage, { seed: seed + 3, skip: (x, z) => ground.riverT(x, z) > 0.05 }));
+  addDust(stage);
 }
 
 /** Taş, çalı ve ağaç serpiştirir. `keepOut` yarıçapındaki orta alan boş kalır. */
@@ -413,6 +417,8 @@ export function tent(color: number = P.white, accent: number = P.red, scale = 1)
 export function addFire(stage: Stage, x: number, z: number, scale = 1): THREE.Group {
   const g = new THREE.Group();
   g.position.set(x, stage.ground(x, z), z);
+  stage.keepClear(x, z, 1.1 * scale);
+  addSmoke(stage, x, stage.ground(x, z), z, scale);
   for (let i = 0; i < 4; i++) {
     const log = mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.9, 5), mat(P.darkBrown));
     log.rotation.set(Math.PI / 2 - 0.25, (i * Math.PI) / 4, 0, 'YXZ');

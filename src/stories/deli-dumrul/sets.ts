@@ -3,6 +3,7 @@ import gsap from 'gsap';
 import type { Stage } from '../../engine/stage';
 import { place } from '../../engine/direct';
 import { Human, type HumanOpts } from '../../procedural/figures';
+import { addFlock } from '../../procedural/life';
 import { P, mat, mesh, rng } from '../../procedural/palette';
 import { addBanner, addFire, addSky, addTerrain, coin, mace, makeGround, scatter, tent, type Sky, type SkyPreset } from '../../procedural/world';
 
@@ -74,6 +75,8 @@ export function bridgeSet(stage: Stage, sky: SkyPreset = 'day'): Sky {
     stage.add(m);
   }
   stage.add(bridge());
+  for (let x = -9; x <= 9; x += 1.5) stage.keepClear(x, 0, 2);
+  if (sky === 'day') addFlock(stage);
   stage.ground = (x, z) => (Math.abs(z) < BR.halfW && Math.abs(x) < BR.L ? Math.max(g(x, z), deckY(x)) : g(x, z));
   addBanner(stage, -8.6, -2.3, P.red);
   addBanner(stage, 8.6, -2.3, P.red);
@@ -97,6 +100,7 @@ export function campSet(stage: Stage, sky: SkyPreset = 'day'): Sky {
     t.position.set(x, stage.ground(x, z), z);
     t.rotation.y = ry;
     stage.add(t);
+    stage.keepClear(x, z, 2.5);
   }
   addFire(stage, 23, 1.5, 0.9);
   return s;
@@ -107,6 +111,7 @@ export function steppeSet(stage: Stage, sky: SkyPreset, seed = 5): Sky {
   const s = addSky(stage, sky);
   addTerrain(stage, makeGround({ seed }), seed + 8);
   scatter(stage, { seed: seed + 1, rocks: 26, shrubs: 50, trees: 6, keepOut: 9, radius: 70 });
+  if (sky === 'day' || sky === 'dawn') addFlock(stage, 4, seed);
   return s;
 }
 
@@ -115,6 +120,7 @@ export function addTent(stage: Stage, x: number, z: number, ry = 0, color: numbe
   t.position.set(x, stage.ground(x, z), z);
   t.rotation.y = ry;
   stage.add(t);
+  stage.keepClear(x, z, 2.5 * scale);
 }
 
 /* ---------------------------- Kişiler ----------------------------- */
@@ -154,6 +160,7 @@ export function mourners(stage: Stage): { list: Human[] } {
   const rugIn = mesh(new THREE.BoxGeometry(1.1, 0.07, 2.2), mat(P.ochre));
   rugIn.position.copy(rug.position);
   stage.add(rug);
+  stage.keepClear(CAMP.x, CAMP.z, 1.9);
   stage.add(rugIn);
 
   const dead = new Human({ robe: P.cream, trim: P.teal, hat: 'none' });

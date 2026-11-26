@@ -31,7 +31,9 @@ export class Stage {
   ground: GroundFn = () => 0;
 
   private ticks: TickFn[] = [];
-  private movers: Mover[] = [];
+  movers: Mover[] = [];
+  private zones: [number, number, number][] = [];
+  private pending: (() => void)[] = [];
   private last = performance.now();
   private time = 0;
   private baseFov = 42;
@@ -68,6 +70,8 @@ export class Stage {
     this.scene.fog = null;
     this.ticks = [];
     this.movers = [];
+    this.zones = [];
+    this.pending = [];
     this.ground = () => 0;
     this.time = 0;
   }
@@ -82,6 +86,27 @@ export class Stage {
     this.movers.push(m);
     if (addToRoot) this.root.add(m.group);
     return m;
+  }
+
+  /** Bir alanı (çadır, ateş, kilim) ot gibi serpiştirmelerden uzak tutar. */
+  keepClear(x: number, z: number, r: number): void {
+    this.zones.push([x, z, r]);
+  }
+
+  isClear(x: number, z: number): boolean {
+    return this.zones.some(([zx, zz, r]) => (x - zx) ** 2 + (z - zz) ** 2 < r * r);
+  }
+
+  /** Sahne kurulumu bittikten sonra, ilk kareden önce çalışacak iş ekler. */
+  afterBuild(fn: () => void): void {
+    this.pending.push(fn);
+  }
+
+  /** Bekleyen kurulum işlerini hemen çalıştırır. */
+  flush(): void {
+    const jobs = this.pending;
+    this.pending = [];
+    for (const fn of jobs) fn();
   }
 
   onTick(fn: TickFn): void {
@@ -125,6 +150,7 @@ export class Stage {
     const dt = Math.min((now - this.last) / 1000, 0.05);
     this.last = now;
     this.time += dt;
+    if (this.pending.length) this.flush();
     for (const m of this.movers) {
       if (!m.freeY) {
         const p = m.group.position;

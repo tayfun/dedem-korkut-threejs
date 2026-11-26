@@ -19,6 +19,7 @@ export function buildHomeScene(stage: Stage): gsap.core.Timeline {
     t.position.set(x, 0, z);
     t.rotation.y = ry;
     stage.add(t);
+    stage.keepClear(x, z, 3);
   }
   addFire(stage, 0, 0, 1.2);
   const dede = stage.track(place(cast.dedeKorkut(), -2.4, -0.6, 1.3)).sit();
