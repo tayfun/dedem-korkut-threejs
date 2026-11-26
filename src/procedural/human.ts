@@ -43,12 +43,34 @@ const THIGH = 0.46;
 const SHIN = 0.46;
 const LEG_X = 0.085;
 const SHOULDER_Y = 1.43;
-const SHOULDER_X = 0.2;
 const UPPER = 0.3;
 const FORE = 0.27;
 const WAIST_Y = 1.06;
-/** Belin yarıçapları: [yanlara, öne-arkaya]. */
-const WAIST: [number, number] = [0.15, 0.115];
+/** Gövde biçimi: omuz genişliği ve göğüs, bel, kalça yarıçapları ([yanlara, öne-arkaya]). */
+interface Build {
+  shoulder: number;
+  chest: [number, number];
+  waist: [number, number];
+  hip: [number, number];
+  /** Göğsün öne çıkıntısı. */
+  bust: number;
+  /** Etek ucunun genişleme oranı. */
+  flare: number;
+}
+
+const BUILDS: Record<FaceKind, Build> = {
+  man: { shoulder: 0.225, chest: [0.215, 0.14], waist: [0.155, 0.118], hip: [0.172, 0.132], bust: 0, flare: 1 },
+  woman: { shoulder: 0.172, chest: [0.165, 0.128], waist: [0.118, 0.098], hip: [0.185, 0.148], bust: 0.03, flare: 1.14 },
+  child: { shoulder: 0.185, chest: [0.178, 0.128], waist: [0.15, 0.118], hip: [0.168, 0.132], bust: 0, flare: 1 },
+  elder: { shoulder: 0.2, chest: [0.195, 0.142], waist: [0.172, 0.136], hip: [0.18, 0.14], bust: 0, flare: 1.04 },
+  grim: { shoulder: 0.215, chest: [0.2, 0.135], waist: [0.15, 0.115], hip: [0.17, 0.13], bust: 0, flare: 1.08 },
+  cyclops: { shoulder: 0.24, chest: [0.235, 0.16], waist: [0.19, 0.15], hip: [0.19, 0.15], bust: 0, flare: 1 },
+};
+
+/** Yüz ve gövde tipi verilmediyse görünüşten çıkar: ak sakal → yaşlı, başörtü → kadın, küçük boy → çocuk. */
+function faceKind(o: HumanOpts): FaceKind {
+  return o.face ?? (o.beard === P.white ? 'elder' : o.hat === 'scarf' ? 'woman' : (o.scale ?? 1) < 0.8 ? 'child' : 'man');
+}
 const HEAD_Y = 1.74;
 /** Başın gövdeye oranı: baş `head.ts` içinde 0,3 yarıçapla kurulur, burada küçültülür. */
 const HEAD_K = 0.72;
@@ -67,14 +89,18 @@ interface Ring {
   w: [number, number][] | null;
   /** Etek halkalarında bacaklara bağlanma oranı. */
   skirt?: number;
+  /** Kıvrım derinliği: halka, çevresi boyunca dalgalanır (etek pilileri). */
+  fold?: number;
 }
 
 /**
  * Tek parça gövde: halkalardan örülen tüpler (gövde + etek, iki kol, iki bacak) tek bir geometride birleşir.
  * Eklem çevresindeki halkalar iki kemiğe birden bağlıdır; eklem bükülünce yüzey esner.
  */
-function bodyGeometry(bones: THREE.Object3D[], o: { robe: number; trim: number; skin: number; long: boolean }): THREE.BufferGeometry {
-  const SEG = 20;
+function bodyGeometry(bones: THREE.Object3D[], o: { robe: number; trim: number; skin: number; long: boolean; build: Build }): THREE.BufferGeometry {
+  const SEG = 32;
+  const FOLDS = 8;
+  const b = o.build;
   const pos: number[] = [];
   const col: number[] = [];
   const skinIndex: number[] = [];
@@ -93,7 +119,8 @@ function bodyGeometry(bones: THREE.Object3D[], o: { robe: number; trim: number; 
     rings.forEach((ring, j) => {
       for (let i = 0; i < SEG; i++) {
         const a = (i / SEG) * Math.PI * 2;
-        v.set(ring.c[0] + Math.sin(a) * ring.r[0], ring.c[1], ring.c[2] + Math.cos(a) * ring.r[1]).applyMatrix4(m);
+        const k = 1 + (ring.fold ?? 0) * Math.cos(a * FOLDS);
+        v.set(ring.c[0] + Math.sin(a) * ring.r[0] * k, ring.c[1], ring.c[2] + Math.cos(a) * ring.r[1] * k).applyMatrix4(m);
         pos.push(v.x, v.y, v.z);
         color.set(stripe !== undefined && i === 0 ? stripe : ring.color);
         col.push(color.r, color.g, color.b);
@@ -179,34 +206,37 @@ function bodyGeometry(bones: THREE.Object3D[], o: { robe: number; trim: number; 
 
   // Gövde ve etek: boyundan etek ucuna tek tüp. Etek halkaları uyluklara bağlanır; otururken dizle birlikte kalkar.
   const hemY = o.long ? 0.05 : 0.46;
-  const hem: [number, number] = o.long ? [0.34, 0.3] : [0.27, 0.22];
+  const hem: [number, number] = o.long ? [0.34 * b.flare, 0.3 * b.flare] : [0.27 * b.flare, 0.22 * b.flare];
   const torso: Ring[] = [
-    { c: [0, SHOULDER_Y + 0.12, 0], r: [0.062, 0.062], color: o.skin, w: R },
-    { c: [0, SHOULDER_Y + 0.075, 0], r: [0.064, 0.064], color: o.skin, w: R },
-    { c: [0, SHOULDER_Y + 0.07, 0], r: [0.085, 0.08], color: o.trim, w: R },
-    { c: [0, SHOULDER_Y + 0.045, 0], r: [0.13, 0.095], color: o.trim, w: R },
-    { c: [0, SHOULDER_Y + 0.01, 0], r: [SHOULDER_X - 0.01, 0.115], color: o.robe, w: R },
-    { c: [0, SHOULDER_Y - 0.1, 0.005], r: [SHOULDER_X - 0.005, 0.135], color: o.robe, w: R },
-    { c: [0, SHOULDER_Y - 0.24, 0.005], r: [0.17, 0.125], color: o.robe, w: R },
-    { c: [0, WAIST_Y, 0], r: WAIST, color: o.robe, w: R },
-    { c: [0, HIP + 0.03, 0], r: [0.18, 0.135], color: o.robe, w: null, skirt: 0.15 },
+    { c: [0, SHOULDER_Y + 0.12, 0], r: [0.058, 0.06], color: o.skin, w: R },
+    { c: [0, SHOULDER_Y + 0.075, 0], r: [0.06, 0.062], color: o.skin, w: R },
+    { c: [0, SHOULDER_Y + 0.07, 0], r: [0.082, 0.078], color: o.trim, w: R },
+    { c: [0, SHOULDER_Y + 0.045, 0], r: [b.shoulder * 0.62, 0.092], color: o.trim, w: R },
+    { c: [0, SHOULDER_Y + 0.012, 0], r: [b.shoulder - 0.012, 0.112], color: o.robe, w: R },
+    { c: [0, SHOULDER_Y - 0.07, b.bust * 0.5], r: [b.chest[0], b.chest[1]], color: o.robe, w: R },
+    { c: [0, SHOULDER_Y - 0.15, b.bust], r: [b.chest[0] - 0.008, b.chest[1] + b.bust * 0.4], color: o.robe, w: R },
+    { c: [0, SHOULDER_Y - 0.26, b.bust * 0.3], r: [(b.chest[0] + b.waist[0]) / 2, (b.chest[1] + b.waist[1]) / 2], color: o.robe, w: R },
+    { c: [0, WAIST_Y, 0], r: b.waist, color: o.robe, w: R },
+    { c: [0, HIP + 0.03, 0], r: b.hip, color: o.robe, w: null, skirt: 0.15 },
   ];
-  const n = o.long ? 5 : 3;
+  const n = o.long ? 6 : 4;
   for (let i = 1; i <= n; i++) {
     const t = i / n;
     const y = THREE.MathUtils.lerp(HIP + 0.03, hemY, t);
     torso.push({
       c: [0, y, 0],
-      r: [THREE.MathUtils.lerp(0.18, hem[0], Math.pow(t, 0.8)), THREE.MathUtils.lerp(0.135, hem[1], Math.pow(t, 0.8))],
+      r: [THREE.MathUtils.lerp(b.hip[0], hem[0], Math.pow(t, 0.8)), THREE.MathUtils.lerp(b.hip[1], hem[1], Math.pow(t, 0.8))],
       color: o.robe,
       w: null,
       // Uzun etek daha az esner: yürürken sallanır, otururken öne doğru yayılır.
       skirt: o.long ? 0.15 + 0.4 * Math.min(1, t * 2) : 0.15 + 0.7 * t,
+      // Kıvrımlar etek ucuna doğru derinleşir.
+      fold: 0.11 * t,
     });
   }
   const last = torso[torso.length - 1].skirt;
-  torso.push({ c: [0, hemY - 0.004, 0], r: [hem[0] + 0.004, hem[1] + 0.004], color: o.trim, w: null, skirt: last });
-  torso.push({ c: [0, hemY - 0.06, 0], r: [hem[0] + 0.012, hem[1] + 0.012], color: o.trim, w: null, skirt: last });
+  torso.push({ c: [0, hemY - 0.004, 0], r: [hem[0] + 0.004, hem[1] + 0.004], color: o.trim, w: null, skirt: last, fold: 0.11 });
+  torso.push({ c: [0, hemY - 0.06, 0], r: [hem[0] + 0.012, hem[1] + 0.012], color: o.trim, w: null, skirt: last, fold: 0.11 });
   torso.push({ c: [0, hemY - 0.066, 0], r: [hem[0] * 0.9, hem[1] * 0.9], color: P.darkBrown, w: null, skirt: last });
   tube(B.root, torso);
 
@@ -274,6 +304,8 @@ export class Human extends Mover {
     const pants = toon(P.brown);
     this.group.add(this.rig);
 
+    const kind = faceKind(o);
+    const build = BUILDS[kind];
     // İskelet: yürüme ve duruş grupları aynı zamanda gövde yüzeyinin kemikleridir.
     const legs = [
       [-1, this.legSwingL, this.legL, this.kneeSwingL, this.kneeL],
@@ -299,7 +331,7 @@ export class Human extends Mover {
       [1, this.swingR, this.armR, this.elbowR, this.handR],
     ] as const;
     for (const [side, swing, arm, elbow, hand] of arms) {
-      swing.position.set(side * SHOULDER_X, SHOULDER_Y, 0);
+      swing.position.set(side * build.shoulder, SHOULDER_Y, 0);
       arm.rotation.z = side * 0.14;
       elbow.position.y = -UPPER;
       hand.position.y = -FORE - 0.03;
@@ -322,7 +354,7 @@ export class Human extends Mover {
     // Gövde: tek parça, kemiklere bağlı yüzey (kaftan, kollar, bacaklar).
     this.group.updateMatrixWorld(true);
     const bones = [this.rig, this.armL, this.elbowL, this.armR, this.elbowR, this.legL, this.kneeL, this.legR, this.kneeR];
-    const body = new THREE.SkinnedMesh(bodyGeometry(bones, { robe: robeColor, trim: trimColor, skin: o.skin ?? P.skin, long: !!o.long }), toonVertex());
+    const body = new THREE.SkinnedMesh(bodyGeometry(bones, { robe: robeColor, trim: trimColor, skin: o.skin ?? P.skin, long: !!o.long, build }), toonVertex());
     body.castShadow = true;
     body.receiveShadow = false; // esneyen yüzey kendi üstüne gölge düşürünce etekte koyu şeritler oluşuyor
     body.frustumCulled = false;
@@ -332,13 +364,13 @@ export class Human extends Mover {
 
     // Kuşak (kilim desenli) ve toka: bel kemiğe katı bağlı olduğu için ayrı parça.
     const belt = mesh(new THREE.CylinderGeometry(1, 1, 0.085, 22), band);
-    belt.scale.set(WAIST[0] + 0.012, 1, WAIST[1] + 0.012);
+    belt.scale.set(build.waist[0] + 0.012, 1, build.waist[1] + 0.012);
     belt.position.y = WAIST_Y;
     const buckle = mesh(new THREE.SphereGeometry(0.03, 8, 6), toon(P.gold));
-    buckle.position.set(0, WAIST_Y, WAIST[1] + 0.015);
+    buckle.position.set(0, WAIST_Y, build.waist[1] + 0.015);
     // Kaftanın ön şeridi: yakadan kuşağa.
     const placket = mesh(new THREE.BoxGeometry(0.05, SHOULDER_Y - WAIST_Y + 0.02, 0.02), trim);
-    placket.position.set(0, (SHOULDER_Y + WAIST_Y) / 2 + 0.01, 0.125);
+    placket.position.set(0, (SHOULDER_Y + WAIST_Y) / 2 + 0.01, build.chest[1] - 0.012 + build.bust * 0.7);
     placket.rotation.x = -0.06;
     this.rig.add(belt, buckle, placket);
 
@@ -358,8 +390,8 @@ export class Human extends Mover {
         this.skull.add(ear);
       }
     }
-    this.addFace(o);
-    this.addHair(o, trim);
+    this.addFace(o, kind);
+    this.addHair(o, trim, kind);
     this.addHat(hatKind, o.hatColor ?? o.trim ?? P.red, robeColor);
     this.rig.add(this.head);
 
@@ -370,9 +402,7 @@ export class Human extends Mover {
     if (o.blind) this.blind();
   }
 
-  private addFace(o: HumanOpts): void {
-    // Yüz tipi verilmediyse görünüşten çıkar: ak sakal → yaşlı, başörtü → kadın, küçük boy → çocuk.
-    const kind: FaceKind = o.face ?? (o.beard === P.white ? 'elder' : o.hat === 'scarf' ? 'woman' : (o.scale ?? 1) < 0.8 ? 'child' : 'man');
+  private addFace(o: HumanOpts, kind: FaceKind): void {
     this.face = new DrawnFace({
       kind,
       skin: o.skin ?? P.skin,
@@ -392,15 +422,54 @@ export class Human extends Mover {
     }
   }
 
-  private addHair(o: HumanOpts, trim: THREE.Material): void {
+  private addHair(o: HumanOpts, trim: THREE.Material, kind: FaceKind): void {
     if (o.hair === undefined) return;
     const hair = toon(o.hair);
-    if (o.long) {
-      // Alında saç ve omuzlardan öne sarkan iki örgü.
+    const hat = o.hat ?? 'bork';
+    const covered = hat === 'scarf' || hat === 'hood';
+    const woman = kind === 'woman';
+
+    /** Bir tutam: başın yüzeyinden aşağı doğru uzanan sivri bir saç parçası. */
+    const lock = (yaw: number, pitch: number, len: number, width: number, drop = 0.4): void => {
+      const from = headPoint(dir(yaw, pitch)).multiplyScalar(1.03);
+      const to = headPoint(dir(yaw * 1.05, pitch - drop)).multiplyScalar(1.07);
+      const geo = new THREE.ConeGeometry(width, len, 5);
+      geo.rotateZ(Math.PI);
+      geo.translate(0, -len / 2, 0);
+      const m = mesh(geo, hair);
+      m.position.copy(from);
+      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), to.sub(from).normalize());
+      this.skull.add(m);
+    };
+
+    if (covered) {
+      // Başörtüsünün altından görünen saç: alında bir bant.
       const fringe = mesh(new THREE.SphereGeometry(HEAD + 0.012, 18, 8, 0, Math.PI * 2, 0, 0.9), hair);
       fringe.scale.y = 1.1;
       fringe.rotation.x = -0.22;
       this.skull.add(fringe);
+    } else {
+      // Saç kütlesi: önde yüksek, ensede alçak biten bir başlık.
+      const cap = mesh(new THREE.SphereGeometry(HEAD * 1.05, 22, 12, 0, Math.PI * 2, 0, 1.57), hair);
+      cap.scale.y = 1.1;
+      cap.rotation.x = -0.62;
+      this.skull.add(cap);
+      if (kind !== 'elder') {
+        // Perçem: alna düşen tutamlar; ortadaki kısa, yanlar uzun.
+        [-0.78, -0.42, -0.08, 0.3, 0.66].forEach((yaw, i) => lock(yaw, 0.66, [0.2, 0.17, 0.13, 0.16, 0.21][i] * (kind === 'child' ? 0.8 : 1), 0.075));
+        // Favori ya da yanak tutamları.
+        for (const sx of [-1, 1]) lock(sx * 1.22, 0.3, woman ? 0.52 : 0.26, woman ? 0.06 : 0.055, 0.6);
+      }
+    }
+
+    if (woman && hat === 'none') {
+      // Omuzlara dökülen uzun saç.
+      const fall = mesh(new THREE.CylinderGeometry(0.25, 0.33, 0.9, 16, 1, true, Math.PI * 0.5, Math.PI), toon(o.hair, { side: THREE.DoubleSide }));
+      fall.position.set(0, -0.46, -0.05);
+      fall.receiveShadow = false;
+      this.skull.add(fall);
+    } else if (o.long && woman) {
+      // Omuzlardan öne sarkan iki örgü.
       for (const sx of [-1, 1]) {
         for (let i = 0; i < 6; i++) {
           const bead = mesh(new THREE.SphereGeometry(0.042 - i * 0.003, 8, 6), hair);
@@ -411,11 +480,6 @@ export class Human extends Mover {
         tip.position.set(sx * 0.145, HEAD_Y - 0.59, 0.14);
         this.rig.add(tip);
       }
-    } else {
-      const back = mesh(new THREE.SphereGeometry(HEAD * 0.94, 18, 12), hair);
-      back.position.set(0, 0, -0.075);
-      back.scale.y = 1.1;
-      this.skull.add(back);
     }
   }
 
