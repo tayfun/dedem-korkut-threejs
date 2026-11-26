@@ -102,7 +102,7 @@ Modüllerin ayrıntılı dökümü `AGENTS.md` içindeki "Kodun Düzeni" tablosu
 3. ✅ **Prosedürel kütüphane** — arazi, gök, insan figürü, at, kuş, çadır, ateş.
 4. ✅ **İlk hikâye: Deli Dumrul** — 16 sahne.
 5. ✅ **Ana sayfa ve Kaynaklar sayfası** — hikâye listesi, kapak sahnesi, kaynakça.
-6. 🔶 **Kalan hikâyeler** — tablodaki sırayla, her biri ayrı ayrı. ✅ Basat ile Tepegöz (19 sahne). ✅ Boğaç Han (19 sahne). Sıradaki: Bamsı Beyrek.
+6. 🔶 **Kalan hikâyeler** — tablodaki sırayla, her biri ayrı ayrı. ✅ Basat ile Tepegöz (19 sahne). ✅ Boğaç Han (19 sahne). ✅ Bamsı Beyrek (iki bölüm, 12 + 12 sahne). Sıradaki: Kan Turalı.
 7. ✅ **Görsel cila** — minyatür görünümü, katmanlı arka plan, eklemli figürler, canlı zemin, kapaklar ve tezhip çerçevesi.
 8. ⬜ **Son cila** — gerçek telefonda performans ölçümü, erişilebilirlik, ses (isteğe bağlı), paylaşım kartları.
 

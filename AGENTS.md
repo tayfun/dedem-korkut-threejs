@@ -31,10 +31,10 @@ Yeni bir hikâye yazarken önce buradaki hazır parçaları kullan; yalnızca o 
 | `src/procedural/palette.ts` | Renkler (`P`), malzemeler (`mat`, `toon`, `glow`, `kilim`), `rng`, `mesh`. |
 | `src/procedural/sky.ts`, `terrain.ts`, `life.ts` | Gök, dağ sıraları, bulut; arazi ve serpiştirme; ot, toz, duman, kuş sürüsü. |
 | `src/procedural/props.ts` | Çadır, ateş, flama, ışık hüzmesi, akçe, kılıç, topuz, kopuz, yay, ok, şiş, yüzük, değnek. |
-| `src/procedural/sets.ts` | Ortak mekânlar: `steppeSet`, `placeTent`. |
+| `src/procedural/sets.ts` | Ortak mekânlar: `steppeSet`, `placeTent`, `reeds` (sazlık). |
 | `src/procedural/human.ts`, `head.ts`, `face.ts` | İnsan figürü, yontulmuş baş, çizilmiş yüz. |
 | `src/procedural/animals.ts` | `Horse`, `Lion`, `Sheep`, `Beast` (boğa, geyik, köpek), `Bird`; yeni hayvanlar buraya. |
-| `src/procedural/cast.ts` | Hazır kişiler: `dedeKorkut`, `villager(i)`, `warrior`, `lady`, `elderMan`, `elderWoman`, `child`; `mounted` (atlı), `archer` (yaylı). |
+| `src/procedural/cast.ts` | Hazır kişiler: `dedeKorkut`, `villager(i)`, `warrior`, `lady`, `elderMan`, `elderWoman`, `child`; `mounted` (atlı), `archer` (yaylı), `armed` (kılıçlı). |
 | `src/stories/<slug>/` | `story.ts` (metin), `scenes.ts` (sahneler), `sets.ts` (o hikâyeye özel mekân ve kişiler), `index.ts`. |
 | `tools/shots.mjs` | Sahnelerin ekran görüntüsünü alan araç. |
 
@@ -58,7 +58,7 @@ Yeni bir hikâye yazarken önce buradaki hazır parçaları kullan; yalnızca o 
 - Dil günümüz Türkçesi, sade ve akıcı; ama özgün metnin söyleyişini ve ritmini koru ("dünya şirin, can aziz", "boy boyladı, soy soyladı"). Soylamaları kısaltabilirsin, özünü ve imgelerini koru.
 - Özel adları koru (Boğaç Han, Banı Çiçek, Salur Kazan). Eskimiş ya da kültürel sözcükleri (kavat, görklü, yumuş oğlanı, otağ) metinde bırak ve sahnenin `note` alanında açıkla.
 - Metnin temeli Dresden nüshasıdır (Ergin ve Gökyay yayınları). Emin olmadığın bir ayrıntıyı ekleme; kaynağa bakılamıyorsa bunu kullanıcıya söyle.
-- Her sahne en çok 450 karakter kadar olsun (telefonda panel ekranın yarısını geçmesin); uzun bölümleri iki sahneye böl. Her hikâye 8–20 sahne.
+- Her sahne en çok 450 karakter kadar olsun (telefonda panel ekranın yarısını geçmesin); uzun bölümleri iki sahneye böl. Her hikâye 8–20 sahne; daha uzun boyları bölümlere ayır (örnek: `bamsi-beyrek/` iki bölüm, tek klasör).
 - Metin ile animasyon kodu ayrı dosyalarda durur (`story.ts` ve `scenes.ts`).
 - Sahneleme metinle çelişmemeli; metinde olmayan bir olayı animasyonla da ekleme.
 - Allah hiçbir sahnede gösterilmez; ilahî buyruk ışıkla anlatılır.

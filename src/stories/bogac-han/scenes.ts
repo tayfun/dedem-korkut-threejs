@@ -2,10 +2,10 @@ import * as THREE from 'three';
 import { armsDown, cam, faceTo, fall, grieve, kneelDown, launch, mood, newTimeline, place, plead, pop, raiseArms, shakeHead, standUp, sway, toss, turn, vanish, walkTo } from '../../engine/direct';
 import type { SceneDef } from '../../engine/story';
 import { Beast, Bird, Horse } from '../../procedural/animals';
-import { archer, child, dedeKorkut, mounted, villager } from '../../procedural/cast';
+import { archer, armed, child, dedeKorkut, mounted, villager } from '../../procedural/cast';
 import type { Human } from '../../procedural/human';
 import { P, mat, mesh } from '../../procedural/palette';
-import { arrow, kopuz, lightBeam, sword } from '../../procedural/props';
+import { arrow, kopuz, lightBeam } from '../../procedural/props';
 import { placeTent } from '../../procedural/sets';
 import { TENTS, bayindir, bogac, bound, dagSet, dirse, flowers, hatun, hizir, homeSet, kiz, konakSet, namert, sofra, toySet, yigit } from './sets';
 
@@ -13,15 +13,6 @@ import { TENTS, bayindir, bogac, bound, dagSet, dirse, flowers, hatun, hizir, ho
 
 const E = Math.PI / 2; // doğuya (+x) bakış
 const W = -Math.PI / 2; // batıya (-x) bakış
-
-/** Figürün sağ eline kılıç verir; kol sallanmaz. */
-function armed(m: Human): Human {
-  const s = sword();
-  s.rotation.x = Math.PI / 2;
-  m.handR.add(s);
-  m.armSwing = 0.2;
-  return m;
-}
 
 /** Yerde yatan yaralı Boğaç: sırtüstü, gözleri kapalı. */
 function wounded(m: Human): Human {

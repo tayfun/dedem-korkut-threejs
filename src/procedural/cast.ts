@@ -3,7 +3,7 @@ import type { Stage } from '../engine/stage';
 import { Horse } from './animals';
 import { Human, type HumanOpts } from './human';
 import { P } from './palette';
-import { bow, kopuz } from './props';
+import { bow, kopuz, sword } from './props';
 
 /**
  * Oyuncu kadrosu: hikâyeler arasında paylaşılan hazır kişiler.
@@ -64,6 +64,15 @@ export function mounted(stage: Stage, who: Human, x: number, z: number, ry: numb
 export function archer(m: Human): Human {
   m.handL.add(bow());
   m.armL.rotation.x = -1.5;
+  m.armSwing = 0.2;
+  return m;
+}
+
+/** Figürün sağ eline kılıç verir; kol yürürken sallanmaz. */
+export function armed(m: Human): Human {
+  const s = sword();
+  s.rotation.x = Math.PI / 2;
+  m.handR.add(s);
   m.armSwing = 0.2;
   return m;
 }

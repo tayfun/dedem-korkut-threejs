@@ -7,8 +7,9 @@ import { archer, child, dedeKorkut, elderWoman, lady, mounted, villager, warrior
 import type { Human } from '../../procedural/human';
 import { P, mat, mesh } from '../../procedural/palette';
 import { arrow, bow, ring, spit, sword } from '../../procedural/props';
+import { reeds } from '../../procedural/sets';
 import { tree } from '../../procedural/terrain';
-import { CAVE, FIRE, POND, aruz, basat, bayindir, campSet, kayaSet, kazan, koca, kumbet, peri, pinarSet, reeds, shepherd, tepegoz, wildBoy, yiginak } from './sets';
+import { CAVE, FIRE, POND, aruz, basat, bayindir, campSet, kayaSet, kazan, koca, kumbet, peri, pinarSet, shepherd, tepegoz, wildBoy, yiginak } from './sets';
 
 /** Basat ile Tepegöz — sahnelerin 3B kurulumu ve animasyonu. Metinler `story.ts` içindedir. */
 
