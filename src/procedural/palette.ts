@@ -91,3 +91,49 @@ export function mesh(geo: THREE.BufferGeometry, material: THREE.Material, shadow
   m.receiveShadow = shadow;
   return m;
 }
+
+const kilimCache = new Map<string, THREE.MeshStandardMaterial>();
+
+/** Kilim şeridi: kodla çizilen zikzak ve baklava motifli, paylaşılan malzeme. */
+export function kilim(a: number = P.red, b: number = P.ochre, c: number = P.indigo): THREE.MeshStandardMaterial {
+  const key = `${a}|${b}|${c}`;
+  let m = kilimCache.get(key);
+  if (!m) {
+    const cv = document.createElement('canvas');
+    cv.width = 32;
+    cv.height = 16;
+    const g = cv.getContext('2d')!;
+    const hex = (n: number) => `#${n.toString(16).padStart(6, '0')}`;
+    g.fillStyle = hex(a);
+    g.fillRect(0, 0, 32, 16);
+    g.fillStyle = hex(b);
+    for (const x of [0, 16]) {
+      g.beginPath();
+      g.moveTo(x + 8, 1);
+      g.lineTo(x + 15, 8);
+      g.lineTo(x + 8, 15);
+      g.lineTo(x + 1, 8);
+      g.fill();
+    }
+    g.fillStyle = hex(c);
+    for (const x of [0, 16]) {
+      g.beginPath();
+      g.moveTo(x + 8, 5);
+      g.lineTo(x + 11, 8);
+      g.lineTo(x + 8, 11);
+      g.lineTo(x + 5, 8);
+      g.fill();
+    }
+    g.fillRect(0, 0, 32, 1);
+    g.fillRect(0, 15, 32, 1);
+    const tex = new THREE.CanvasTexture(cv);
+    tex.wrapS = THREE.RepeatWrapping;
+    tex.repeat.set(8, 1);
+    tex.magFilter = THREE.NearestFilter;
+    tex.colorSpace = THREE.SRGBColorSpace;
+    m = new THREE.MeshStandardMaterial({ map: tex, flatShading: true, roughness: 0.92 });
+    kilimCache.set(key, m);
+    shared.add(m);
+  }
+  return m;
+}

@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { cam, faceTo, place, shakeHead, turn, walkTo } from '../../engine/direct';
 import type { SceneDef } from '../../engine/story';
-import { Bird, Horse, cast, type Human } from '../../procedural/figures';
+import { Bird, Horse, KNEEL_KNEE, KNEEL_Y, cast, type Human } from '../../procedural/figures';
 import { P } from '../../procedural/palette';
 import { addFire, lightBeam, sword } from '../../procedural/world';
 import { CAMP, addTent, bridgeSet, campSet, child, dumrul, father, mother, mourners, newTimeline, pop, steppeSet, sway, tossCoin, vanish, villager, wife } from './sets';
@@ -210,7 +210,7 @@ export const scenes: SceneDef[] = [
       });
       // Dumrul ayağa kalkar, kılıcını çeker.
       tl.to(d, { yOffset: 0, duration: 0.5, ease: 'power2.out' }, 4.4);
-      tl.to([d.legL.rotation, d.legR.rotation], { x: 0, z: 0, duration: 0.5 }, 4.4);
+      tl.to([d.legL.rotation, d.legR.rotation, d.kneeL.rotation, d.kneeR.rotation], { x: 0, z: 0, duration: 0.5 }, 4.4);
       tl.set(sw, { visible: true }, 4.9);
       tl.to(d.armR.rotation, { x: -2.8, duration: 0.4, ease: 'back.out(2)' }, 4.9);
       d.walkSpeed = 13;
@@ -321,9 +321,9 @@ export const scenes: SceneDef[] = [
       tl.to(a.group.position, { x: 0.6, y: 0, z: 0.9, duration: 1.2, ease: 'power2.inOut' }, 0.2);
       tl.to(a.rig.rotation, { x: 0, duration: 0.8 }, 0.2);
       tl.to(a, { flap: 0.2, duration: 1 }, 0.4);
-      tl.to(d.group.position, { x: -3.1, y: -0.78, z: 1.2, duration: 1.0, ease: 'power2.out' }, 0.8);
+      tl.to(d.group.position, { x: -3.1, y: KNEEL_Y * 1.1, z: 1.2, duration: 1.0, ease: 'power2.out' }, 0.8);
       tl.to(d.rig.rotation, { x: 0, duration: 1.0, ease: 'power2.out' }, 0.8);
-      tl.to([d.legL.rotation, d.legR.rotation], { x: 1.5, duration: 0.8 }, 0.8);
+      tl.to([d.kneeL.rotation, d.kneeR.rotation], { x: KNEEL_KNEE, duration: 0.8 }, 0.8);
       plead(tl, d, 1.8);
       tl.to([d.armL.rotation, d.armR.rotation], { x: -1.2, duration: 0.35, yoyo: true, repeat: 5, ease: 'sine.inOut' }, 2.4);
       shakeHead(tl, a.head, 4.6, 1.4);
@@ -341,8 +341,8 @@ export const scenes: SceneDef[] = [
       const tl = newTimeline();
       const d = stage.track(place(dumrul(), -3.1, 1.2, E));
       d.freeY = true;
-      d.group.position.y = -0.78;
-      d.legL.rotation.x = d.legR.rotation.x = 1.5;
+      d.group.position.y = KNEEL_Y * 1.1;
+      d.kneeL.rotation.x = d.kneeR.rotation.x = KNEEL_KNEE;
       d.armL.rotation.x = d.armR.rotation.x = -1.5;
       const a = stage.track(place(cast.azrail(), 0.6, 0.9, W));
       a.flap = 0.2;
@@ -532,8 +532,8 @@ export const scenes: SceneDef[] = [
       // Dumrul araya girer, diz çöküp yalvarır.
       walkTo(tl, d, -2.2, 2.2, 1.0, 1.6);
       turn(tl, d, 0.1, 2.6, 0.4);
-      tl.to(d, { yOffset: -0.78, duration: 0.5, ease: 'power2.out' }, 2.8);
-      tl.to([d.legL.rotation, d.legR.rotation], { x: 1.5, duration: 0.5 }, 2.8);
+      tl.to(d, { yOffset: KNEEL_Y * 1.1, duration: 0.5, ease: 'power2.out' }, 2.8);
+      tl.to([d.kneeL.rotation, d.kneeR.rotation], { x: KNEEL_KNEE, duration: 0.5 }, 2.8);
       tl.to(d.head.rotation, { x: -0.55, duration: 0.6 }, 3.2);
       tl.to(d.armL.rotation, { x: -2.5, z: -0.35, duration: 0.7 }, 3.2);
       tl.to(d.armR.rotation, { x: -2.5, z: 0.35, duration: 0.7 }, 3.2);
@@ -563,8 +563,8 @@ export const scenes: SceneDef[] = [
       const kids = [stage.track(place(child(0), 0.1, 0.5, -1.2)), stage.track(place(child(1), -1.0, -1.0, -1.0))];
       kids.forEach((k) => (k.walkSpeed = 14));
       const d = stage.track(place(dumrul(), -2.2, 2.2, 0.1));
-      d.yOffset = -0.78;
-      d.legL.rotation.x = d.legR.rotation.x = 1.5;
+      d.yOffset = KNEEL_Y * 1.1;
+      d.kneeL.rotation.x = d.kneeR.rotation.x = KNEEL_KNEE;
       d.head.rotation.x = -0.55;
       d.armL.rotation.set(-2.5, 0, -0.35);
       d.armR.rotation.set(-2.5, 0, 0.35);
@@ -587,7 +587,7 @@ export const scenes: SceneDef[] = [
       cam(tl, stage, [0, 2.2, 12], [-3, 2.6, 0], 3.5, 2.6);
       // Dumrul doğrulur, aile kavuşur.
       tl.to(d, { yOffset: 0, duration: 0.6, ease: 'power2.out' }, 5.6);
-      tl.to([d.legL.rotation, d.legR.rotation], { x: 0, duration: 0.6 }, 5.6);
+      tl.to([d.kneeL.rotation, d.kneeR.rotation], { x: 0, duration: 0.6 }, 5.6);
       tl.to(d.head.rotation, { x: 0, duration: 0.5 }, 5.6);
       tl.to(d.armL.rotation, { x: 0, z: -0.14, duration: 0.6 }, 5.6);
       tl.to(d.armR.rotation, { x: 0, z: 0.14, duration: 0.6 }, 5.6);

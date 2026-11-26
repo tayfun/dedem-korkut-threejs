@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { createNoise2D } from 'simplex-noise';
 import type { GroundFn, Stage } from '../engine/stage';
 import { noInk } from '../engine/ink';
-import { P, glow, mat, mesh, rng } from './palette';
+import { P, glow, kilim, mat, mesh, rng } from './palette';
 
 /* ------------------------------------------------------------------ */
 /* Gökyüzü ve ışık                                                     */
@@ -392,7 +392,7 @@ export function tent(color: number = P.white, accent: number = P.red, scale = 1)
   const g = new THREE.Group();
   const wall = mesh(new THREE.CylinderGeometry(2.2, 2.2, 1.5, 12), mat(color));
   wall.position.y = 0.75;
-  const band = mesh(new THREE.CylinderGeometry(2.24, 2.24, 0.22, 12), mat(accent));
+  const band = mesh(new THREE.CylinderGeometry(2.24, 2.24, 0.26, 12), kilim(accent, P.ochre, P.cream));
   band.position.y = 1.3;
   const band2 = mesh(new THREE.CylinderGeometry(2.24, 2.24, 0.1, 12), mat(P.ochre));
   band2.position.y = 1.08;

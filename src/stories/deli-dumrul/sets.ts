@@ -120,7 +120,7 @@ export function addTent(stage: Stage, x: number, z: number, ry = 0, color: numbe
 /* ---------------------------- Kişiler ----------------------------- */
 
 export function dumrul(withMace = false): Human {
-  const d = new Human({ robe: P.red, trim: P.ochre, hat: 'bork', hatColor: P.indigo, scale: 1.1 });
+  const d = new Human({ robe: P.red, trim: P.ochre, hat: 'bork', hatColor: P.indigo, scale: 1.1, moustache: P.black, hair: P.black, cloak: P.indigo });
   if (withMace) {
     const m = mace();
     m.rotation.x = Math.PI / 2;
@@ -130,17 +130,17 @@ export function dumrul(withMace = false): Human {
   return d;
 }
 
-export const wife = () => new Human({ robe: P.teal, trim: P.ochre, hat: 'scarf', hatColor: P.cream, long: true });
+export const wife = () => new Human({ robe: P.teal, trim: P.ochre, hat: 'scarf', hatColor: P.cream, long: true, hair: P.black });
 export const father = () => new Human({ robe: P.brown, trim: P.cream, hat: 'kalpak', hatColor: P.indigo, beard: P.white });
-export const mother = () => new Human({ robe: P.indigo, trim: P.cream, hat: 'scarf', hatColor: P.white, long: true });
+export const mother = () => new Human({ robe: P.indigo, trim: P.cream, hat: 'scarf', hatColor: P.white, long: true, hair: P.pale });
 export const child = (i: number) => new Human({ robe: i ? P.ochre : P.green, trim: P.red, hat: 'bork', hatColor: P.red, scale: i ? 0.55 : 0.66 });
 
 const LOOKS: HumanOpts[] = [
-  { robe: P.teal, trim: P.cream, hat: 'bork', hatColor: P.red },
+  { robe: P.teal, trim: P.cream, hat: 'bork', hatColor: P.red, moustache: P.black },
   { robe: P.brown, trim: P.ochre, hat: 'kalpak', hatColor: P.indigo },
-  { robe: P.indigo, trim: P.cream, hat: 'scarf', hatColor: P.cream, long: true },
-  { robe: P.green, trim: P.ochre, hat: 'bork', hatColor: P.ochre },
-  { robe: P.crimson, trim: P.cream, hat: 'scarf', hatColor: P.ochre, long: true },
+  { robe: P.indigo, trim: P.cream, hat: 'scarf', hatColor: P.cream, long: true, hair: P.darkBrown },
+  { robe: P.green, trim: P.ochre, hat: 'bork', hatColor: P.ochre, moustache: P.darkBrown, hair: P.darkBrown },
+  { robe: P.crimson, trim: P.cream, hat: 'scarf', hatColor: P.ochre, long: true, hair: P.black },
   { robe: P.ochre, trim: P.indigo, hat: 'kalpak', hatColor: P.red, beard: P.black },
   { robe: P.stoneDark, trim: P.red, hat: 'bork', hatColor: P.teal, beard: P.white },
   { robe: P.indigo, trim: P.ochre, hat: 'bork', hatColor: P.green, beard: P.black },

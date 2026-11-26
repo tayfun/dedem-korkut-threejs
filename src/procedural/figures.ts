@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Mover } from '../engine/stage';
-import { P, mat, mesh } from './palette';
+import { P, kilim, mat, mesh } from './palette';
 import { kopuz } from './world';
 
 /* ------------------------------------------------------------------ */
@@ -16,6 +16,11 @@ export interface HumanOpts {
   hatColor?: number;
   skin?: number;
   beard?: number;
+  moustache?: number;
+  /** Saç rengi: kadınlarda iki örgü, erkeklerde ense saçı. */
+  hair?: number;
+  /** Sırtta dalgalanan pelerin. */
+  cloak?: number;
   /** Uzun etek: bacaklar görünmez. */
   long?: boolean;
   scale?: number;
@@ -23,9 +28,10 @@ export interface HumanOpts {
 }
 
 /**
- * Basit geometrilerden kurulan insan figürü. Önü +z yönüne bakar, ayakları orijindedir.
+ * Basit geometrilerden kurulan, eklemli insan figürü. Önü +z yönüne bakar, ayakları orijindedir.
  * Kollar ve bacaklar omuz/kalça ekseninden döner:
  * `rotation.x` eksi → öne, artı → arkaya; kollar için -3 → yukarı.
+ * Dirsekler kolun duruşuna göre kendiliğinden bükülür; dizler `kneeL/kneeR` ile bükülür.
  */
 export class Human extends Mover {
   /** Yatma, eğilme gibi tüm gövde hareketleri için. */
@@ -35,6 +41,8 @@ export class Human extends Mover {
   armR = new THREE.Group();
   legL = new THREE.Group();
   legR = new THREE.Group();
+  kneeL = new THREE.Group();
+  kneeR = new THREE.Group();
   handR = new THREE.Group();
   handL = new THREE.Group();
   wingL?: THREE.Group;
@@ -45,64 +53,118 @@ export class Human extends Mover {
   armSwing = 1;
   private swingL = new THREE.Group();
   private swingR = new THREE.Group();
+  private elbowL = new THREE.Group();
+  private elbowR = new THREE.Group();
   private legSwingL = new THREE.Group();
   private legSwingR = new THREE.Group();
+  private kneeSwingL = new THREE.Group();
+  private kneeSwingR = new THREE.Group();
+  private cloak?: THREE.Group;
   private phase = Math.random() * 10;
 
   constructor(o: HumanOpts = {}) {
     super();
     const robe = mat(o.robe ?? P.indigo);
-    const trim = mat(o.trim ?? P.ochre);
+    const trimColor = o.trim ?? P.ochre;
+    const trim = mat(trimColor);
+    const band = kilim(trimColor, o.robe === P.red ? P.indigo : P.red, P.cream);
     const skin = mat(o.skin ?? P.skin);
     const boots = mat(P.darkBrown);
+    const pants = mat(P.brown);
     this.group.add(this.rig);
 
-    // Bacaklar
-    for (const [side, swing, leg] of [[-1, this.legSwingL, this.legL], [1, this.legSwingR, this.legR]] as const) {
+    // Bacaklar: uyluk + diz + baldır/çizme
+    const legs = [
+      [-1, this.legSwingL, this.legL, this.kneeSwingL, this.kneeL],
+      [1, this.legSwingR, this.legR, this.kneeSwingR, this.kneeR],
+    ] as const;
+    for (const [side, swing, leg, kneeSwing, knee] of legs) {
       swing.position.set(side * 0.14, 0.86, 0);
-      const m = mesh(new THREE.BoxGeometry(0.17, 0.86, 0.2), boots);
-      m.position.y = -0.43;
-      leg.add(m);
+      const thigh = mesh(new THREE.BoxGeometry(0.18, 0.46, 0.2), pants);
+      thigh.position.y = -0.21;
+      kneeSwing.position.y = -0.43;
+      const shin = mesh(new THREE.BoxGeometry(0.16, 0.44, 0.18), boots);
+      shin.position.y = -0.2;
+      const foot = mesh(new THREE.BoxGeometry(0.17, 0.1, 0.3), boots);
+      foot.position.set(0, -0.38, 0.06);
+      knee.add(shin, foot);
+      kneeSwing.add(knee);
+      leg.add(thigh, kneeSwing);
       swing.add(leg);
       this.rig.add(swing);
       if (o.long) swing.visible = false;
     }
 
-    // Gövde ve etek
-    const torso = mesh(new THREE.CylinderGeometry(0.23, 0.33, 0.82, 6), robe);
+    // Gövde: kaftan, etek, kilim kuşak, yaka ve ön şerit
+    const torso = mesh(new THREE.CylinderGeometry(0.23, 0.33, 0.82, 7), robe);
     torso.position.y = 1.22;
     const skirtH = o.long ? 0.8 : 0.42;
-    const skirt = mesh(new THREE.CylinderGeometry(0.33, o.long ? 0.5 : 0.42, skirtH, 6), robe);
+    const skirtR = o.long ? 0.5 : 0.42;
+    const skirt = mesh(new THREE.CylinderGeometry(0.33, skirtR, skirtH, 7), robe);
     skirt.position.y = 0.81 - skirtH / 2;
-    const belt = mesh(new THREE.CylinderGeometry(0.335, 0.335, 0.09, 6), trim);
+    const hem = mesh(new THREE.CylinderGeometry(skirtR - 0.012, skirtR + 0.012, 0.09, 7), band);
+    hem.position.y = 0.81 - skirtH + 0.045;
+    const belt = mesh(new THREE.CylinderGeometry(0.338, 0.338, 0.1, 7), band);
     belt.position.y = 0.84;
-    const collar = mesh(new THREE.CylinderGeometry(0.15, 0.24, 0.08, 6), trim);
-    collar.position.y = 1.63;
-    this.rig.add(torso, skirt, belt, collar);
+    const collar = mesh(new THREE.CylinderGeometry(0.15, 0.245, 0.09, 7), trim);
+    collar.position.y = 1.625;
+    const front = mesh(new THREE.BoxGeometry(0.07, 0.74, 0.03), trim);
+    front.position.set(0, 1.24, 0.262);
+    front.rotation.x = -0.118;
+    const neck = mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.1, 6), skin);
+    neck.position.y = 1.67;
+    this.rig.add(torso, skirt, hem, belt, collar, front, neck);
 
-    // Kollar
-    for (const [side, swing, arm, hand] of [[-1, this.swingL, this.armL, this.handL], [1, this.swingR, this.armR, this.handR]] as const) {
+    // Kollar: üst kol + dirsek + ön kol + el
+    const arms = [
+      [-1, this.swingL, this.armL, this.elbowL, this.handL],
+      [1, this.swingR, this.armR, this.elbowR, this.handR],
+    ] as const;
+    for (const [side, swing, arm, elbow, hand] of arms) {
       swing.position.set(side * 0.31, 1.55, 0);
       arm.rotation.z = side * 0.14;
-      const m = mesh(new THREE.BoxGeometry(0.14, 0.66, 0.15), robe);
-      m.position.y = -0.3;
-      const h = mesh(new THREE.IcosahedronGeometry(0.08, 0), skin);
-      hand.position.y = -0.68;
-      hand.add(h);
-      arm.add(m, hand);
+      const shoulder = mesh(new THREE.IcosahedronGeometry(0.095, 0), robe);
+      const upper = mesh(new THREE.BoxGeometry(0.14, 0.36, 0.15), robe);
+      upper.position.y = -0.17;
+      elbow.position.y = -0.34;
+      const fore = mesh(new THREE.BoxGeometry(0.125, 0.3, 0.135), robe);
+      fore.position.y = -0.14;
+      const cuff = mesh(new THREE.BoxGeometry(0.14, 0.06, 0.15), trim);
+      cuff.position.y = -0.29;
+      hand.position.y = -0.36;
+      const palm = mesh(new THREE.BoxGeometry(0.09, 0.11, 0.06), skin);
+      const thumb = mesh(new THREE.BoxGeometry(0.03, 0.06, 0.04), skin);
+      thumb.position.set(-side * 0.05, 0.01, 0.03);
+      hand.add(palm, thumb);
+      elbow.add(fore, cuff, hand);
+      arm.add(shoulder, upper, elbow);
       swing.add(arm);
       this.rig.add(swing);
     }
 
-    // Baş
+    // Baş ve yüz
     this.head.position.y = 1.84;
-    const skull = mesh(new THREE.IcosahedronGeometry(0.2, 1), skin);
-    this.head.add(skull);
+    this.head.add(mesh(new THREE.IcosahedronGeometry(0.2, 1), skin));
+    const dark = mat(P.black);
     const eyeGeo = new THREE.BoxGeometry(0.04, 0.045, 0.02);
-    for (const sx of [-0.075, 0.075]) {
-      const e = new THREE.Mesh(eyeGeo, mat(P.black));
-      e.position.set(sx, 0.03, 0.185);
-      this.head.add(e);
+    const browGeo = new THREE.BoxGeometry(0.075, 0.018, 0.02);
+    const browColor = mat(o.beard ?? o.moustache ?? o.hair ?? P.black);
+    for (const sx of [-1, 1]) {
+      const e = new THREE.Mesh(eyeGeo, dark);
+      e.position.set(sx * 0.075, 0.03, 0.185);
+      const b = new THREE.Mesh(browGeo, browColor);
+      b.position.set(sx * 0.078, 0.085, 0.183);
+      b.rotation.z = -sx * 0.18;
+      this.head.add(e, b);
+    }
+    const nose = mesh(new THREE.ConeGeometry(0.03, 0.09, 4), skin);
+    nose.position.set(0, -0.015, 0.205);
+    nose.rotation.x = 0.35;
+    this.head.add(nose);
+    if (o.moustache !== undefined || o.beard !== undefined) {
+      const mo = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.03, 0.03), mat(o.moustache ?? o.beard!));
+      mo.position.set(0, -0.075, 0.18);
+      this.head.add(mo);
     }
     if (o.beard !== undefined) {
       const b = mesh(new THREE.ConeGeometry(0.15, 0.36, 5), mat(o.beard));
@@ -110,9 +172,29 @@ export class Human extends Mover {
       b.rotation.x = Math.PI + 0.25;
       this.head.add(b);
     }
+    if (o.hair !== undefined) {
+      const hair = mat(o.hair);
+      if (o.long) {
+        // İki örgü: omuzlardan öne sarkar.
+        for (const sx of [-1, 1]) {
+          const braid = mesh(new THREE.CylinderGeometry(0.035, 0.022, 0.62, 5), hair);
+          braid.position.set(sx * 0.19, 1.42, 0.17);
+          braid.rotation.z = -sx * 0.1;
+          const tip = mesh(new THREE.IcosahedronGeometry(0.035, 0), trim);
+          tip.position.set(sx * 0.22, 1.1, 0.17);
+          this.rig.add(braid, tip);
+        }
+      } else {
+        const back = mesh(new THREE.IcosahedronGeometry(0.2, 1), hair);
+        back.position.set(0, -0.03, -0.045);
+        back.scale.set(1.02, 0.95, 0.95);
+        this.head.add(back);
+      }
+    }
     this.addHat(o.hat ?? 'bork', o.hatColor ?? o.trim ?? P.red, o.robe ?? P.indigo);
     this.rig.add(this.head);
 
+    if (o.cloak !== undefined) this.addCloak(o.cloak, trimColor);
     if (o.wings !== undefined) this.addWings(o.wings);
     if (o.scale) this.group.scale.setScalar(o.scale);
   }
@@ -124,7 +206,9 @@ export class Human extends Mover {
       fur.position.y = 0.13;
       const top = mesh(new THREE.CylinderGeometry(0.13, 0.21, 0.2, 7), mat(color));
       top.position.y = 0.27;
-      h.add(fur, top);
+      const knob = mesh(new THREE.IcosahedronGeometry(0.04, 0), mat(P.gold));
+      knob.position.y = 0.39;
+      h.add(fur, top, knob);
     } else if (hat === 'kalpak') {
       const top = mesh(new THREE.ConeGeometry(0.22, 0.42, 7), mat(color));
       top.position.y = 0.3;
@@ -135,13 +219,15 @@ export class Human extends Mover {
       const t = mesh(new THREE.IcosahedronGeometry(0.26, 1), mat(color));
       t.position.y = 0.15;
       t.scale.y = 0.62;
-      h.add(t);
+      const cap = mesh(new THREE.CylinderGeometry(0.08, 0.12, 0.14, 6), mat(P.red));
+      cap.position.y = 0.31;
+      h.add(t, cap);
     } else if (hat === 'scarf') {
       const s = mesh(new THREE.IcosahedronGeometry(0.235, 1), mat(color));
       s.position.set(0, 0.04, -0.035);
       const drape = mesh(new THREE.ConeGeometry(0.25, 0.6, 6), mat(color));
       drape.position.set(0, -0.2, -0.1);
-      const crown = mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.12, 7), mat(P.ochre));
+      const crown = mesh(new THREE.CylinderGeometry(0.15, 0.17, 0.12, 7), kilim(P.ochre, P.red, P.indigo));
       crown.position.y = 0.24;
       h.add(s, drape, crown);
     } else if (hat === 'hood') {
@@ -152,6 +238,25 @@ export class Human extends Mover {
       tip.rotation.x = -0.5;
       h.add(s, tip);
     }
+  }
+
+  private addCloak(color: number, trim: number): void {
+    const g = new THREE.Group();
+    g.position.set(0, 1.6, -0.2);
+    const shape = new THREE.Shape();
+    shape.moveTo(-0.3, 0);
+    shape.lineTo(0.3, 0);
+    shape.lineTo(0.5, -1.15);
+    shape.lineTo(0.25, -1.25);
+    shape.lineTo(0, -1.17);
+    shape.lineTo(-0.25, -1.25);
+    shape.lineTo(-0.5, -1.15);
+    shape.closePath();
+    g.add(mesh(new THREE.ShapeGeometry(shape), mat(color, { side: THREE.DoubleSide })));
+    const clasp = mesh(new THREE.BoxGeometry(0.62, 0.06, 0.05), mat(trim));
+    g.add(clasp);
+    this.cloak = g;
+    this.rig.add(g);
   }
 
   private addWings(color: number): void {
@@ -176,24 +281,41 @@ export class Human extends Mover {
     }
   }
 
-  /** Figürü oturtur: bacaklar öne uzanır, gövde alçalır. */
+  /** Figürü yere oturtur: bacaklar öne uzanır, dizler hafif bükülür. */
   sit(): this {
     this.yOffset = -0.72;
-    this.legL.rotation.x = -1.5;
-    this.legR.rotation.x = -1.5;
-    this.legL.rotation.z = -0.25;
-    this.legR.rotation.z = 0.25;
+    this.legL.rotation.set(-1.5, 0, -0.25);
+    this.legR.rotation.set(-1.5, 0, 0.25);
+    this.kneeL.rotation.x = this.kneeR.rotation.x = 0.3;
+    return this;
+  }
+
+  /** Figürü diz çöktürür. */
+  kneel(): this {
+    this.yOffset = KNEEL_Y;
+    this.kneeL.rotation.x = this.kneeR.rotation.x = KNEEL_KNEE;
     return this;
   }
 
   update(t: number): void {
     const a = this.walkAmp;
-    const s = Math.sin(t * this.walkSpeed + this.phase);
-    this.legSwingL.rotation.x = s * 0.65 * a;
-    this.legSwingR.rotation.x = -s * 0.65 * a;
+    const ph = t * this.walkSpeed + this.phase;
+    const s = Math.sin(ph);
+    const c = Math.cos(ph);
+    this.legSwingL.rotation.x = s * 0.6 * a;
+    this.legSwingR.rotation.x = -s * 0.6 * a;
+    // Diz, bacak öne savrulurken bükülür.
+    this.kneeSwingL.rotation.x = Math.max(0, -c) * 0.95 * a;
+    this.kneeSwingR.rotation.x = Math.max(0, c) * 0.95 * a;
     this.swingL.rotation.x = -s * 0.45 * a * this.armSwing;
     this.swingR.rotation.x = s * 0.45 * a * this.armSwing;
-    this.rig.position.y = Math.abs(Math.cos(t * this.walkSpeed + this.phase)) * 0.05 * a;
+    this.rig.position.y = Math.abs(c) * 0.05 * a;
+    // Dirsek: kol öne ya da yana kalktıkça bükülür, tam yukarıda yeniden açılır.
+    for (const [arm, swing, elbow] of [[this.armL, this.swingL, this.elbowL], [this.armR, this.swingR, this.elbowR]] as const) {
+      const lift = THREE.MathUtils.clamp(-(arm.rotation.x + swing.rotation.x), 0, Math.PI);
+      elbow.rotation.x = -(0.18 + 0.6 * Math.sin(lift) * (1 - Math.min(1, Math.abs(arm.rotation.z)) * 0.7));
+    }
+    if (this.cloak) this.cloak.rotation.x = 0.1 + 0.3 * a + Math.sin(t * 2.2 + this.phase) * 0.04 + Math.abs(s) * 0.06 * a;
     if (this.wingL && this.wingR) {
       const f = Math.sin(t * 4.5 + this.phase) * this.flap;
       this.wingR.rotation.y = 0.45 - f;
@@ -201,6 +323,10 @@ export class Human extends Mover {
     }
   }
 }
+
+/** Diz çökme duruşunun değerleri (zaman çizelgelerinde de kullanılır). */
+export const KNEEL_Y = -0.42;
+export const KNEEL_KNEE = 1.5;
 
 /* ------------------------------------------------------------------ */
 /* At                                                                  */
@@ -212,7 +338,9 @@ export class Horse extends Mover {
   seat = new THREE.Group();
   neck = new THREE.Group();
   private legs: THREE.Group[] = [];
+  private shins: THREE.Group[] = [];
   private tail = new THREE.Group();
+  private tailTip = new THREE.Group();
   private phase = Math.random() * 10;
 
   constructor(color: number = P.brown, mane: number = P.black) {
@@ -227,52 +355,96 @@ export class Horse extends Mover {
     this.rig.add(inner);
     this.group.add(this.rig);
 
-    const torso = mesh(new THREE.BoxGeometry(0.56, 0.62, 1.7), body);
-    torso.position.y = 1.25;
-    inner.add(torso);
+    // Gövde: fıçı biçimli, göğüs ve sağrı yuvarlak
+    const barrel = mesh(new THREE.CylinderGeometry(0.34, 0.36, 1.3, 8), body);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.y = 1.27;
+    barrel.scale.set(0.88, 1, 1.02);
+    const chest = mesh(new THREE.IcosahedronGeometry(0.37, 1), body);
+    chest.position.set(0, 1.3, 0.62);
+    chest.scale.set(0.86, 1.02, 0.9);
+    const rump = mesh(new THREE.IcosahedronGeometry(0.39, 1), body);
+    rump.position.set(0, 1.3, -0.62);
+    rump.scale.set(0.88, 1, 0.92);
+    inner.add(barrel, chest, rump);
 
-    this.neck.position.set(0, 1.42, 0.75);
+    // Boyun, baş, yele
+    this.neck.position.set(0, 1.42, 0.78);
     this.neck.rotation.x = 0.7;
-    const neckM = mesh(new THREE.BoxGeometry(0.3, 0.95, 0.42), body);
-    neckM.position.y = 0.4;
-    const head = mesh(new THREE.BoxGeometry(0.27, 0.32, 0.72), body);
-    head.position.set(0, 0.86, 0.2);
-    head.rotation.x = 0.35;
-    const mn = mesh(new THREE.BoxGeometry(0.08, 0.95, 0.14), dark);
-    mn.position.set(0, 0.45, -0.25);
-    const earGeo = new THREE.ConeGeometry(0.05, 0.16, 4);
-    for (const sx of [-0.09, 0.09]) {
-      const ear = mesh(earGeo, body);
-      ear.position.set(sx, 1.08, 0.0);
-      this.neck.add(ear);
+    const neckM = mesh(new THREE.CylinderGeometry(0.15, 0.24, 0.95, 6), body);
+    neckM.position.y = 0.38;
+    neckM.scale.x = 0.8;
+    const head = new THREE.Group();
+    head.position.set(0, 0.86, 0.06);
+    head.rotation.x = 0.55;
+    const skull = mesh(new THREE.BoxGeometry(0.24, 0.3, 0.4), body);
+    const muzzle = mesh(new THREE.BoxGeometry(0.19, 0.22, 0.36), body);
+    muzzle.position.set(0, -0.04, 0.34);
+    const nose = mesh(new THREE.BoxGeometry(0.2, 0.12, 0.08), dark);
+    nose.position.set(0, -0.08, 0.5);
+    const bridle = mesh(new THREE.BoxGeometry(0.21, 0.24, 0.04), mat(P.red));
+    bridle.position.set(0, -0.04, 0.24);
+    const eyeGeo = new THREE.BoxGeometry(0.02, 0.05, 0.05);
+    for (const sx of [-1, 1]) {
+      const eye = new THREE.Mesh(eyeGeo, mat(P.black));
+      eye.position.set(sx * 0.125, 0.05, 0.08);
+      const ear = mesh(new THREE.ConeGeometry(0.05, 0.17, 4), body);
+      ear.position.set(sx * 0.09, 0.22, -0.12);
+      head.add(eye, ear);
     }
-    this.neck.add(neckM, head, mn);
+    const forelock = mesh(new THREE.ConeGeometry(0.07, 0.22, 4), dark);
+    forelock.position.set(0, 0.14, 0.12);
+    forelock.rotation.x = 1.9;
+    head.add(skull, muzzle, nose, bridle, forelock);
+    this.neck.add(neckM, head);
+    for (let i = 0; i < 6; i++) {
+      const tuft = mesh(new THREE.BoxGeometry(0.07, 0.2, 0.2), dark);
+      tuft.position.set(0, 0.08 + i * 0.15, -0.2 + i * 0.012);
+      tuft.rotation.x = -0.25;
+      this.neck.add(tuft);
+    }
     inner.add(this.neck);
 
-    const legGeo = new THREE.BoxGeometry(0.15, 0.98, 0.17);
-    for (const [x, z] of [[-0.2, 0.68], [0.2, 0.68], [-0.2, -0.68], [0.2, -0.68]]) {
+    // Bacaklar: üst bacak + bilek + toynak
+    for (const [x, z] of [[-0.2, 0.66], [0.2, 0.66], [-0.2, -0.66], [0.2, -0.66]]) {
       const pivot = new THREE.Group();
-      pivot.position.set(x, 0.98, z);
-      const l = mesh(legGeo, body);
-      l.position.y = -0.49;
-      const hoof = mesh(new THREE.BoxGeometry(0.17, 0.12, 0.2), dark);
-      hoof.position.y = -0.92;
-      pivot.add(l, hoof);
+      pivot.position.set(x, 1.0, z);
+      const upper = mesh(new THREE.BoxGeometry(0.17, 0.52, 0.2), body);
+      upper.position.y = -0.24;
+      const shin = new THREE.Group();
+      shin.position.y = -0.5;
+      const lower = mesh(new THREE.BoxGeometry(0.11, 0.44, 0.12), body);
+      lower.position.y = -0.2;
+      const hoof = mesh(new THREE.BoxGeometry(0.15, 0.1, 0.17), dark);
+      hoof.position.y = -0.45;
+      shin.add(lower, hoof);
+      pivot.add(upper, shin);
       inner.add(pivot);
       this.legs.push(pivot);
+      this.shins.push(shin);
     }
 
-    this.tail.position.set(0, 1.45, -0.85);
-    const tailM = mesh(new THREE.ConeGeometry(0.1, 0.9, 5), dark);
-    tailM.position.y = -0.42;
-    this.tail.add(tailM);
-    this.tail.rotation.x = 0.35;
+    // Kuyruk: iki boğumlu
+    this.tail.position.set(0, 1.5, -0.95);
+    this.tail.rotation.x = 0.5;
+    const t1 = mesh(new THREE.CylinderGeometry(0.06, 0.09, 0.45, 5), dark);
+    t1.position.y = -0.2;
+    this.tailTip.position.y = -0.42;
+    const t2 = mesh(new THREE.ConeGeometry(0.1, 0.6, 5), dark);
+    t2.position.y = -0.28;
+    t2.rotation.x = Math.PI;
+    this.tailTip.add(t2);
+    this.tailTip.rotation.x = -0.35;
+    this.tail.add(t1, this.tailTip);
     inner.add(this.tail);
 
-    const saddle = mesh(new THREE.BoxGeometry(0.62, 0.1, 0.7), mat(P.red));
-    saddle.position.y = 1.6;
-    inner.add(saddle);
-    this.seat.position.set(0, 0.92, -0.05);
+    // Eyer ve kilim örtü
+    const cloth = mesh(new THREE.BoxGeometry(0.66, 0.05, 0.86), kilim(P.red, P.ochre, P.indigo));
+    cloth.position.y = 1.63;
+    const saddle = mesh(new THREE.BoxGeometry(0.42, 0.1, 0.5), mat(P.darkBrown));
+    saddle.position.y = 1.69;
+    inner.add(cloth, saddle);
+    this.seat.position.set(0, 0.94, -0.05);
     inner.add(this.seat);
   }
 
@@ -281,21 +453,25 @@ export class Horse extends Mover {
     rider.freeY = true;
     rider.group.position.set(0, 0, 0);
     rider.group.rotation.set(0, 0, 0);
-    rider.legL.rotation.set(-0.5, 0, -0.5);
-    rider.legR.rotation.set(-0.5, 0, 0.5);
+    rider.legL.rotation.set(-0.7, 0, -0.5);
+    rider.legR.rotation.set(-0.7, 0, 0.5);
+    rider.kneeL.rotation.x = rider.kneeR.rotation.x = 0.9;
     this.seat.add(rider.group);
   }
 
   update(t: number): void {
     const a = this.walkAmp;
-    const s = Math.sin(t * this.walkSpeed + this.phase);
-    const c = Math.cos(t * this.walkSpeed + this.phase);
-    this.legs[0].rotation.x = s * 0.6 * a;
-    this.legs[1].rotation.x = c * 0.6 * a;
-    this.legs[2].rotation.x = -c * 0.6 * a;
-    this.legs[3].rotation.x = -s * 0.6 * a;
-    this.rig.position.y = Math.abs(s) * 0.1 * a;
-    this.tail.rotation.z = Math.sin(t * 3 + this.phase) * 0.2;
+    const ph = t * this.walkSpeed + this.phase;
+    // Dört vuruşlu yürüyüş: her bacak çeyrek tur arayla basar.
+    [0, Math.PI, Math.PI / 2, Math.PI * 1.5].forEach((off, i) => {
+      this.legs[i].rotation.x = Math.sin(ph + off) * 0.55 * a;
+      this.shins[i].rotation.x = Math.max(0, -Math.cos(ph + off)) * 0.9 * a;
+    });
+    this.rig.position.y = Math.abs(Math.sin(ph)) * 0.08 * a;
+    this.neck.rotation.x = 0.7 + Math.sin(ph * 2) * 0.06 * a;
+    this.tail.rotation.z = Math.sin(t * 3 + this.phase) * 0.18;
+    this.tailTip.rotation.z = Math.sin(t * 3 + this.phase - 0.8) * 0.25;
+    this.tail.rotation.x = 0.5 + 0.35 * a;
   }
 }
 
@@ -350,7 +526,7 @@ export class Bird extends Mover {
 export const cast = {
   /** Dede Korkut: ak sakallı bilge ozan; kucağında kopuzu vardır. */
   dedeKorkut: () => {
-    const d = new Human({ robe: P.cream, trim: P.teal, hat: 'turban', hatColor: P.white, beard: P.white, long: true });
+    const d = new Human({ robe: P.cream, trim: P.teal, hat: 'turban', hatColor: P.white, beard: P.white, long: true, cloak: P.teal });
     const k = kopuz();
     k.position.set(0.12, 1.02, 0.34);
     k.rotation.z = 1.05;
