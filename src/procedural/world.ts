@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { createNoise2D } from 'simplex-noise';
 import type { GroundFn, Stage } from '../engine/stage';
+import { noInk } from '../engine/ink';
 import { P, glow, mat, mesh, rng } from './palette';
 
 /* ------------------------------------------------------------------ */
@@ -98,7 +99,7 @@ export function addSky(stage: Stage, preset: SkyPreset): Sky {
   const starGeo = new THREE.BufferGeometry();
   starGeo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
   const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 2.2, sizeAttenuation: false, transparent: true, opacity: d.stars, fog: false, depthWrite: false });
-  stage.add(new THREE.Points(starGeo, starMat));
+  stage.add(noInk(new THREE.Points(starGeo, starMat)));
 
   return {
     tweenTo(tl, to, dur, at) {
@@ -349,7 +350,7 @@ export function addFire(stage: Stage, x: number, z: number, scale = 1): THREE.Gr
     f.geometry.translate(0, h / 2, 0);
     f.position.set(off, 0.1, i === 1 ? 0.1 : -off);
     flames.push(f);
-    g.add(f);
+    g.add(noInk(f));
   });
   const light = new THREE.PointLight(0xff9040, 14 * scale, 22, 1.6);
   light.position.y = 1;
@@ -375,7 +376,7 @@ export function lightBeam(height = 40, radius = 3): THREE.Mesh {
   const geo = new THREE.CylinderGeometry(radius * 0.35, radius, height, 16, 1, true);
   geo.translate(0, height / 2, 0);
   const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xfff3c8, transparent: true, opacity: 0.13, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, fog: false }));
-  return m;
+  return noInk(m);
 }
 
 export function coin(): THREE.Mesh {

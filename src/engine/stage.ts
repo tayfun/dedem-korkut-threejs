@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { isSharedMaterial } from '../procedural/palette';
+import { InkPipeline } from './ink';
 
 export type TickFn = (t: number, dt: number) => void;
 export type GroundFn = (x: number, z: number) => number;
@@ -35,14 +36,16 @@ export class Stage {
   private time = 0;
   private baseFov = 42;
   private inset = 0;
+  private ink: InkPipeline;
 
   constructor(private canvas: HTMLCanvasElement) {
-    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.05;
+    this.ink = new InkPipeline(this.renderer);
     this.scene.add(this.root);
     this.resize();
     window.addEventListener('resize', () => this.resize());
@@ -101,6 +104,7 @@ export class Stage {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.renderer.setSize(w, h, false);
+    this.ink.setSize(w, h, this.renderer.getPixelRatio());
     const aspect = w / h;
     this.camera.aspect = aspect;
     // Dar (dikey) ekranlarda yatay görüş alanını korumak için dikey açıyı büyüt.
@@ -130,6 +134,6 @@ export class Stage {
     }
     for (const fn of this.ticks) fn(this.time, dt);
     this.camera.lookAt(this.look);
-    this.renderer.render(this.scene, this.camera);
+    this.ink.render(this.scene, this.camera);
   }
 }
