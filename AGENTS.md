@@ -27,7 +27,8 @@ Dede Korkut hikâyelerini yetişkin okura, özgün metne sadık kalarak günüm�
 - Ortak parçalar `src/procedural/` altında durur ve hikâyeler arasında yeniden kullanılır: `world.ts` (gök, dağ sıraları, bulut, arazi, çadır, ateş, eşyalar), `figures.ts` (insan, at, kuş), `life.ts` (ot, toz, duman, kuş sürüsü). Bir hikâyeye özel olanlar o hikâyenin `sets.ts` dosyasında kalır.
 - İnsanlar çizgi film tarzındadır: iri baş, iri gözler, yuvarlak hatlar, basamaklı gölge (`toon()` malzemesi). Çevre ise köşeli low-poly kalır; karakterler bu sayede öne çıkar. Yeni kişi ve hayvanları da `toon()` ile, yuvarlak geometrilerle (küre, kapsül, lathe) kur.
 - İnsan figürü eklemlidir: kollar `armL/armR` (dirsek kendiliğinden bükülür), bacaklar `legL/legR`, dizler `kneeL/kneeR`. Oturma ve diz çökme için `sit()`, `kneel()` ve `KNEEL_Y`, `KNEEL_KNEE` değerlerini kullan.
-- Baş küre değildir: `headPoint()` ile yontulur (çene, burun, elmacık kemiği, göz çukuru). Yüze eklenen her parça `onFace()` ile bu yüzeye oturtulur.
+- Baş küre değildir: `headPoint()` ile yontulur (çene, burun, elmacık kemiği, göz çukuru).
+- Yüz 2B çizilir (`src/procedural/face.ts`): göz, kaş, bıyık ve ağız eğrilerle bir tuvale çizilip başa giydirilir. Yüz tipleri: `man`, `woman`, `child`, `elder`, `grim`; yeni bir tip gerekiyorsa `KINDS` tablosuna ekle. Yüze 3B parça (göz, ağız) ekleme; sakal ve kulak dışında her şey çizimdir.
 - Yüz ifadesi anlatımın parçasıdır: her sahnede kişilere `setMood('neutral' | 'happy' | 'smug' | 'angry' | 'sad' | 'fear')` ver; sahne içinde değişecekse `tl.call(() => kisi.setMood(...), [], zaman)` kullan.
 - Çadır, ateş, kilim gibi zemine oturan her şey için `stage.keepClear(x, z, r)` çağır; yoksa içinden ot çıkar.
 - Telefonlarda akıcı çalışmalı: geometrileri ve malzemeleri paylaş, gereksiz draw call'dan kaçın, sahne değişirken kaynakları `dispose()` et. Sahne her karede iki kez çizilir (renk + çizgi geçişi); ağır sahnelerden kaçın.

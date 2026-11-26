@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { Mover } from '../engine/stage';
-import { DrawnFace } from './face';
+import { DrawnFace, type FaceKind } from './face';
 import { P, kilim, mat, mesh, toon } from './palette';
 import { kopuz } from './world';
 
@@ -28,8 +28,10 @@ export interface HumanOpts {
   long?: boolean;
   /** Yanaklarda pembelik. */
   blush?: boolean;
-  /** Yüz 3B parçalar yerine 2B çizimle yapılır (göz, kaş, bıyık, ağız). */
-  drawnFace?: boolean;
+  /** Yüz tipi; verilmezse sakal, başlık ve boydan çıkarılır. */
+  face?: FaceKind;
+  /** Göz rengi. */
+  eyes?: number;
   mood?: Mood;
   scale?: number;
   wings?: number;
@@ -38,7 +40,6 @@ export interface HumanOpts {
 /** Baş yarıçapı; yüz çizimleri bu kürenin üstüne yerleşir. */
 const HEAD = 0.3;
 const HIP = 0.72;
-const FRONT = new THREE.Vector3(0, 0, 1);
 
 /** Bir yönde (yaw sağ-sol, pitch yukarı-aşağı) birim vektör. */
 export const dir = (yaw: number, pitch: number) => new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
@@ -93,29 +94,12 @@ function headGeometry(): THREE.BufferGeometry {
   return headGeo;
 }
 
-/** Yassı bir parçayı yontulmuş başın yüzeyine, verilen yöne yapıştırır. */
-function onFace<T extends THREE.Object3D>(obj: T, yaw: number, pitch: number, lift = 0.008): T {
-  const d = dir(yaw, pitch);
-  obj.quaternion.setFromUnitVectors(FRONT, d);
-  obj.position.copy(headPoint(d)).addScaledVector(d, lift);
-  return obj;
-}
-
-const MOODS: Record<Mood, { brow: number; browLift: number; mouth: 'smile' | 'frown' | 'open'; size: number }> = {
-  neutral: { brow: 0, browLift: 0, mouth: 'smile', size: 0.6 },
-  happy: { brow: -0.12, browLift: 0.02, mouth: 'smile', size: 1.15 },
-  smug: { brow: 0.32, browLift: 0, mouth: 'smile', size: 1 },
-  angry: { brow: 0.5, browLift: -0.012, mouth: 'frown', size: 0.9 },
-  sad: { brow: -0.42, browLift: 0.005, mouth: 'frown', size: 0.8 },
-  fear: { brow: -0.3, browLift: 0.035, mouth: 'open', size: 1 },
-};
-
 /**
  * Çizgi film tarzı insan figürü: iri baş, iri gözler, yuvarlak hatlar, basamaklı gölge.
  * Önü +z yönüne bakar, ayakları orijindedir. Kollar ve bacaklar omuz/kalça ekseninden döner:
  * `rotation.x` eksi → öne, artı → arkaya; kollar için -3 → yukarı.
  * Dirsekler kolun duruşuna göre kendiliğinden bükülür; dizler `kneeL/kneeR` ile bükülür.
- * Yüz ifadesi `setMood` ile değişir; gözler kendiliğinden kırpılır.
+ * Yüz 2B çizilir (`face.ts`); ifade `setMood` ile değişir, gözler kendiliğinden kırpılır.
  */
 export class Human extends Mover {
   /** Yatma, eğilme gibi tüm gövde hareketleri için. */
@@ -146,10 +130,6 @@ export class Human extends Mover {
   private kneeSwingL = new THREE.Group();
   private kneeSwingR = new THREE.Group();
   private cloak?: THREE.Group;
-  private eyes: THREE.Group[] = [];
-  private brows: THREE.Group[] = [];
-  private browBase = 0;
-  private mouths: Partial<Record<'smile' | 'open', THREE.Mesh>> = {};
   private face?: DrawnFace;
   private mood: Mood = 'neutral';
   private phase = Math.random() * 10;
@@ -278,89 +258,18 @@ export class Human extends Mover {
   }
 
   private addFace(o: HumanOpts): void {
-    if (o.drawnFace) {
-      this.face = new DrawnFace({
-        skin: o.skin ?? P.skin,
-        brow: o.beard ?? o.moustache ?? o.hair ?? P.black,
-        moustache: o.moustache,
-        blush: o.blush,
-        noMouth: o.beard !== undefined,
-      });
-      this.head.add(this.face.mesh);
-      if (o.beard !== undefined) {
-        const b = mesh(new THREE.SphereGeometry(0.21, 16, 12), toon(o.beard));
-        b.scale.set(1.0, 1.3, 0.72);
-        b.position.set(0, -0.3, 0.12);
-        this.head.add(b);
-      }
-      return;
-    }
-    const white = toon(0xfbf6ee, { face: true });
-    const iris = toon(0x4a2c16, { face: true });
-    const black = toon(0x140c08, { face: true });
-    const browMat = toon(o.beard ?? o.moustache ?? o.hair ?? P.black, { face: true });
-    for (const sx of [-1, 1]) {
-      // Badem göz: yatık ak, renkli iris, gözbebeği, ışıltı ve üst kirpik çizgisi.
-      const eye = onFace(new THREE.Group(), sx * 0.43, 0.03, 0.01);
-      const sclera = new THREE.Mesh(new THREE.CircleGeometry(0.062, 20), white);
-      sclera.scale.y = 0.74;
-      const ring = new THREE.Mesh(new THREE.CircleGeometry(0.036, 16), iris);
-      ring.position.set(0, -0.002, 0.003);
-      const pupil = new THREE.Mesh(new THREE.CircleGeometry(0.018, 12), black);
-      pupil.position.set(0, -0.002, 0.006);
-      const glint = new THREE.Mesh(new THREE.CircleGeometry(0.011, 8), white);
-      glint.position.set(0.012, 0.014, 0.009);
-      const lash = new THREE.Mesh(new THREE.TorusGeometry(0.062, 0.008, 4, 14, Math.PI), black);
-      lash.scale.y = 0.78;
-      lash.position.z = 0.004;
-      eye.add(sclera, ring, pupil, glint, lash);
-      this.eyes.push(eye);
-      this.head.add(eye);
-
-      // Kavisli kaş: bir yayın üst dilimi; ifade için kendi ekseninde döner.
-      const arc = 1.15;
-      const browMesh = new THREE.Mesh(new THREE.TorusGeometry(0.1, 0.013, 4, 10, arc), browMat);
-      browMesh.rotation.z = Math.PI / 2 - arc / 2;
-      browMesh.position.y = -0.1;
-      const brow = new THREE.Group();
-      brow.add(browMesh);
-      brow.userData.side = sx;
-      const holder = onFace(new THREE.Group(), sx * 0.43, 0.33, 0.012);
-      holder.add(brow);
-      this.brows.push(brow);
-      this.head.add(holder);
-
-      if (o.blush) this.head.add(onFace(new THREE.Mesh(new THREE.CircleGeometry(0.05, 12), toon(0xe2907c, { face: true })), sx * 0.62, -0.24, 0.006));
-    }
-    this.browBase = 0;
-
-    // Burun altı gölgesi: burnu düz ışıkta da okunur kılar.
-    const shade = new THREE.Mesh(new THREE.CircleGeometry(0.05, 12, Math.PI, Math.PI), toon(new THREE.Color(o.skin ?? P.skin).multiplyScalar(0.72).getHex(), { face: true }));
-    shade.scale.y = 0.55;
-    this.head.add(onFace(shade, 0, -0.31, 0.004));
-
-    if (o.beard === undefined) {
-      const lip = toon(o.blush ? 0xa8433a : 0x7a3a2c, { face: true });
-      const pitch = o.moustache !== undefined ? -0.6 : -0.54;
-      const smile = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.008, 4, 14, Math.PI * 0.8), lip);
-      smile.geometry.rotateZ(Math.PI * 0.1);
-      const open = new THREE.Mesh(new THREE.CircleGeometry(0.042, 12), toon(0x4a1f1a, { face: true }));
-      open.scale.y = 1.2;
-      this.mouths = { smile, open };
-      for (const m of [smile, open]) {
-        const holder = onFace(new THREE.Group(), 0, pitch, 0.002);
-        holder.add(m);
-        this.head.add(holder);
-      }
-    }
-    if (o.moustache !== undefined || o.beard !== undefined) {
-      const hairMat = toon(o.moustache ?? o.beard!);
-      for (const sx of [-1, 1]) {
-        const m = onFace(mesh(new THREE.CapsuleGeometry(0.026, 0.085, 3, 8), hairMat), sx * 0.2, -0.43, 0.012);
-        m.rotateZ(sx * 1.2);
-        this.head.add(m);
-      }
-    }
+    // Yüz tipi verilmediyse görünüşten çıkar: ak sakal → yaşlı, başörtü → kadın, küçük boy → çocuk.
+    const kind: FaceKind = o.face ?? (o.beard === P.white ? 'elder' : o.hat === 'scarf' ? 'woman' : (o.scale ?? 1) < 0.8 ? 'child' : 'man');
+    this.face = new DrawnFace({
+      kind,
+      skin: o.skin ?? P.skin,
+      brow: o.beard ?? o.moustache ?? o.hair ?? P.black,
+      iris: o.eyes,
+      moustache: o.moustache ?? o.beard,
+      blush: o.blush,
+      noMouth: o.beard !== undefined,
+    });
+    this.head.add(this.face.mesh);
     if (o.beard !== undefined) {
       // Sakal çene hattını izler: yanaklardan başlar, çenenin altında toplanır.
       const b = mesh(new THREE.SphereGeometry(0.21, 16, 12), toon(o.beard));
@@ -486,24 +395,10 @@ export class Human extends Mover {
     }
   }
 
-  /** Yüz ifadesini değiştirir: kaşların eğimi ve ağzın biçimi. */
+  /** Yüz ifadesini değiştirir: kaşlar, göz kapakları ve ağız yeniden çizilir. */
   setMood(mood: Mood): this {
     this.mood = mood;
     this.face?.set(mood, this.eyesClosed);
-    const m = MOODS[mood];
-    for (const b of this.brows) {
-      b.rotation.z = m.brow * b.userData.side;
-      b.position.y = this.browBase + m.browLift;
-    }
-    const { smile, open } = this.mouths;
-    if (smile && open) {
-      open.visible = m.mouth === 'open';
-      smile.visible = !open.visible;
-      // Yay aşağı bakarsa gülümseme, yukarı bakarsa somurtma.
-      smile.rotation.z = m.mouth === 'frown' ? 0 : Math.PI;
-      smile.position.y = m.mouth === 'frown' ? -0.045 : 0.03;
-      smile.scale.setScalar(m.size);
-    }
     return this;
   }
 
@@ -543,7 +438,6 @@ export class Human extends Mover {
     }
     // Göz kırpma: birkaç saniyede bir, kısa süreli.
     const blink = this.eyesClosed || (t * 0.27 + this.phase) % 1 < 0.035;
-    for (const e of this.eyes) e.scale.y = blink ? 0.08 : 1;
     this.face?.set(this.mood, blink);
     if (this.cloak) this.cloak.rotation.x = 0.06 + 0.3 * a + Math.sin(t * 2.2 + this.phase) * 0.03 + Math.abs(s) * 0.06 * a;
     if (this.wingL && this.wingR) {
@@ -774,5 +668,5 @@ export const cast = {
     return d;
   },
   /** Azrail: koyu giysili, ak sakallı, al kanatlı. */
-  azrail: () => new Human({ robe: P.black, trim: P.crimson, hat: 'hood', skin: P.pale, beard: P.white, long: true, wings: P.red, scale: 1.15, mood: 'angry' }),
+  azrail: () => new Human({ robe: P.black, trim: P.crimson, hat: 'hood', skin: P.pale, beard: P.white, long: true, wings: P.red, scale: 1.15, mood: 'angry', face: 'grim', eyes: 0xb9c6d4 }),
 };
