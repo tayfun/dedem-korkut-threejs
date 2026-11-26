@@ -48,6 +48,7 @@ Yeni bir hikâye yazarken önce buradaki hazır parçaları kullan; yalnızca o 
   - Ham dosya `models/<ad>.glb` içinde durur: Meshy'de A duruşu, Mixamo iskeleti, parmak kemiksiz, silahsız ve eşyasız üretilir.
   - `blender -b --python tools/fit-model.py -- models/<ad>.glb src/models/<ad>.glb` ham dosyayı işler: omuz yüksekliğine göre ölçekler, üçgen sayısını düşürür (`tris=9000`; yüz korunur), kolları Human duruşuna indirir, ağırlıkları Human'ın kemiklerine (dokuz gövde kemiği ve `head`) toplar ve dokuyu bölge haritasına çevirir. Başı kodla kurmak istersen `neck=1.53` başı boyundan keser.
   - Bölge haritası renk taşımaz: kaftan, şerit, ten, saç, şalvar, çizme, kemer, maden, yüz çizgileri, ak ve taş bölgelerini taşır. Renkler çalışma anında `robe`, `trim`, `skin`, `hair` seçeneklerinden ve paletten verilir; aynı model her kişide başka renkte giyilir.
+  - Şimdiki modeller: `hatun` (`lady()`) ve `bey` (`warrior()`; yalnızca börklü, bıyıklı, sakalsız görünüşte, öbürleri kodla kurulur). Başlığın tepesi modelde ayrı bir renkteyse (lacivert) `hatColor` ile boyanır.
   - Yeni model eklerken `model.ts` içindeki `URLS` tablosuna ekle. Modelin özgün renkleri farklıysa `fit-model.py` içindeki `REF` renklerini ona göre düzelt.
 - Görünüm "canlanan minyatür"dür: köşeli low-poly çevre, çizgi film tarzı karakterler, sınırlı palet; üstüne mürekkep çizgisi, kâğıt dokusu ve kenar kararması (`src/engine/ink.ts`). Yeni renk eklemek yerine ortak paletten (`P`) seç.
 - Mürekkep çizgisi almaması gereken nesneleri (alev, ışık hüzmesi, yıldız, ot, duman) `noInk()` ile işaretle.

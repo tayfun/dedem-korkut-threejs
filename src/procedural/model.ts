@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import hatunUrl from '../models/noble-oguz-hatun.glb?url';
+import beyUrl from '../models/noble-steppe-guardian.glb?url';
 import { P, share, toonRamp } from './palette';
 
 /**
@@ -10,9 +11,9 @@ import { P, share, toonRamp } from './palette';
  * böylece aynı model farklı kişilerde farklı renkte giyilir.
  */
 
-export type ModelName = 'hatun';
+export type ModelName = 'hatun' | 'bey';
 
-const URLS: Record<ModelName, string> = { hatun: hatunUrl };
+const URLS: Record<ModelName, string> = { hatun: hatunUrl, bey: beyUrl };
 
 /** Human'ın kemik sırası (`human.ts` içindeki `B` ile aynı). */
 const BONES = ['root', 'armL', 'elbowL', 'armR', 'elbowR', 'legL', 'kneeL', 'legR', 'kneeR', 'head'];
@@ -34,6 +35,8 @@ export interface ModelColors {
   trim: number;
   skin: number;
   hair: number;
+  /** Başlığın tepesi (modelde ayrı bölgeyse). */
+  hat: number;
 }
 
 const models = new Map<ModelName, BodyModel>();
@@ -85,12 +88,12 @@ export const bodyModel = (name: ModelName): BodyModel | undefined => models.get(
 
 /** Modelin verilen renklerle boyanmış, paylaşılan malzemesi. */
 export function modelMaterial(name: ModelName, c: ModelColors): THREE.MeshToonMaterial {
-  const key = `${name}|${c.robe}|${c.trim}|${c.skin}|${c.hair}`;
+  const key = `${name}|${c.robe}|${c.trim}|${c.skin}|${c.hair}|${c.hat}`;
   let m = materials.get(key);
   if (!m) {
     const model = models.get(name)!;
-    // Bölge sırası fit-model.py ile aynı: 0 boş, kaftan, şerit, ten, saç, şalvar, çizme, kemer, maden, yüz çizgileri, ak, taş.
-    const colors = [c.robe, c.robe, c.trim, c.skin, c.hair, P.brown, P.darkBrown, P.darkBrown, P.gold, P.black, P.white, P.water];
+    // Bölge sırası fit-model.py ile aynı: 0 boş, kaftan, şerit, ten, saç, şalvar, çizme, kemer, maden, yüz çizgileri, ak, taş, başlık.
+    const colors = [c.robe, c.robe, c.trim, c.skin, c.hair, P.brown, P.darkBrown, P.darkBrown, P.gold, P.black, P.white, P.water, c.hat];
     const n = model.size;
     const cv = document.createElement('canvas');
     cv.width = cv.height = n;

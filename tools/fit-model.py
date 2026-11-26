@@ -109,7 +109,7 @@ cnt = valid.reshape(TEX, k, TEX, k).sum((1, 3))
 rgb = (full * valid[:, :, None]).reshape(TEX, k, TEX, k, 3).sum((1, 3)) / np.maximum(cnt, 1)[:, :, None]
 covered = cnt > 0
 REF = {'robe': (0x68, 0x29, 0x3a), 'dark': (0x34, 0x29, 0x27), 'brown': (0x62, 0x46, 0x3b), 'tan': (0xc2, 0xa1, 0x83), 'skin': (0xfb, 0xcd, 0xbd), 'grey': (0xbb, 0xba, 0xb8), 'white': (0xea, 0xe8, 0xe5),
-       'black': (0x0c, 0x0a, 0x0a), 'gem': (0x20, 0xc8, 0xc8)}
+       'black': (0x0c, 0x0a, 0x0a), 'gem': (0x20, 0xc8, 0xc8), 'blue': (0x17, 0x36, 0x66)}
 keys = list(REF); refs = np.array([REF[n] for n in keys], dtype=np.float32)
 cls = np.argmin(((rgb[:, :, None, :] - refs[None, None]) ** 2).sum(-1), -1)
 lum = lambda c: c @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
@@ -138,16 +138,16 @@ for f in range(nf):
 for _ in range(6):   # yüzlerin kenarında boş kalan noktalar komşu yüzün kuşağını alır
     for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
         nz = np.roll(zone, (dy, dx), (0, 1)); take = (zone == 255) & (nz != 255); zone[take] = nz[take]
-# Gözler ve kaşlar da kapkaradır; yüz kuşağında kara pikseller boşluk değil, çizgidir. Renkleri buna göre yeniden küçült.
-valid |= np.repeat(np.repeat(zone == 4, k, 0), k, 1) & ~inked
+# Gözler, kaşlar ve saç kapkara olabilir; baş kuşağında kara pikseller boşluk değil, boyadır. Renkleri buna göre yeniden küçült.
+valid |= np.repeat(np.repeat(zone >= 3, k, 0), k, 1) & ~inked   # başta: kara saç da olabilir
 cnt = valid.reshape(TEX, k, TEX, k).sum((1, 3))
 rgb = (full * valid[:, :, None]).reshape(TEX, k, TEX, k, 3).sum((1, 3)) / np.maximum(cnt, 1)[:, :, None]
 covered = cnt > 0
 cls = np.argmin(((rgb[:, :, None, :] - refs[None, None]) ** 2).sum(-1), -1)
 shade = np.clip(lum(rgb) / np.maximum(lum(refs)[cls], 40), 0.55, 1.3)
 ki = keys.index
-# Bölgeler (model.ts ile aynı sıra): 1 kaftan, 2 şerit, 3 ten, 4 saç, 5 şalvar, 6 çizme, 7 kemer, 8 maden, 9 mürekkep, 10 ak, 11 taş
-NSLOT, STEP = 11, 20
+# Bölgeler (model.ts ile aynı sıra): 1 kaftan, 2 şerit, 3 ten, 4 saç, 5 şalvar, 6 çizme, 7 kemer, 8 maden, 9 mürekkep, 10 ak, 11 taş, 12 başlık
+NSLOT, STEP = 12, 20
 slot = np.zeros((TEX, TEX), dtype=np.uint8)
 dark = (cls == ki('dark')) | (cls == ki('black')); pale = (cls == ki('grey')) | (cls == ki('white'))
 slot[cls == ki('robe')] = 1; slot[cls == ki('tan')] = 2; slot[cls == ki('skin')] = 3
@@ -166,7 +166,7 @@ for y0, x0 in zip(*np.nonzero(fmask)):
 sizes = np.array(sizes); print('FACE_BLOBS', sorted(sizes[1:].tolist(), reverse=True)[:16])
 slot[fmask & (sizes[lab] < INK_MAX * (TEX / 1024) ** 2)] = 9
 slot[pale] = 8; slot[pale & (zone >= 3)] = 10
-slot[cls == ki('gem')] = 11
+slot[cls == ki('gem')] = 11; slot[cls == ki('blue')] = 12
 # Yüzde çizgi kenarları (kara ile ten karışımı) şerit ya da maden sanılmasın: koyulaşmış ten olarak kalsın.
 def thin(m, r=4):   # çevresinde azınlıkta kalan noktalar: ince çizgi ve kenarlar
     n = np.zeros(m.shape, np.int16)

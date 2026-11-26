@@ -38,7 +38,12 @@ const LOOKS: HumanOpts[] = [
 export const villager = (i: number, extra: HumanOpts = {}) => new Human({ ...LOOKS[i % LOOKS.length], ...extra });
 
 /** Bey ya da yiğit: börklü, bıyıklı, pelerinli. Renkleri ve ayrıntıları `o` ile değiştir. */
-export const warrior = (o: HumanOpts = {}) => new Human({ robe: P.red, trim: P.ochre, hat: 'bork', hatColor: P.indigo, scale: 1.1, moustache: P.black, hair: P.black, cloak: P.indigo, ...o });
+export const warrior = (o: HumanOpts = {}) => {
+  const h: HumanOpts = { robe: P.red, trim: P.ochre, hat: 'bork', hatColor: P.indigo, scale: 1.1, moustache: P.black, hair: P.black, cloak: P.indigo, ...o };
+  // Hazır model börklü, bıyıklı, sakalsız bir beydir; başka görünüşler (sakallı, bıyıksız, kalpaklı) kodla kurulur.
+  const fits = h.hat === 'bork' && h.moustache !== undefined && h.beard === undefined && h.face === undefined;
+  return new Human({ ...h, model: 'model' in o ? o.model : fits ? 'bey' : undefined });
+};
 
 /** Hatun: başörtülü, örgülü, uzun etekli. */
 export const lady = (o: HumanOpts = {}) => new Human({ robe: P.teal, trim: P.ochre, hat: 'scarf', hatColor: P.cream, long: true, hair: P.black, blush: true, face: 'woman', model: 'hatun', ...o });
