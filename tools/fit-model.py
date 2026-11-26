@@ -5,11 +5,11 @@ Meshy'den gelen (Mixamo iskeletli, A duruşlu) GLB'yi sitenin insan iskeletine u
 
 Yaptıkları:
   1. Modeli omuz yüksekliği human.ts'teki SHOULDER_Y olacak biçimde ölçekler, ortalar.
-  2. Başı boyundan keser (baş, yüz ve başlık kodla kurulur; ifade değişebilsin diye).
+  2. Baş modelde kalır ve "head" kemiğine bağlanır (neck=1.53 verilirse boyundan kesilir).
   3. Üçgen sayısını düşürür.
   4. Kolları A duruşundan Human'ın duruşuna (yana sarkık) indirir.
-  5. Mixamo ağırlıklarını Human'ın dokuz kemiğine toplar (root, armL/R, elbowL/R, legL/R, kneeL/R).
-  6. Dokuyu "bölge haritası"na çevirir: R = bölge (kaftan, şerit, ten, saç, şalvar, çizme, kemer, maden),
+  5. Mixamo ağırlıklarını Human'ın kemiklerine toplar (root, armL/R, elbowL/R, legL/R, kneeL/R, head).
+  6. Dokuyu "bölge haritası"na çevirir: R = bölge (kaftan, şerit, ten, saç, şalvar, çizme, kemer, maden, yüz çizgileri, ak, taş),
      G = açıklık. Renkler çalışma anında paletten verilir (src/procedural/model.ts).
 """
 import bpy, bmesh, sys, json, os
@@ -19,9 +19,12 @@ from mathutils import Vector, Matrix
 argv = sys.argv[sys.argv.index('--') + 1:]
 SRC, OUT = argv[0], argv[1]
 OPT = dict(a.split('=') for a in argv[2:])
-TARGET_TRIS = int(OPT.get('tris', 8000))
-NECK_CUT = float(OPT.get('neck', 1.53))
+TARGET_TRIS = int(OPT.get('tris', 9000))
+NECK_CUT = float(OPT.get('neck', 0))   # > 0 ise baş bu yükseklikten kesilir (baş kodla kurulacaksa)
 TEX = int(OPT.get('tex', 1024))
+# Yüz kutusu, "headfront" kemiğine göre: [yarı genişlik, aşağı, yukarı, geriye]
+INK_MAX = int(OPT.get('ink', 200))   # yüzde bundan küçük koyu lekeler göz/kaş sayılır (1024 dokuda piksel)
+FACE = [float(x) for x in OPT.get('face', '0.11,0,0.26,0.10').split(',')]
 
 # human.ts ile aynı ölçüler
 SHOULDER_Y, ARM_TILT = 1.43, 0.14
@@ -56,11 +59,11 @@ J = {k: fitp(v) for k, v in J.items()}
 bm = bmesh.new(); bm.from_mesh(ob.data)
 for v in bm.verts: v.co = to_b(fitp(to_g(v.co)))
 
-# 2. Başı kes, kesikleri kapat
-r = bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=to_b((0, NECK_CUT, 0)), plane_no=(0, 0, 1), clear_outer=True)
+# 2. İstenirse başı kes, kesikleri kapat
+r = {'geom_cut': []} if NECK_CUT <= 0 else bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=to_b((0, NECK_CUT, 0)), plane_no=(0, 0, 1), clear_outer=True)
 cut = [e for e in r['geom_cut'] if isinstance(e, bmesh.types.BMEdge)]
-caps = bmesh.ops.holes_fill(bm, edges=cut, sides=0)['faces']
-caps = bmesh.ops.triangulate(bm, faces=caps)['faces']
+caps = bmesh.ops.holes_fill(bm, edges=cut, sides=0)['faces'] if cut else []
+caps = bmesh.ops.triangulate(bm, faces=caps)['faces'] if caps else []
 uv = bm.loops.layers.uv.active
 capset = set(caps)
 for f in caps:
@@ -73,9 +76,15 @@ tris_cut = len(ob.data.polygons)
 
 # 3. Sadeleştir
 if tris_cut > TARGET_TRIS:
+    # Baş (yüz) ayrıntısını koru: sadeleştirme ağırlığını gövdeye ver.
+    hg = [g.index for g in ob.vertex_groups if g.name.split(':')[-1] in ('Head', 'HeadTop_End', 'headfront')]
+    body = ob.vertex_groups.new(name='body')
+    for v in ob.data.vertices:
+        body.add([v.index], 1.0 - 0.75 * min(1.0, sum(g.weight for g in v.groups if g.group in hg)), 'REPLACE')
     mod = ob.modifiers.new('decimate', 'DECIMATE'); mod.ratio = TARGET_TRIS / tris_cut
+    mod.vertex_group = 'body'; mod.vertex_group_factor = 2.0
     new = bpy.data.meshes.new_from_object(ob.evaluated_get(bpy.context.evaluated_depsgraph_get()))
-    ob.modifiers.remove(mod); ob.data = new
+    ob.modifiers.remove(mod); ob.data = new; ob.vertex_groups.remove(ob.vertex_groups['body'])
 bm = bmesh.new(); bm.from_mesh(ob.data); bmesh.ops.triangulate(bm, faces=bm.faces[:]); bm.to_mesh(ob.data); bm.free()
 me = ob.data
 nv, nf = len(me.vertices), len(me.polygons)
@@ -99,7 +108,8 @@ for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)): valid &= np.roll(inked, (dy, d
 cnt = valid.reshape(TEX, k, TEX, k).sum((1, 3))
 rgb = (full * valid[:, :, None]).reshape(TEX, k, TEX, k, 3).sum((1, 3)) / np.maximum(cnt, 1)[:, :, None]
 covered = cnt > 0
-REF = {'robe': (0x68, 0x29, 0x3a), 'dark': (0x34, 0x29, 0x27), 'brown': (0x62, 0x46, 0x3b), 'tan': (0xc2, 0xa1, 0x83), 'skin': (0xfb, 0xcd, 0xbd), 'grey': (0xbb, 0xba, 0xb8), 'white': (0xea, 0xe8, 0xe5)}
+REF = {'robe': (0x68, 0x29, 0x3a), 'dark': (0x34, 0x29, 0x27), 'brown': (0x62, 0x46, 0x3b), 'tan': (0xc2, 0xa1, 0x83), 'skin': (0xfb, 0xcd, 0xbd), 'grey': (0xbb, 0xba, 0xb8), 'white': (0xea, 0xe8, 0xe5),
+       'black': (0x0c, 0x0a, 0x0a), 'gem': (0x20, 0xc8, 0xc8)}
 keys = list(REF); refs = np.array([REF[n] for n in keys], dtype=np.float32)
 cls = np.argmin(((rgb[:, :, None, :] - refs[None, None]) ** 2).sum(-1), -1)
 lum = lambda c: c @ np.array([0.299, 0.587, 0.114], dtype=np.float32)
@@ -107,10 +117,13 @@ shade = np.clip(lum(rgb) / lum(refs)[cls], 0.55, 1.3)
 
 luv = np.zeros(len(me.loops) * 2); me.uv_layers.active.data.foreach_get('uv', luv); luv = luv.reshape(-1, 2)
 lv = np.zeros(len(me.loops), dtype=np.int64); me.loops.foreach_get('vertex_index', lv)
-fuv = luv.reshape(nf, 3, 2) * TEX; fy = P[lv].reshape(nf, 3, 3)[:, :, 1].mean(1)
+fuv = luv.reshape(nf, 3, 2) * TEX; fcen = P[lv].reshape(nf, 3, 3).mean(1); fy = fcen[:, 1]
 fc = np.clip(fuv.mean(1).astype(int), 0, TEX - 1); fcls = cls[fc[:, 1], fc[:, 0]]
-belt_y = float(np.median(fy[(fcls == keys.index('brown')) & (fy > 0.8)]))
-zone_f = np.where(fy > belt_y + 0.05, 2, np.where(fy > 0.62, 1, 0)).astype(np.uint8)
+belt_y = float(np.median(fy[(fcls == keys.index('brown')) & (fy > 0.8) & (fy < J['Neck'][1] - 0.1)]))
+# Kuşaklar: 0 diz altı, 1 etek, 2 kemer üstü, 3 baş, 4 yüz (gözler ve kaşlar burada "mürekkep"tir, saç değil).
+hf = J['headfront']
+in_face = (np.abs(fcen[:, 0] - hf[0]) < FACE[0]) & (fcen[:, 1] > hf[1] - FACE[1]) & (fcen[:, 1] < hf[1] + FACE[2]) & (fcen[:, 2] > hf[2] - FACE[3])
+zone_f = np.where(in_face, 4, np.where(fy > J['Neck'][1], 3, np.where(fy > belt_y + 0.05, 2, np.where(fy > 0.62, 1, 0)))).astype(np.uint8)
 zone = np.full((TEX, TEX), 255, dtype=np.uint8)
 for f in range(nf):
     t = fuv[f]; lo = np.maximum(np.floor(t.min(0) - 1).astype(int), 0); hi = np.minimum(np.ceil(t.max(0) + 1).astype(int), TEX - 1)
@@ -125,25 +138,55 @@ for f in range(nf):
 for _ in range(6):   # yüzlerin kenarında boş kalan noktalar komşu yüzün kuşağını alır
     for dy, dx in ((0, 1), (0, -1), (1, 0), (-1, 0)):
         nz = np.roll(zone, (dy, dx), (0, 1)); take = (zone == 255) & (nz != 255); zone[take] = nz[take]
+# Gözler ve kaşlar da kapkaradır; yüz kuşağında kara pikseller boşluk değil, çizgidir. Renkleri buna göre yeniden küçült.
+valid |= np.repeat(np.repeat(zone == 4, k, 0), k, 1) & ~inked
+cnt = valid.reshape(TEX, k, TEX, k).sum((1, 3))
+rgb = (full * valid[:, :, None]).reshape(TEX, k, TEX, k, 3).sum((1, 3)) / np.maximum(cnt, 1)[:, :, None]
+covered = cnt > 0
+cls = np.argmin(((rgb[:, :, None, :] - refs[None, None]) ** 2).sum(-1), -1)
+shade = np.clip(lum(rgb) / np.maximum(lum(refs)[cls], 40), 0.55, 1.3)
 ki = keys.index
-SLOT = {'robe': 1, 'trim': 2, 'skin': 3, 'hair': 4, 'pants': 5, 'boots': 6, 'belt': 7, 'metal': 8}
+# Bölgeler (model.ts ile aynı sıra): 1 kaftan, 2 şerit, 3 ten, 4 saç, 5 şalvar, 6 çizme, 7 kemer, 8 maden, 9 mürekkep, 10 ak, 11 taş
+NSLOT, STEP = 11, 20
 slot = np.zeros((TEX, TEX), dtype=np.uint8)
+dark = (cls == ki('dark')) | (cls == ki('black')); pale = (cls == ki('grey')) | (cls == ki('white'))
 slot[cls == ki('robe')] = 1; slot[cls == ki('tan')] = 2; slot[cls == ki('skin')] = 3
-slot[cls == ki('dark')] = 5; slot[(cls == ki('dark')) & (zone == 2)] = 4
+slot[dark] = 5; slot[dark & (zone >= 2)] = 4
 slot[cls == ki('brown')] = 7; slot[(cls == ki('brown')) & (zone == 0)] = 6
-slot[(cls == ki('grey')) | (cls == ki('white'))] = 8
+# Yüzdeki koyu lekeler: küçük olanlar göz ve kaştır (mürekkep), büyük olanlar alna düşen saçtır.
+fmask = dark & (zone == 4); lab = np.zeros(fmask.shape, np.int32); sizes = [0]
+for y0, x0 in zip(*np.nonzero(fmask)):
+    if lab[y0, x0]: continue
+    n = len(sizes); stack = [(y0, x0)]; lab[y0, x0] = n; c = 0
+    while stack:
+        y, x = stack.pop(); c += 1
+        for yy, xx in ((y + 1, x), (y - 1, x), (y, x + 1), (y, x - 1)):
+            if 0 <= yy < TEX and 0 <= xx < TEX and fmask[yy, xx] and not lab[yy, xx]: lab[yy, xx] = n; stack.append((yy, xx))
+    sizes.append(c)
+sizes = np.array(sizes); print('FACE_BLOBS', sorted(sizes[1:].tolist(), reverse=True)[:16])
+slot[fmask & (sizes[lab] < INK_MAX * (TEX / 1024) ** 2)] = 9
+slot[pale] = 8; slot[pale & (zone >= 3)] = 10
+slot[cls == ki('gem')] = 11
+# Yüzde çizgi kenarları (kara ile ten karışımı) şerit ya da maden sanılmasın: koyulaşmış ten olarak kalsın.
+def thin(m, r=4):   # çevresinde azınlıkta kalan noktalar: ince çizgi ve kenarlar
+    n = np.zeros(m.shape, np.int16)
+    for dy in range(-r, r + 1):
+        for dx in range(-r, r + 1): n += np.roll(m, (dy, dx), (0, 1))
+    return m & (n < 0.4 * (2 * r + 1) ** 2)
+edge = thin((zone == 4) & ((cls == ki('tan')) | (cls == ki('grey')) | (cls == ki('brown'))))
+slot[edge] = 3; shade[edge] = np.clip(lum(rgb)[edge] / lum(refs)[ki('skin')], 0.55, 1.3)
 slot[~covered] = 0
 sh = (np.round(shade * 16) * 8).clip(0, 255).astype(np.uint8)   # 16 basamak: dosya küçülür
 sh[np.abs(shade - 1) < 0.08] = 128
 # Benekleri temizle: özgün dokudaki çizikler yanlış bölgeye düşer; çevresinde azınlıkta kalan nokta komşularına uyar.
 R = 3
-count = np.zeros((9, TEX, TEX), dtype=np.int16)
+count = np.zeros((NSLOT + 1, TEX, TEX), dtype=np.int16)
 for dy in range(-R, R + 1):
     for dx in range(-R, R + 1):
         sl = np.roll(slot, (dy, dx), (0, 1))
-        for i in range(1, 9): count[i] += sl == i
+        for i in range(1, NSLOT + 1): count[i] += sl == i
 own = np.take_along_axis(count, slot[None].astype(np.int64), 0)[0]
-speck = (slot > 0) & (own < 0.3 * (2 * R + 1) ** 2)
+speck = (slot > 0) & (slot < 9) & (zone != 4) & (own < 0.3 * (2 * R + 1) ** 2)   # yüzün ince çizgilerine dokunma
 slot[speck] = count.argmax(0)[speck]; sh[speck] = 128
 sh[slot == 0] = 128
 # Ada kenarlarını dışa doğru taşır: mipmap ve süzmede dikiş görünmesin.
@@ -155,7 +198,7 @@ for _ in range(12):
         take = empty & (ns != 0) & (slot == 0)
         slot[take] = ns[take]; sh[take] = nh[take]
 out_px = np.zeros((TEX, TEX, 4), dtype=np.float32)
-out_px[:, :, 0] = slot * 28 / 255; out_px[:, :, 1] = sh / 255; out_px[:, :, 3] = 1
+out_px[:, :, 0] = slot * STEP / 255; out_px[:, :, 1] = sh / 255; out_px[:, :, 3] = 1
 img = bpy.data.images.new('slots', TEX, TEX, alpha=False); img.colorspace_settings.name = 'Non-Color'
 img.pixels.foreach_set(out_px.ravel()); img.file_format = 'PNG'
 img.filepath_raw = OUT.replace('.glb', '.slots.png'); img.save(); img.pack()
@@ -178,11 +221,11 @@ for sd, sign in (('Left', 1), ('Right', -1)):
 P = newP
 
 # 6. Ağırlıkları Human kemiklerine topla. Mixamo'nun "Left"i kişinin solu (+x); Human'da +x "R"dir.
-BONES = ['root', 'armL', 'elbowL', 'armR', 'elbowR', 'legL', 'kneeL', 'legR', 'kneeR']
+BONES = ['root', 'armL', 'elbowL', 'armR', 'elbowR', 'legL', 'kneeL', 'legR', 'kneeR', 'head']
 MAP = {'Arm': 'arm', 'ForeArm': 'elbow', 'Hand': 'elbow', 'HandMiddle4': 'elbow', 'UpLeg': 'leg', 'Leg': 'knee', 'Foot': 'knee', 'ToeBase': 'knee', 'Toe_End': 'knee'}
 NW = np.zeros((nv, len(BONES)))
 for i, n in enumerate(names):
-    tgt = 'root'
+    tgt = 'head' if n in ('Head', 'HeadTop_End', 'headfront') else 'root'
     for sd, hs in (('Left', 'R'), ('Right', 'L')):
         if n.startswith(sd) and n[len(sd):] in MAP: tgt = MAP[n[len(sd):]] + hs
     NW[:, BONES.index(tgt)] += W[:, i]
@@ -199,7 +242,7 @@ for vi in range(nv):
 bpy.data.objects.remove(arm)
 ad = bpy.data.armatures.new('rig'); rig = bpy.data.objects.new('rig', ad); bpy.context.scene.collection.objects.link(rig)
 bpy.context.view_layer.objects.active = rig; bpy.ops.object.mode_set(mode='EDIT')
-JOINT = {'root': (0, 0, 0)}
+JOINT = {'root': (0, 0, 0), 'head': (0, J['Neck'][1], 0)}   # baş boyun ekleminden döner
 for hs, sign in (('L', -1), ('R', 1)):
     sh0 = np.array([sign * shoulder_x, SHOULDER_Y, 0]); d = np.array([sign * np.sin(ARM_TILT), -np.cos(ARM_TILT), 0])
     JOINT['arm' + hs] = sh0; JOINT['elbow' + hs] = sh0 + UPPER * d
@@ -207,7 +250,7 @@ for hs, sign in (('L', -1), ('R', 1)):
 eb = {}
 for b in BONES:
     e = ad.edit_bones.new(b); e.head = to_b(JOINT[b]); e.tail = e.head + Vector((0, 0, 0.1)); eb[b] = e
-for b in BONES[1:]: eb[b].parent = eb[{'arm': 'root', 'leg': 'root', 'elbow': 'arm' + b[-1], 'knee': 'leg' + b[-1]}[b[:-1]]]
+for b in BONES[1:]: eb[b].parent = eb[{'arm': 'root', 'leg': 'root', 'hea': 'root', 'elbow': 'arm' + b[-1], 'knee': 'leg' + b[-1]}[b[:-1]]]
 bpy.ops.object.mode_set(mode='OBJECT')
 ob.parent = rig; ob.modifiers.new('rig', 'ARMATURE').object = rig
 
@@ -223,5 +266,5 @@ for a in list(bpy.data.actions): bpy.data.actions.remove(a)
 ob.name = me.name = 'body'
 bpy.ops.export_scene.gltf(filepath=OUT, export_format='GLB', export_animations=False, export_tangents=False, export_skins=True, export_yup=True, export_image_format='AUTO')
 os.remove(img.filepath_raw)   # harita GLB'nin içinde
-print('FIT ' + json.dumps({'scale': round(s, 4), 'shoulder_x': round(shoulder_x, 4), 'belt_y': round(belt_y, 3), 'tris_after_cut': tris_cut, 'tris': nf, 'verts': nv,
-    'joints': {k: [round(float(x), 3) for x in v] for k, v in J.items() if k in ('Hips', 'LeftArm', 'LeftElbow', 'LeftWrist', 'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'Neck', 'Head', 'HeadTop_End')}}))
+print('FIT ' + json.dumps({'head_tris': int((fy > J['Neck'][1]).sum()), 'face_tris': int(in_face.sum()), 'scale': round(s, 4), 'shoulder_x': round(shoulder_x, 4), 'belt_y': round(belt_y, 3), 'tris_after_cut': tris_cut, 'tris': nf, 'verts': nv,
+    'joints': {k: [round(float(x), 3) for x in v] for k, v in J.items() if k in ('headfront', 'Hips', 'LeftArm', 'LeftElbow', 'LeftWrist', 'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'Neck', 'Head', 'HeadTop_End')}}))

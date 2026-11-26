@@ -6,7 +6,7 @@ Dede Korkut hikâyelerini yetişkin okura, özgün metne sadık kalarak günüm�
 
 - Ziyaretçi bir hikâye seçer, hikâye sahne sahne ilerler.
 - Her sahnede kısa, sade bir metin ve o metne eşlik eden prosedürel bir 3B animasyon bulunur.
-- Hazır video ya da resim yok: görseller kodla üretilir. Tek istisna gövde modelleridir (`models/`, `tools/fit-model.py`); baş ve yüz her durumda kodla kurulur.
+- Hazır video ya da resim yok: görseller kodla üretilir. Tek istisna hazır kişi modelleridir (`models/`, `tools/fit-model.py`).
 - Telefon ve masaüstünde akıcı çalışır.
 
 ## 2. Seçilen Hikâyeler

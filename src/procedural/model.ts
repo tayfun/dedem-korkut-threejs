@@ -5,7 +5,7 @@ import { P, share, toonRamp } from './palette';
 
 /**
  * Hazır gövde modelleri: Meshy'de üretilip `tools/fit-model.py` ile Human iskeletine uydurulmuş GLB'ler.
- * Modelde baş yoktur; baş, yüz ve başlık `human.ts` içinde kodla kurulur (ifade değişebilsin diye).
+ * Baş da modelden gelir ve Human'ın `head` kemiğine bağlıdır; yüzü dokuya işlidir, ifadesi değişmez.
  * Dokusu renk değil "bölge haritası"dır: kaftan, şerit, ten, saç… renkleri burada paletten verilir,
  * böylece aynı model farklı kişilerde farklı renkte giyilir.
  */
@@ -15,13 +15,15 @@ export type ModelName = 'hatun';
 const URLS: Record<ModelName, string> = { hatun: hatunUrl };
 
 /** Human'ın kemik sırası (`human.ts` içindeki `B` ile aynı). */
-const BONES = ['root', 'armL', 'elbowL', 'armR', 'elbowR', 'legL', 'kneeL', 'legR', 'kneeR'];
+const BONES = ['root', 'armL', 'elbowL', 'armR', 'elbowR', 'legL', 'kneeL', 'legR', 'kneeR', 'head'];
 
 export interface BodyModel {
   geometry: THREE.BufferGeometry;
   /** Omuz ekleminin gövde ekseninden uzaklığı. */
   shoulder: number;
-  /** Bölge haritası: RGBA, R = bölge × 28, G = açıklık (128 = 1). */
+  /** Boyun ekleminin yüksekliği; baş buradan döner. */
+  neck: number;
+  /** Bölge haritası: RGBA, R = bölge × 20, G = açıklık (128 = 1). */
   slots: Uint8ClampedArray;
   size: number;
 }
@@ -55,6 +57,7 @@ async function load(name: ModelName): Promise<void> {
   for (let i = 0; i < si.count; i++) si.setXYZW(i, order[si.getX(i)], order[si.getY(i)], order[si.getZ(i)], order[si.getW(i)]);
   const armR = src.skeleton.bones.find((b) => b.name === 'armR')!;
   const shoulder = armR.getWorldPosition(new THREE.Vector3()).x;
+  const neck = src.skeleton.bones.find((b) => b.name === 'head')!.getWorldPosition(new THREE.Vector3()).y;
 
   const map = (src.material as THREE.MeshStandardMaterial).map!;
   const img = map.image as ImageBitmap;
@@ -65,7 +68,7 @@ async function load(name: ModelName): Promise<void> {
   const slots = g.getImageData(0, 0, img.width, img.height).data;
   map.dispose();
   (src.material as THREE.Material).dispose();
-  models.set(name, { geometry, shoulder, slots, size: img.width });
+  models.set(name, { geometry, shoulder, neck, slots, size: img.width });
 }
 
 /** Bütün modelleri bir kez yükler. Yükleme başarısız olursa figürler kodla kurulan gövdeyle çizilir. */
@@ -86,8 +89,8 @@ export function modelMaterial(name: ModelName, c: ModelColors): THREE.MeshToonMa
   let m = materials.get(key);
   if (!m) {
     const model = models.get(name)!;
-    // Bölge sırası fit-model.py ile aynı: 0 boş, kaftan, şerit, ten, saç, şalvar, çizme, kemer, maden.
-    const colors = [c.robe, c.robe, c.trim, c.skin, c.hair, P.brown, P.darkBrown, P.darkBrown, P.gold];
+    // Bölge sırası fit-model.py ile aynı: 0 boş, kaftan, şerit, ten, saç, şalvar, çizme, kemer, maden, yüz çizgileri, ak, taş.
+    const colors = [c.robe, c.robe, c.trim, c.skin, c.hair, P.brown, P.darkBrown, P.darkBrown, P.gold, P.black, P.white, P.water];
     const n = model.size;
     const cv = document.createElement('canvas');
     cv.width = cv.height = n;
@@ -96,7 +99,7 @@ export function modelMaterial(name: ModelName, c: ModelColors): THREE.MeshToonMa
     const s = model.slots;
     const d = out.data;
     for (let i = 0; i < s.length; i += 4) {
-      const color = colors[Math.min(8, Math.round(s[i] / 28))];
+      const color = colors[Math.min(colors.length - 1, Math.round(s[i] / 20))];
       const k = s[i + 1] / 128;
       d[i] = Math.min(255, ((color >> 16) & 255) * k);
       d[i + 1] = Math.min(255, ((color >> 8) & 255) * k);

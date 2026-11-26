@@ -34,7 +34,7 @@ export interface HumanOpts {
   mood?: Mood;
   scale?: number;
   wings?: number;
-  /** Hazır gövde modeli (`model.ts`); yüklenmemişse gövde kodla kurulur. Baş her durumda kodla kurulur. */
+  /** Hazır model (`model.ts`): gövde ve baş modelden gelir; `hat`, `eyes`, `blush` ve ifade etkisizdir. Yüklenmemişse figür kodla kurulur. */
   model?: ModelName;
 }
 
@@ -356,6 +356,10 @@ export class Human extends Mover {
       this.rig.add(swing);
     }
 
+    // Baş boyundan döner: modelde boyun ekleminden, kodla kurulan başta başın ortasından.
+    this.head.position.y = model ? model.neck : HEAD_Y;
+    this.rig.add(this.head);
+
     // Gövde: tek parça, kemiklere bağlı yüzey (kaftan, kollar, bacaklar).
     this.group.updateMatrixWorld(true);
     const bones = [this.rig, this.armL, this.elbowL, this.armR, this.elbowR, this.legL, this.kneeL, this.legR, this.kneeR];
@@ -367,7 +371,8 @@ export class Human extends Mover {
     body.frustumCulled = false;
     this.rig.add(body);
     body.updateMatrixWorld(true);
-    body.bind(new THREE.Skeleton(bones as unknown as THREE.Bone[]), body.matrixWorld);
+    // Modelin başı da aynı yüzeydedir; onuncu kemik baştır.
+    body.bind(new THREE.Skeleton((model ? [...bones, this.head] : bones) as unknown as THREE.Bone[]), body.matrixWorld);
 
     // Kuşak (kilim desenli) ve toka: bel kemiğe katı bağlı olduğu için ayrı parça.
     const belt = mesh(new THREE.CylinderGeometry(1, 1, 0.085, 22), band);
@@ -381,8 +386,18 @@ export class Human extends Mover {
     placket.rotation.x = -0.06;
     if (!model) this.rig.add(belt, buckle, placket);
 
-    // Baş ve yüz
-    this.head.position.y = HEAD_Y;
+    // Baş ve yüz: modelde hazır gelir (yüzü dokuya işlidir; ifade ve göz kırpma yoktur).
+    if (!model) this.addHead(o, kind, skin, trim, robeColor);
+
+    if (o.cloak !== undefined) this.addCloak(o.cloak);
+    if (o.wings !== undefined) this.addWings(o.wings);
+    if (o.scale) this.group.scale.setScalar(o.scale);
+    this.setMood(o.mood ?? 'neutral');
+    if (o.blind) this.blind();
+  }
+
+  /** Kodla kurulan baş: yontulmuş kafatası, kulaklar, çizilmiş yüz, saç ve başlık. */
+  private addHead(o: HumanOpts, kind: FaceKind, skin: THREE.Material, trim: THREE.Material, robeColor: number): void {
     this.skull.scale.setScalar(HEAD_K);
     this.head.add(this.skull);
     this.skull.add(mesh(headGeometry(), skin));
@@ -398,15 +413,8 @@ export class Human extends Mover {
       }
     }
     this.addFace(o, kind);
-    this.addHair(o, trim, kind, !!model);
+    this.addHair(o, trim, kind);
     this.addHat(hatKind, o.hatColor ?? o.trim ?? P.red, robeColor);
-    this.rig.add(this.head);
-
-    if (o.cloak !== undefined) this.addCloak(o.cloak);
-    if (o.wings !== undefined) this.addWings(o.wings);
-    if (o.scale) this.group.scale.setScalar(o.scale);
-    this.setMood(o.mood ?? 'neutral');
-    if (o.blind) this.blind();
   }
 
   private addFace(o: HumanOpts, kind: FaceKind): void {
@@ -429,7 +437,7 @@ export class Human extends Mover {
     }
   }
 
-  private addHair(o: HumanOpts, trim: THREE.Material, kind: FaceKind, model = false): void {
+  private addHair(o: HumanOpts, trim: THREE.Material, kind: FaceKind): void {
     if (o.hair === undefined) return;
     const hair = toon(o.hair);
     const hat = o.hat ?? 'bork';
@@ -475,7 +483,7 @@ export class Human extends Mover {
       fall.position.set(0, -0.46, -0.05);
       fall.receiveShadow = false;
       this.skull.add(fall);
-    } else if (o.long && woman && !model) {
+    } else if (o.long && woman) {
       // Omuzlardan öne sarkan iki örgü.
       for (const sx of [-1, 1]) {
         for (let i = 0; i < 6; i++) {
