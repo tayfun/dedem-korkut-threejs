@@ -74,6 +74,12 @@ export function glow(color: number, opacity = 1): THREE.MeshBasicMaterial {
   return m;
 }
 
+/** Bir malzemeyi paylaşılan olarak işaretler: sahne temizlenirken bırakılmaz. */
+export function share<T extends THREE.Material>(m: T): T {
+  shared.add(m);
+  return m;
+}
+
 export function isSharedMaterial(m: THREE.Material): boolean {
   return shared.has(m);
 }

@@ -1,5 +1,6 @@
 import './styles/main.css';
 import { Stage } from './engine/stage';
+import { loadModels } from './procedural/model';
 import { stories } from './stories';
 import { showHome } from './ui/home';
 import { showReader } from './ui/reader';
@@ -16,6 +17,7 @@ async function route(): Promise<void> {
   const [, kind, slug, sceneNo] = location.hash.replace(/^#/, '').split('/');
   cleanup?.();
   cleanup = undefined;
+  await loadModels(); // figürler kurulmadan önce gövde modelleri hazır olmalı
   const meta = kind === 'hikaye' ? stories.find((s) => s.slug === slug && s.load) : undefined;
   if (meta?.load) {
     app.innerHTML = '<p class="loading">Yükleniyor…</p>';

@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { Mover } from '../engine/stage';
 import { DrawnFace, type FaceKind, type Mood } from './face';
 import { HEAD, dir, headGeometry, headPoint } from './head';
+import { bodyModel, modelMaterial, type ModelName } from './model';
 import { P, kilim, mesh, toon, toonVertex } from './palette';
 
 export type { FaceKind, Mood } from './face';
@@ -33,6 +34,8 @@ export interface HumanOpts {
   mood?: Mood;
   scale?: number;
   wings?: number;
+  /** Hazır gövde modeli (`model.ts`); yüklenmemişse gövde kodla kurulur. Baş her durumda kodla kurulur. */
+  model?: ModelName;
 }
 
 /* ------------------------------ Ölçüler ----------------------------- */
@@ -305,7 +308,9 @@ export class Human extends Mover {
     this.group.add(this.rig);
 
     const kind = faceKind(o);
-    const build = BUILDS[kind];
+    const model = o.model ? bodyModel(o.model) : undefined;
+    // Modelin omuzları kendi genişliğindedir; kollar oradan döner.
+    const build = model ? { ...BUILDS[kind], shoulder: model.shoulder } : BUILDS[kind];
     // İskelet: yürüme ve duruş grupları aynı zamanda gövde yüzeyinin kemikleridir.
     const legs = [
       [-1, this.legSwingL, this.legL, this.kneeSwingL, this.kneeL],
@@ -324,7 +329,7 @@ export class Human extends Mover {
       leg.add(kneeSwing);
       swing.add(leg);
       this.rig.add(swing);
-      if (o.long) foot.visible = false;
+      if (o.long || model) foot.visible = false;
     }
     const arms = [
       [-1, this.swingL, this.armL, this.elbowL, this.handL],
@@ -344,7 +349,7 @@ export class Human extends Mover {
       const thumb = mesh(new THREE.CapsuleGeometry(0.014, 0.035, 3, 6), skin);
       thumb.position.set(-side * 0.04, -0.01, 0.025);
       thumb.rotation.z = -side * 0.6;
-      hand.add(palm, fingers, thumb);
+      if (!model) hand.add(palm, fingers, thumb); // modelin kendi elleri var
       elbow.add(hand);
       arm.add(elbow);
       swing.add(arm);
@@ -354,7 +359,9 @@ export class Human extends Mover {
     // Gövde: tek parça, kemiklere bağlı yüzey (kaftan, kollar, bacaklar).
     this.group.updateMatrixWorld(true);
     const bones = [this.rig, this.armL, this.elbowL, this.armR, this.elbowR, this.legL, this.kneeL, this.legR, this.kneeR];
-    const body = new THREE.SkinnedMesh(bodyGeometry(bones, { robe: robeColor, trim: trimColor, skin: o.skin ?? P.skin, long: !!o.long, build }), toonVertex());
+    const body = model
+      ? new THREE.SkinnedMesh(model.geometry, modelMaterial(o.model!, { robe: robeColor, trim: trimColor, skin: o.skin ?? P.skin, hair: o.hair ?? P.black }))
+      : new THREE.SkinnedMesh(bodyGeometry(bones, { robe: robeColor, trim: trimColor, skin: o.skin ?? P.skin, long: !!o.long, build }), toonVertex());
     body.castShadow = true;
     body.receiveShadow = false; // esneyen yüzey kendi üstüne gölge düşürünce etekte koyu şeritler oluşuyor
     body.frustumCulled = false;
@@ -372,7 +379,7 @@ export class Human extends Mover {
     const placket = mesh(new THREE.BoxGeometry(0.05, SHOULDER_Y - WAIST_Y + 0.02, 0.02), trim);
     placket.position.set(0, (SHOULDER_Y + WAIST_Y) / 2 + 0.01, build.chest[1] - 0.012 + build.bust * 0.7);
     placket.rotation.x = -0.06;
-    this.rig.add(belt, buckle, placket);
+    if (!model) this.rig.add(belt, buckle, placket);
 
     // Baş ve yüz
     this.head.position.y = HEAD_Y;
@@ -391,7 +398,7 @@ export class Human extends Mover {
       }
     }
     this.addFace(o, kind);
-    this.addHair(o, trim, kind);
+    this.addHair(o, trim, kind, !!model);
     this.addHat(hatKind, o.hatColor ?? o.trim ?? P.red, robeColor);
     this.rig.add(this.head);
 
@@ -422,7 +429,7 @@ export class Human extends Mover {
     }
   }
 
-  private addHair(o: HumanOpts, trim: THREE.Material, kind: FaceKind): void {
+  private addHair(o: HumanOpts, trim: THREE.Material, kind: FaceKind, model = false): void {
     if (o.hair === undefined) return;
     const hair = toon(o.hair);
     const hat = o.hat ?? 'bork';
@@ -468,7 +475,7 @@ export class Human extends Mover {
       fall.position.set(0, -0.46, -0.05);
       fall.receiveShadow = false;
       this.skull.add(fall);
-    } else if (o.long && woman) {
+    } else if (o.long && woman && !model) {
       // Omuzlardan öne sarkan iki örgü.
       for (const sx of [-1, 1]) {
         for (let i = 0; i < 6; i++) {

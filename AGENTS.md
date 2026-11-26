@@ -34,13 +34,21 @@ Yeni bir hikâye yazarken önce buradaki hazır parçaları kullan; yalnızca o 
 | `src/procedural/sets.ts` | Ortak mekânlar: `steppeSet`, `placeTent`, `reeds` (sazlık). |
 | `src/procedural/human.ts`, `head.ts`, `face.ts` | İnsan figürü, yontulmuş baş, çizilmiş yüz. |
 | `src/procedural/animals.ts` | `Horse`, `Lion`, `Sheep`, `Beast` (boğa, geyik, köpek), `Bird`; yeni hayvanlar buraya. |
+| `src/procedural/model.ts` | Hazır gövde modelleri: yükleme (`loadModels`), bölge haritasından renklendirme (`modelMaterial`). |
+| `models/`, `src/models/` | Meshy'den gelen ham GLB'ler ve `tools/fit-model.py` ile işlenmiş, sitenin yüklediği GLB'ler. |
 | `src/procedural/cast.ts` | Hazır kişiler: `dedeKorkut`, `villager(i)`, `warrior`, `lady`, `elderMan`, `elderWoman`, `child`; `mounted` (atlı), `archer` (yaylı), `armed` (kılıçlı). |
 | `src/stories/<slug>/` | `story.ts` (metin), `scenes.ts` (sahneler), `sets.ts` (o hikâyeye özel mekân ve kişiler), `index.ts`. |
 | `tools/shots.mjs` | Sahnelerin ekran görüntüsünü alan araç. |
+| `tools/fit-model.py` | Ham modeli Human iskeletine uyduran Blender betiği. |
 
 ## Görseller
 
-- Bütün görseller kodla üretilir. Hazır 3B model, resim ya da video ekleme. Kodla çizilen dokular (`kilim()` gibi canvas dokuları) serbesttir.
+- Görseller kodla üretilir. Hazır resim ya da video ekleme. Kodla çizilen dokular (`kilim()` gibi canvas dokuları) serbesttir. Tek istisna aşağıda anlatılan gövde modelleridir; onların dışında hazır 3B model ekleme.
+- Gövde modelleri: bir kişinin gövdesi (kaftan, kollar, bacaklar, örgüler) Meshy'de üretilmiş bir modelden gelebilir (`HumanOpts.model`; `lady()` bunu kendisi verir). Baş, yüz, saç ve başlık her durumda kodla kurulur; ifade ve göz kırpma böyle çalışır. Model yüklenemezse gövde kodla kurulur.
+  - Ham dosya `models/<ad>.glb` içinde durur: Meshy'de A duruşu, Mixamo iskeleti, parmak kemiksiz, silahsız ve eşyasız üretilir.
+  - `blender -b --python tools/fit-model.py -- models/<ad>.glb src/models/<ad>.glb` ham dosyayı işler: omuz yüksekliğine göre ölçekler, başı boyundan keser, üçgen sayısını düşürür (`tris=8000`), kolları Human duruşuna indirir, ağırlıkları Human'ın dokuz kemiğine toplar ve dokuyu bölge haritasına çevirir.
+  - Bölge haritası renk taşımaz: kaftan, şerit, ten, saç, şalvar, çizme, kemer ve maden bölgelerini taşır. Renkler çalışma anında `robe`, `trim`, `skin`, `hair` seçeneklerinden ve paletten verilir; aynı model her kişide başka renkte giyilir.
+  - Yeni model eklerken `model.ts` içindeki `URLS` tablosuna ekle. Modelin özgün renkleri farklıysa `fit-model.py` içindeki `REF` renklerini ona göre düzelt.
 - Görünüm "canlanan minyatür"dür: köşeli low-poly çevre, çizgi film tarzı karakterler, sınırlı palet; üstüne mürekkep çizgisi, kâğıt dokusu ve kenar kararması (`src/engine/ink.ts`). Yeni renk eklemek yerine ortak paletten (`P`) seç.
 - Mürekkep çizgisi almaması gereken nesneleri (alev, ışık hüzmesi, yıldız, ot, duman) `noInk()` ile işaretle.
 - İnsanlar çizgi film tarzındadır: uzun ve ince gövde, iri gözler, yuvarlak hatlar, basamaklı gölge (`toon()` malzemesi). Çevre ise köşeli low-poly kalır; karakterler bu sayede öne çıkar. Yeni kişi ve hayvanları da `toon()` ile, yuvarlak geometrilerle (küre, kapsül, lathe) kur.

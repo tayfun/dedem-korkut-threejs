@@ -35,7 +35,7 @@ const out = opt.out ?? 'shots';
 const base = `http://localhost:${opt.port ?? 5173}`;
 mkdirSync(out, { recursive: true });
 
-const browser = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
+const browser = await chromium.launch({ executablePath: process.env.CHROME_PATH || undefined, args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const page = await browser.newPage({ viewport: opt.mobile ? { width: 390, height: 780 } : { width: 1100, height: 700 } });
 const problems = [];
 page.on('console', (m) => {

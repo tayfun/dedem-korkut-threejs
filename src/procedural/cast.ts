@@ -41,7 +41,7 @@ export const villager = (i: number, extra: HumanOpts = {}) => new Human({ ...LOO
 export const warrior = (o: HumanOpts = {}) => new Human({ robe: P.red, trim: P.ochre, hat: 'bork', hatColor: P.indigo, scale: 1.1, moustache: P.black, hair: P.black, cloak: P.indigo, ...o });
 
 /** Hatun: başörtülü, örgülü, uzun etekli. */
-export const lady = (o: HumanOpts = {}) => new Human({ robe: P.teal, trim: P.ochre, hat: 'scarf', hatColor: P.cream, long: true, hair: P.black, blush: true, face: 'woman', ...o });
+export const lady = (o: HumanOpts = {}) => new Human({ robe: P.teal, trim: P.ochre, hat: 'scarf', hatColor: P.cream, long: true, hair: P.black, blush: true, face: 'woman', model: 'hatun', ...o });
 
 /** Ak sakallı koca. */
 export const elderMan = (o: HumanOpts = {}) => new Human({ robe: P.brown, trim: P.cream, hat: 'kalpak', hatColor: P.indigo, beard: P.white, ...o });
