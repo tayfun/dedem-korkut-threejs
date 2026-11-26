@@ -1,6 +1,6 @@
 # Dedem Korkut — Proje Planı
 
-Dede Korkut hikâyelerini sade bir Türkçeyle anlatan, her sahnesi kodla (Three.js) canlandırılan bir web sitesi.
+Dede Korkut hikâyelerini yetişkin okura, özgün metne sadık kalarak günümüz Türkçesiyle anlatan, her sahnesi kodla (Three.js) canlandırılan bir web sitesi.
 
 ## 1. Hedef
 
@@ -28,11 +28,12 @@ Dede Korkut Kitabı'ndaki on iki boy ile 2018'de bulunan on üçüncü boy aras�
 
 ## 3. Anlatım Dili
 
-- Kısa cümleler, günlük Türkçe. Hedef okur: 10 yaş ve üstü herkes.
-- Eski sözcükler sadeleştirilir; özel adlar ve kültürel sözcükler (boy, ozan, kopuz, otağ) korunur ve ilk geçtiği yerde açıklanır.
-- Her hikâye 8–14 sahneye bölünür; her sahne 2–4 cümledir.
-- Her hikâye Dede Korkut'un gelip ad vermesi ya da dua etmesiyle biter; bu kalıp korunur.
-- Metinler özgün metne sadık kalır; olay uydurulmaz, yalnızca kısaltılır ve sadeleştirilir.
+- Hedef okur yetişkinlerdir. Özgün metne sadık kalınır: olay eklenmez, sert bölümler yumuşatılmaz.
+- Günümüz Türkçesi, sade ve akıcı; özgün söyleyiş ve ritim korunur, soylamalar kısaltılır.
+- Eskimiş sözcükler metinde kalır, sahne altındaki notta açıklanır.
+- Her hikâye 8–18 sahneye bölünür; bir sahne en çok 450 karakter kadardır.
+- Her hikâye Dede Korkut'un gelip boy boylaması ve dua etmesiyle biter; bu kalıp korunur.
+- Dayanak: Dresden nüshası. Kaynakça ve uyarlama ilkeleri sitede `#/kaynaklar` sayfasındadır.
 
 ## 4. Teknik Yapı
 
@@ -96,8 +97,8 @@ Metin ile kod ayrı dosyalarda durur; böylece metin, koda dokunmadan düzeltile
 1. ✅ **Temel** — Vite + TypeScript + Three.js kurulumu, GitHub Pages iş akışı.
 2. ✅ **Motor** — sahne yöneticisi, zaman çizelgesi, ileri/geri gezinme, metin paneli.
 3. ✅ **Prosedürel kütüphane** — arazi, gök, insan figürü, at, kuş, çadır, ateş.
-4. ✅ **İlk hikâye: Deli Dumrul** — 13 sahne.
-5. ✅ **Ana sayfa** — hikâye listesi, kapak sahnesi, Dede Korkut tanıtımı.
+4. ✅ **İlk hikâye: Deli Dumrul** — 16 sahne.
+5. ✅ **Ana sayfa ve Kaynaklar sayfası** — hikâye listesi, kapak sahnesi, kaynakça.
 6. ⬜ **Kalan hikâyeler** — tablodaki sırayla, her biri ayrı ayrı. Sıradaki: Basat ile Tepegöz.
 7. ⬜ **Cila** — mobil performans, erişilebilirlik, ses (kopuz ezgisi, isteğe bağlı), paylaşım kartları.
 

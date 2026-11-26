@@ -4,7 +4,7 @@ Bu depoda çalışan yapay zekâ ajanları ve geliştiriciler için kurallar.
 
 ## Proje
 
-Dede Korkut hikâyelerini sade Türkçeyle anlatan, sahneleri Three.js ile prosedürel olarak canlandırılan bir web sitesi. Kapsam, hikâye listesi ve aşamalar için önce `PLAN.md` dosyasını oku.
+Dede Korkut hikâyelerini yetişkin okura, özgün metne sadık kalarak günümüz Türkçesiyle anlatan, sahneleri Three.js ile prosedürel olarak canlandırılan bir web sitesi. Kapsam, hikâye listesi ve aşamalar için önce `PLAN.md` dosyasını oku.
 
 ## Git
 
@@ -29,12 +29,21 @@ Dede Korkut hikâyelerini sade Türkçeyle anlatan, sahneleri Three.js ile prose
 
 ## Hikâye Metinleri
 
-- Dil sade ve günlük Türkçe; kısa cümleler. Hedef okur 10 yaş ve üstü.
-- Özgün hikâyeye sadık kal: kısalt ve sadeleştir, ama olay ya da karakter uydurma.
-- Özel adları koru (Boğaç Han, Banı Çiçek, Salur Kazan). Kültürel sözcükleri (boy, ozan, kopuz, otağ) koru ve ilk geçtiği yerde kısaca açıkla.
-- Her sahne 2–4 cümle; her hikâye 8–14 sahne.
+- Hedef okur yetişkinlerdir. Özgün hikâyeye sadık kal: olay, kişi ya da konuşma uydurma; sert, kaba ya da rahatsız edici bölümleri yumuşatma ve atlama.
+- Dil günümüz Türkçesi, sade ve akıcı; ama özgün metnin söyleyişini ve ritmini koru ("dünya şirin, can aziz", "boy boyladı, soy soyladı"). Soylamaları kısaltabilirsin, özünü ve imgelerini koru.
+- Özel adları koru (Boğaç Han, Banı Çiçek, Salur Kazan). Eskimiş ya da kültürel sözcükleri (kavat, görklü, yumuş oğlanı, otağ) metinde bırak ve sahnenin `note` alanında açıkla.
+- Metnin temeli Dresden nüshasıdır (Ergin ve Gökyay yayınları). Emin olmadığın bir ayrıntıyı ekleme; kaynağa bakılamıyorsa bunu kullanıcıya söyle.
+- Her sahne en çok 450 karakter kadar olsun (telefonda panel ekranın yarısını geçmesin); uzun bölümleri iki sahneye böl. Her hikâye 8–18 sahne.
 - Metin ile animasyon kodu ayrı dosyalarda durur (`story.ts` ve `scenes.ts`).
+- Sahneleme metinle çelişmemeli; metinde olmayan bir olayı animasyonla da ekleme.
+- Allah hiçbir sahnede gösterilmez; ilahî buyruk ışıkla anlatılır.
 - Site arayüzü ve hikâye metinleri Türkçedir. Kod içindeki adlar (değişken, fonksiyon, dosya) İngilizce, yorumlar Türkçe ya da İngilizce olabilir.
+
+## Kaynaklar
+
+- Kaynaklar sayfası `src/ui/sources.ts` içindedir (`#/kaynaklar`).
+- Yeni hikâye eklerken "Hikâyelerin kaynağı" bölümüne hangi nüshanın kaçıncı boyu olduğunu yaz.
+- Kaynakça bilgisini (yazar, yayınevi, yıl) doğrulamadan ekleme.
 
 ## Yeni Hikâye Ekleme
 

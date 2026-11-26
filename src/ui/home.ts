@@ -23,13 +23,13 @@ export function showHome(app: HTMLElement, stage: Stage, stories: StoryMeta[]): 
       <header class="hero">
         <div class="kilim" aria-hidden="true"></div>
         <h1>Dedem Korkut</h1>
-        <p class="lead">Yüzyıllar önce Oğuz boyları arasında dolaşan bilge bir ozan vardı: Dede Korkut. Kopuzunu çalar, yiğitlerin hikâyelerini anlatırdı. Burada o hikâyeleri sade bir dille okuyabilir, sahnelerini canlı izleyebilirsin.</p>
+        <p class="lead">Dede Korkut, Oğuzların bilge ozanıdır: kopuzunu çalar, boy boylar, soy soylar, yiğitlere ad koyar. Burada o hikâyeler özgün metne bağlı kalınarak, günümüz Türkçesiyle anlatılıyor; her sahne kodla canlandırılıyor.</p>
         <a class="cta" href="#/hikaye/${stories.find((s) => s.load)?.slug ?? ''}">İlk hikâyeye başla</a>
       </header>
       <section class="list" aria-labelledby="list-title">
         <h2 id="list-title">Hikâyeler</h2>
         <ol class="stories">${cards}</ol>
-        <p class="foot">Bütün sahneler kodla çizilir; hazır resim ya da model kullanılmaz.</p>
+        <p class="foot">Anlatımlar Dresden nüshasındaki metne dayanır; bütün sahneler kodla çizilir. <a href="#/kaynaklar">Kaynaklar ve uyarlama ilkeleri →</a></p>
       </section>
     </main>`;
 

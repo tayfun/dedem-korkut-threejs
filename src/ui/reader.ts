@@ -9,6 +9,7 @@ export function showReader(app: HTMLElement, stage: Stage, story: Story, startAt
       <header class="topbar">
         <a class="back" href="#/">← Hikâyeler</a>
         <h1>${story.title}</h1>
+        <a class="back src" href="#/kaynaklar">Kaynaklar</a>
       </header>
       <section class="panel" aria-live="polite">
         <div class="kilim" aria-hidden="true"></div>

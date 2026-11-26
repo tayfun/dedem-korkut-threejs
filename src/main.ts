@@ -3,6 +3,7 @@ import { Stage } from './engine/stage';
 import { stories } from './stories';
 import { showHome } from './ui/home';
 import { showReader } from './ui/reader';
+import { showSources } from './ui/sources';
 
 const canvas = document.getElementById('stage') as HTMLCanvasElement;
 const app = document.getElementById('app') as HTMLElement;
@@ -21,6 +22,9 @@ async function route(): Promise<void> {
     const story = await meta.load();
     cleanup = showReader(app, stage, story, Math.max(0, (parseInt(sceneNo, 10) || 1) - 1));
     document.title = `${story.title} — Dedem Korkut`;
+  } else if (kind === 'kaynaklar') {
+    cleanup = showSources(app, stage);
+    document.title = 'Kaynaklar — Dedem Korkut';
   } else {
     cleanup = showHome(app, stage, stories);
     document.title = 'Dedem Korkut';

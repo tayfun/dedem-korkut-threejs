@@ -21,7 +21,7 @@ function armsDown(tl: gsap.core.Timeline, m: Human, at: number): void {
 }
 
 export const scenes: SceneDef[] = [
-  /* 1 — Köprü ve otuz üç akçe */
+  /* Köprü ve otuz üç akçe */
   {
     id: 'kopru',
     build(stage) {
@@ -45,7 +45,7 @@ export const scenes: SceneDef[] = [
     },
   },
 
-  /* 2 — Geçmeyenden kırk akçe */
+  /* Geçmeyenden kırk akçe */
   {
     id: 'ovunme',
     build(stage) {
@@ -83,7 +83,7 @@ export const scenes: SceneDef[] = [
     },
   },
 
-  /* 3 — Obada yas */
+  /* Obada yas */
   {
     id: 'oba',
     build(stage) {
@@ -108,7 +108,7 @@ export const scenes: SceneDef[] = [
     },
   },
 
-  /* 4 — "Azrail de kimmiş?" */
+  /* "Azrail de kimmiş?" */
   {
     id: 'soru',
     build(stage) {
@@ -141,7 +141,7 @@ export const scenes: SceneDef[] = [
     },
   },
 
-  /* 5 — Buyruk */
+  /* Buyruk */
   {
     id: 'buyruk',
     build(stage) {
@@ -169,7 +169,7 @@ export const scenes: SceneDef[] = [
     },
   },
 
-  /* 6 — Sofrada Azrail */
+  /* Sofrada Azrail */
   {
     id: 'sofra',
     build(stage) {
@@ -232,7 +232,7 @@ export const scenes: SceneDef[] = [
     },
   },
 
-  /* 7 — At ürker */
+  /* At ürker */
   {
     id: 'at',
     build(stage) {
@@ -298,7 +298,7 @@ export const scenes: SceneDef[] = [
     },
   },
 
-  /* 8 — Yalvarış ve dua */
+  /* Yalvarış: "Bana yalvarma, Allah'a yalvar." */
   {
     id: 'yalvaris',
     build(stage) {
@@ -313,9 +313,6 @@ export const scenes: SceneDef[] = [
       a.group.position.y = 0.3;
       a.flap = 0.6;
       a.rig.rotation.x = 0.35;
-      const beam = stage.add(lightBeam(70, 3.2));
-      beam.position.set(-3.1, 0, 1.2);
-      beam.scale.set(0.01, 1, 0.01);
       stage.setCamera([-3.2, 2.2, 10.5], [-3.0, 1.5, 0.8]);
 
       turn(tl, a, W, 0.2, 1.0);
@@ -328,26 +325,50 @@ export const scenes: SceneDef[] = [
       tl.to(d.rig.rotation, { x: 0, duration: 1.0, ease: 'power2.out' }, 0.8);
       tl.to([d.legL.rotation, d.legR.rotation], { x: 1.5, duration: 0.8 }, 0.8);
       plead(tl, d, 1.8);
-      tl.to([d.armL.rotation, d.armR.rotation], { x: -1.2, duration: 0.35, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 2.4);
-      // "Bana yalvarma, Allah'a yalvar."
-      shakeHead(tl, a.head, 3.6, 1.2);
-      tl.to(a.armR.rotation, { x: -2.9, duration: 0.6, ease: 'power2.out' }, 4.8);
-      // Dumrul göğe döner, dua eder.
-      turn(tl, d, 0.25, 6.0, 0.6);
-      tl.to(d.head.rotation, { x: -0.55, duration: 0.6 }, 6.2);
-      tl.to(d.armL.rotation, { x: -2.5, z: -0.35, duration: 0.7 }, 6.2);
-      tl.to(d.armR.rotation, { x: -2.5, z: 0.35, duration: 0.7 }, 6.2);
-      tl.to(a.armR.rotation, { x: 0, duration: 0.6 }, 6.6);
-      cam(tl, stage, [-2.2, 1.8, 11], [-2.2, 1.9, 1], 3.5, 5.6);
-      // Işık iner: dua kabul olur.
-      tl.to(beam.scale, { x: 1, z: 1, duration: 2.2, ease: 'power2.out' }, 8.2);
-      walkTo(tl, a, 3.4, -1.2, 2.2, 9.2);
-      faceTo(tl, a, -3.1, 1.2, 11.4);
+      tl.to([d.armL.rotation, d.armR.rotation], { x: -1.2, duration: 0.35, yoyo: true, repeat: 5, ease: 'sine.inOut' }, 2.4);
+      shakeHead(tl, a.head, 4.6, 1.4);
+      tl.to(a.armR.rotation, { x: -2.9, duration: 0.6, ease: 'power2.out' }, 6.2);
+      tl.to(d.head.rotation, { x: -0.3, duration: 0.6 }, 6.6);
       return tl;
     },
   },
 
-  /* 9 — Baba */
+  /* Dua: "Canımı alacaksan sen al." */
+  {
+    id: 'dua',
+    build(stage) {
+      steppeSet(stage, 'day', 12);
+      const tl = newTimeline();
+      const d = stage.track(place(dumrul(), -3.1, 1.2, E));
+      d.freeY = true;
+      d.group.position.y = -0.78;
+      d.legL.rotation.x = d.legR.rotation.x = 1.5;
+      d.armL.rotation.x = d.armR.rotation.x = -1.5;
+      const a = stage.track(place(cast.azrail(), 0.6, 0.9, W));
+      a.flap = 0.2;
+      a.armR.rotation.x = -2.9;
+      const beam = stage.add(lightBeam(70, 3.2));
+      beam.position.set(-3.1, 0, 1.2);
+      beam.scale.set(0.01, 1, 0.01);
+      stage.setCamera([-1.5, 2.2, 10.5], [-1.2, 1.5, 0.8]);
+
+      // Dumrul göğe döner, dua eder.
+      turn(tl, d, 0.25, 0.4, 0.6);
+      tl.to(d.head.rotation, { x: -0.55, duration: 0.6 }, 0.6);
+      tl.to(d.armL.rotation, { x: -2.5, z: -0.35, duration: 0.7 }, 0.6);
+      tl.to(d.armR.rotation, { x: -2.5, z: 0.35, duration: 0.7 }, 0.6);
+      tl.to(a.armR.rotation, { x: 0, duration: 0.6 }, 1.0);
+      cam(tl, stage, [-2.2, 1.8, 11], [-2.2, 1.9, 1], 3.5, 0.3);
+      tl.to([d.armL.rotation, d.armR.rotation], { x: -2.2, duration: 0.8, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 1.6);
+      // Işık iner: dua kabul olur.
+      tl.to(beam.scale, { x: 1, z: 1, duration: 2.2, ease: 'power2.out' }, 4.6);
+      walkTo(tl, a, 3.4, -1.2, 2.2, 5.6);
+      faceTo(tl, a, -3.1, 1.2, 7.8);
+      return tl;
+    },
+  },
+
+  /* Baba */
   {
     id: 'baba',
     build(stage) {
@@ -378,7 +399,7 @@ export const scenes: SceneDef[] = [
     },
   },
 
-  /* 10 — Ana */
+  /* Ana */
   {
     id: 'ana',
     build(stage) {
@@ -412,7 +433,7 @@ export const scenes: SceneDef[] = [
     },
   },
 
-  /* 11 — Veda */
+  /* Veda: Dumrul eşine vasiyet eder */
   {
     id: 'veda',
     build(stage) {
@@ -428,7 +449,7 @@ export const scenes: SceneDef[] = [
       a.flap = 0.15;
       stage.setCamera([-4, 3, 13], [-2, 1.5, 0.5]);
 
-      tl.to(d.armL.rotation, { x: -1.4, duration: 0.4 }, 0.2); // "Dur."
+      tl.to(d.armL.rotation, { x: -1.4, duration: 0.4 }, 0.2); // "Aman!"
       faceTo(tl, d, -9.5, 3.4, 0.1, 0.3);
       tl.to(d.armL.rotation, { x: 0, duration: 0.4 }, 1.3);
       walkTo(tl, d, -0.6, -0.2, 2.6, 1.5);
@@ -442,23 +463,95 @@ export const scenes: SceneDef[] = [
       tl.to(d.armL.rotation, { x: -0.8, duration: 0.5 }, 4.8);
       tl.to(d.head.rotation, { x: 0, duration: 0.4 }, 6.0);
       tl.to(d.armL.rotation, { x: 0, duration: 0.4 }, 6.0);
-      // "Malım mülküm senin olsun."
+      // "Dağlarım, sularım, atlarım senin olsun."
       faceTo(tl, d, 1.2, -1.2, 6.0);
       tl.to(d.armR.rotation, { x: -1.4, z: 1.0, duration: 0.6, ease: 'power2.out' }, 6.4);
-      tl.to(d.armR.rotation, { x: 0, z: 0.14, duration: 0.6 }, 7.8);
-      // Eşi karşı çıkar, Azrail'in önüne geçer.
-      shakeHead(tl, w.head, 8.0, 1.4);
-      walkTo(tl, w, -3.2, 1.2, 1.6, 9.6);
-      faceTo(tl, w, -6, 2.6, 11.2);
-      tl.to(w.armL.rotation, { x: -0.3, z: -1.2, duration: 0.5, ease: 'back.out(2)' }, 11.4);
-      tl.to(w.armR.rotation, { x: -0.3, z: 1.2, duration: 0.5, ease: 'back.out(2)' }, 11.4);
-      faceTo(tl, d, -3.2, 1.2, 10.4);
-      cam(tl, stage, [-1.5, 2.4, 10.5], [-2.6, 1.5, 0.8], 3.5, 9.4);
+      tl.to(d.armR.rotation, { x: -1.9, duration: 0.5, yoyo: true, repeat: 1, ease: 'sine.inOut' }, 7.1);
+      tl.to(d.armR.rotation, { x: 0, z: 0.14, duration: 0.6 }, 8.4);
+      tl.to(w.head.rotation, { x: 0.35, duration: 0.6 }, 8.2);
       return tl;
     },
   },
 
-  /* 12 — Bağışlanma */
+  /* Eşin cevabı: "Canım senin canına kurban olsun." */
+  {
+    id: 'es',
+    build(stage) {
+      steppeSet(stage, 'dusk', 14);
+      const tl = newTimeline();
+      addTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
+      addFire(stage, 5.5, 0.5, 0.9);
+      const w = stage.track(place(wife(), 1.2, -1.2, Math.atan2(-1.8, 1.0)));
+      stage.track(place(child(0), 0.1, 0.5, Math.atan2(-0.7, -0.7)));
+      stage.track(place(child(1), -1.0, -1.0, Math.atan2(0.4, 0.8)));
+      const d = stage.track(place(dumrul(), -0.6, -0.2, Math.atan2(1.8, -1.0)));
+      const a = stage.track(place(cast.azrail(), -6, 2.6, E));
+      a.flap = 0.15;
+      stage.setCamera([0.5, 2.5, 9.5], [0.4, 1.4, -0.6]);
+
+      shakeHead(tl, w.head, 0.4, 1.4);
+      // "Senden sonra dağlarını ben neyleyim?"
+      tl.to(w.armR.rotation, { x: -1.5, z: 0.9, duration: 0.6, ease: 'power2.out' }, 2.0);
+      tl.to(w.armR.rotation, { x: 0, z: 0.14, duration: 0.6 }, 3.4);
+      plead(tl, w, 4.0);
+      armsDown(tl, w, 5.2);
+      // Azrail'in önüne geçer.
+      walkTo(tl, w, -3.2, 1.2, 1.6, 5.6);
+      faceTo(tl, w, -6, 2.6, 7.2);
+      tl.to(w.armL.rotation, { x: -0.3, z: -1.2, duration: 0.5, ease: 'back.out(2)' }, 7.4);
+      tl.to(w.armR.rotation, { x: -0.3, z: 1.2, duration: 0.5, ease: 'back.out(2)' }, 7.4);
+      faceTo(tl, d, -3.2, 1.2, 6.4);
+      cam(tl, stage, [-1.5, 2.4, 10.5], [-2.6, 1.5, 0.8], 3.5, 5.4);
+      return tl;
+    },
+  },
+
+  /* İkinci dua: "Alırsan ikimizin canını birlikte al." */
+  {
+    id: 'ikinci-dua',
+    build(stage) {
+      steppeSet(stage, 'dusk', 14);
+      const tl = newTimeline();
+      addTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
+      addFire(stage, 5.5, 0.5, 0.9);
+      const w = stage.track(place(wife(), -3.2, 1.2, Math.atan2(-2.8, 1.4)));
+      w.armL.rotation.set(-0.3, 0, -1.2);
+      w.armR.rotation.set(-0.3, 0, 1.2);
+      stage.track(place(child(0), 0.1, 0.5, -1.2));
+      stage.track(place(child(1), -1.0, -1.0, -1.0));
+      const d = stage.track(place(dumrul(), -0.6, -0.2, Math.atan2(-2.6, 1.4)));
+      d.walkSpeed = 13;
+      const a = stage.track(place(cast.azrail(), -6, 2.6, E));
+      a.flap = 0.15;
+      stage.setCamera([-1.5, 2.4, 10.5], [-2.6, 1.5, 0.8]);
+
+      // Azrail hatunun canını almaya gelir.
+      tl.to(a, { flap: 0.5, duration: 0.5 }, 0.3);
+      walkTo(tl, a, -4.8, 1.9, 1.6, 0.4);
+      tl.to(a.armR.rotation, { x: -1.4, duration: 0.6, ease: 'power2.out' }, 1.9);
+      // Dumrul araya girer, diz çöküp yalvarır.
+      walkTo(tl, d, -2.2, 2.2, 1.0, 1.6);
+      turn(tl, d, 0.1, 2.6, 0.4);
+      tl.to(d, { yOffset: -0.78, duration: 0.5, ease: 'power2.out' }, 2.8);
+      tl.to([d.legL.rotation, d.legR.rotation], { x: 1.5, duration: 0.5 }, 2.8);
+      tl.to(d.head.rotation, { x: -0.55, duration: 0.6 }, 3.2);
+      tl.to(d.armL.rotation, { x: -2.5, z: -0.35, duration: 0.7 }, 3.2);
+      tl.to(d.armR.rotation, { x: -2.5, z: 0.35, duration: 0.7 }, 3.2);
+      tl.to([d.armL.rotation, d.armR.rotation], { x: -2.2, duration: 0.8, yoyo: true, repeat: 3, ease: 'sine.inOut' }, 4.0);
+      armsDown(tl, w, 3.4);
+      tl.to(w.armL.rotation, { z: -0.14, duration: 0.6 }, 3.4);
+      tl.to(w.armR.rotation, { z: 0.14, duration: 0.6 }, 3.4);
+      faceTo(tl, w, -2.2, 2.2, 3.6);
+      // Azrail durur, göğe bakar.
+      tl.to(a.armR.rotation, { x: 0, duration: 0.6 }, 4.6);
+      tl.to(a.head.rotation, { x: -0.4, duration: 0.6 }, 5.0);
+      tl.to(a, { flap: 0.15, duration: 0.8 }, 4.6);
+      cam(tl, stage, [-1.6, 2.6, 11.5], [-2.9, 1.1, 1.6], 4, 2.0);
+      return tl;
+    },
+  },
+
+  /* Bağışlanma */
   {
     id: 'bagis',
     build(stage) {
@@ -466,19 +559,22 @@ export const scenes: SceneDef[] = [
       const tl = newTimeline();
       addTent(stage, 1.5, -6, 0, P.white, P.red, 1.4);
       addFire(stage, 5.5, 0.5, 0.9);
-      const w = stage.track(place(wife(), -3.2, 1.2, -1.1));
-      w.armL.rotation.set(-0.3, 0, -1.2);
-      w.armR.rotation.set(-0.3, 0, 1.2);
-      const kids = [stage.track(place(child(0), 0.1, 0.5, -1.2)), stage.track(place(child(1), -1.0, -1.0, 0.5))];
+      const w = stage.track(place(wife(), -3.2, 1.2, Math.atan2(1.0, 1.0)));
+      const kids = [stage.track(place(child(0), 0.1, 0.5, -1.2)), stage.track(place(child(1), -1.0, -1.0, -1.0))];
       kids.forEach((k) => (k.walkSpeed = 14));
-      const d = stage.track(place(dumrul(), -0.6, -0.2, -1.1));
-      const a = stage.track(place(cast.azrail(), -6, 2.6, E));
+      const d = stage.track(place(dumrul(), -2.2, 2.2, 0.1));
+      d.yOffset = -0.78;
+      d.legL.rotation.x = d.legR.rotation.x = 1.5;
+      d.head.rotation.x = -0.55;
+      d.armL.rotation.set(-2.5, 0, -0.35);
+      d.armR.rotation.set(-2.5, 0, 0.35);
+      const a = stage.track(place(cast.azrail(), -4.8, 1.9, E));
       a.freeY = true;
       a.flap = 0.15;
       const beam = stage.add(lightBeam(70, 4));
-      beam.position.set(-2.2, 0, 0.6);
+      beam.position.set(-2.7, 0, 1.7);
       beam.scale.set(0.01, 1, 0.01);
-      stage.setCamera([-1.5, 2.4, 10.5], [-2.6, 1.5, 0.8]);
+      stage.setCamera([-1.6, 2.6, 11.5], [-2.9, 1.1, 1.6]);
 
       tl.to(beam.scale, { x: 1, z: 1, duration: 2, ease: 'power2.out' }, 0.3);
       sky.tweenTo(tl, 'dawn', 6, 1.5);
@@ -489,27 +585,30 @@ export const scenes: SceneDef[] = [
       tl.to(a.group.position, { x: -40, y: 26, z: -50, duration: 6, ease: 'power2.in' }, 3.2);
       tl.to(a.rig.rotation, { x: 0.6, duration: 1.2 }, 3.4);
       cam(tl, stage, [0, 2.2, 12], [-3, 2.6, 0], 3.5, 2.6);
-      // Aile kavuşur.
-      tl.to([w.armL.rotation, w.armR.rotation], { x: 0, z: 0, duration: 0.6 }, 5.4);
-      faceTo(tl, w, -0.6, -0.2, 5.6);
-      walkTo(tl, d, -2.3, 0.8, 1.0, 5.8);
+      // Dumrul doğrulur, aile kavuşur.
+      tl.to(d, { yOffset: 0, duration: 0.6, ease: 'power2.out' }, 5.6);
+      tl.to([d.legL.rotation, d.legR.rotation], { x: 0, duration: 0.6 }, 5.6);
+      tl.to(d.head.rotation, { x: 0, duration: 0.5 }, 5.6);
+      tl.to(d.armL.rotation, { x: 0, z: -0.14, duration: 0.6 }, 5.6);
+      tl.to(d.armR.rotation, { x: 0, z: 0.14, duration: 0.6 }, 5.6);
+      faceTo(tl, d, -3.2, 1.2, 6.2);
       tl.to([d.armL.rotation, d.armR.rotation], { x: -1.2, duration: 0.5 }, 6.8);
       tl.to([w.armL.rotation, w.armR.rotation], { x: -1.2, duration: 0.5 }, 6.9);
-      walkTo(tl, kids[0], -1.9, 2.1, 0.8, 6.4);
-      walkTo(tl, kids[1], -3.3, 2.3, 0.9, 6.6);
-      faceTo(tl, kids[0], -2.7, 1.0, 7.3);
-      faceTo(tl, kids[1], -2.7, 1.0, 7.5);
+      walkTo(tl, kids[0], -1.1, 3.0, 0.9, 6.4);
+      walkTo(tl, kids[1], -4.1, 2.7, 1.0, 6.6);
+      faceTo(tl, kids[0], -2.7, 1.7, 7.4);
+      faceTo(tl, kids[1], -2.7, 1.7, 7.7);
       kids.forEach((k, i) => {
-        tl.to(k, { yOffset: 0.35, duration: 0.22, ease: 'power2.out', yoyo: true, repeat: 5 }, 7.7 + i * 0.15);
-        tl.to([k.armL.rotation, k.armR.rotation], { x: -2.8, duration: 0.3 }, 7.7 + i * 0.15);
+        tl.to(k, { yOffset: 0.35, duration: 0.22, ease: 'power2.out', yoyo: true, repeat: 5 }, 7.9 + i * 0.15);
+        tl.to([k.armL.rotation, k.armR.rotation], { x: -2.8, duration: 0.3 }, 7.9 + i * 0.15);
       });
       tl.to(beam.material, { opacity: 0, duration: 2.5 }, 7.5);
-      cam(tl, stage, [-2.5, 2.2, 9], [-2.6, 1.3, 1], 4, 6.2);
+      cam(tl, stage, [-2.6, 2.2, 9.5], [-2.7, 1.3, 1.6], 4, 6.2);
       return tl;
     },
   },
 
-  /* 13 — Dedem Korkut */
+  /* Dedem Korkut */
   {
     id: 'dede',
     build(stage) {

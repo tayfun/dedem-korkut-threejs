@@ -1,49 +1,68 @@
 import type { SceneText } from '../../engine/story';
 
-/** Deli Dumrul — sahne metinleri. Anahtarlar `scenes.ts` içindeki sahne kimlikleriyle eşleşir. */
+/**
+ * Deli Dumrul — sahne metinleri (Dresden nüshası, beşinci boy).
+ * Anahtarlar `scenes.ts` içindeki sahne kimlikleriyle eşleşir.
+ */
 export const texts: Record<string, SceneText> = {
   kopru: {
-    text: 'Oğuz ilinde Duha Koca’nın oğlu Deli Dumrul adında bir yiğit vardı. Kuru bir çayın üstüne köprü yaptırmıştı. Köprüden geçenden otuz üç akçe alırdı.',
-    note: 'Akçe: eski bir gümüş para.',
+    text: 'Oğuz’da Duha Koca oğlu Deli Dumrul derler bir er vardı. Kuru bir çayın üstüne köprü yaptırmıştı. Geçenden otuz üç akçe alır, geçmeyenden döve döve kırk akçe alırdı.',
+    note: 'Akçe: gümüş para.',
   },
   ovunme: {
-    text: 'Geçmeyenden ise döve döve kırk akçe alırdı. Neden mi böyle yapardı? “Benden deli, benden güçlü biri var mı? Varsa çıksın, benimle dövüşsün!” derdi.',
+    text: 'Bunu neden yapardı? “Benden deli, benden güçlü er var mı ki çıksın, benimle savaşsın?” derdi. “Erliğim, bahadırlığım, yiğitliğim Rum’a, Şam’a gitsin, ün salsın.”',
+    note: 'Rum: Anadolu. Şam: Suriye.',
   },
   oba: {
-    text: 'Bir gün köprünün yanına bir oba kondu. O obada iyi, güzel bir yiğit hastalanıp öldü. Kimi “oğul” diye, kimi “kardeş” diye ağladı.',
+    text: 'Bir gün köprüsünün yamacına bir bölük oba konmuştu. O obada iyi, güzel bir yiğit hastalandı; Allah’ın buyruğuyla öldü. Kimi “oğul” diye, kimi “kardeş” diye ağladı; o yiğidin üstüne büyük bir yas koptu.',
     note: 'Oba: çadırlarıyla birlikte göçen topluluk.',
   },
   soru: {
-    text: 'Deli Dumrul atını sürüp geldi. “Neden ağlıyorsunuz?” diye sordu. “Yiğidimizin canını al kanatlı Azrail aldı” dediler. Dumrul öfkelendi: “Azrail de kimmiş? Allah’ım, onu bana göster; dövüşeyim, yiğidin canını kurtarayım!”',
-    note: 'Al: kırmızı.',
+    text: 'Deli Dumrul dörtnala yetişti: “Bre kavatlar, ne ağlarsınız? Köprümün yanında bu kavga nedir?” “Hanım, iyi bir yiğidimiz öldü” dediler, “al kanatlı Azrail canını aldı.” “Azrail dediğiniz kimdir ki adamın canını alır? Ya kadir Allah, birliğin, varlığın hakkı için Azrail’i gözüme göster; savaşayım, çekişeyim, yiğidin canını kurtarayım!”',
+    note: 'Kavat: ağır bir sövgü. Hanım: “hanım, efendim” anlamında seslenme. Al: kırmızı.',
   },
   buyruk: {
-    text: 'Dumrul’un bu sözü Allah’ın hoşuna gitmedi. Azrail’e buyurdu: “Git, o delinin gözüne görün. Benzini sarart, canını al.”',
+    text: 'Dumrul’un sözü Hak Teala’ya hoş gelmedi. “Bak bak, bu deli kavat benim birliğimi bilmez, birliğime şükretmez; ulu dergâhımda gezer, benlik eder” dedi. Azrail’e buyurdu: “Ya Azrail, var, o deli kavatın gözüne görün; benzini sarart, canını hırıldat, al.”',
   },
   sofra: {
-    text: 'Dumrul kırk yiğidiyle oturmuş yiyip içiyordu. Azrail birden karşısına çıktı: ak sakallı, heybetli bir ihtiyar. Dumrul kılıcını çekip saldırdı. Azrail bir güvercin olup uçtu gitti.',
+    text: 'Deli Dumrul kırk yiğidiyle yiyip içip otururken Azrail çıkageldi. Onu ne çavuş gördü ne kapıcı. Dumrul’un görür gözü görmez, tutar eli tutmaz oldu. “Bre, ne heybetli kocasın! Sakalcığı ağarmış, gözceğizi çöngelmiş koca, kimsin?” dedi. Azrail kendini bildirince Dumrul kara kılıcını sıyırıp saldırdı. Azrail bir güvercin oldu, uçtu gitti.',
+    note: 'Koca: yaşlı adam. Çöngelmiş: feri sönmüş.',
   },
   at: {
-    text: 'Dumrul “Azrail’i korkuttum!” diye sevindi. Doğanını alıp atına bindi, güvercinin peşine düştü. Dönerken Azrail atının gözüne göründü. At ürktü, Dumrul’u yere vurdu; Azrail göğsüne çöktü.',
-    note: 'Doğan: avda kullanılan yırtıcı bir kuş.',
+    text: 'Dumrul elini eline çaldı, kah kah güldü: “Yiğitlerim, Azrail’in gözünü öyle korkuttum ki kaçtı. Onu doğana aldırmadan bırakır mıyım?” Atına bindi, doğanını eline aldı, ardına düştü. Dönüp evine gelirken Azrail atının gözüne göründü. At ürktü, Dumrul’u kaldırıp yere vurdu. Kara başı bunaldı; ak göğsünün üstüne Azrail basıp kondu.',
+    note: 'Doğan: avda kullanılan yırtıcı kuş.',
   },
   yalvaris: {
-    text: 'Dumrul, “Seni bilmiyordum, canımı alma!” diye yalvardı. Azrail, “Bana yalvarma, Allah’a yalvar” dedi. Dumrul dua etti: “Canımı alacaksan sen al, Azrail’e bırakma.” Bu söz Allah’ın hoşuna gitti: “Dumrul canının yerine bir can bulsun, kendi canı kurtulsun.”',
+    text: '“Bre Azrail, aman! Ben seni böyle bilmezdim, uğrulayın can aldığını duymazdım. Bizim dağlarımızın bağları, o bağların kara salkımlı üzümü, o üzümün al şarabı olur. Şaraplıydım, ne söylediğimi bilmedim. Beyliğe usanmadım, yiğitliğe doymadım; canımı alma!” Azrail dedi: “Bre deli kavat, bana ne yalvarırsın? Allah’a yalvar. Benim elimde ne var; ben de bir yumuş oğlanıyım.”',
+    note: 'Uğrulayın: hırsız gibi, gizlice. Yumuş oğlanı: buyruk taşıyan hizmetçi.',
+  },
+  dua: {
+    text: 'Dumrul, “Öyleyse sen aradan çık; ben Allah’la söyleşeyim” dedi. “Yücelerden yücesin, kimse bilmez nicesin, görklü Tanrı! Nice cahiller seni gökte arar, yerde ister; sen müminlerin gönlündesin. Canımı alacaksan sen al, Azrail’e bırakma.” Bu söz Hak Teala’ya hoş geldi: “Deli Dumrul can yerine can bulsun, kendi canı azat olsun.”',
+    note: 'Görklü: güzel, yüce.',
   },
   baba: {
-    text: 'Dumrul babasına koştu. “Baba, canını bana verir misin?” dedi. Yaşlı babası, “Dünya tatlı, can tatlıdır; canımı veremem. Anana git” dedi.',
+    text: 'Dumrul babasına vardı, elini öptü: “Ak sakallı, aziz babam! Küfür söz söyledim, Hak Teala’ya hoş gelmedi. Azrail ak göğsüme kondu, tatlı canımı alır oldu. Senden can dilerim, verir misin?” Babası dedi: “Canımın parçası oğul! Kara dağım gerekse söyle, Azrail’in yaylası olsun; tavla tavla atlarım, katar katar develerim, altınım gümüşüm onun olsun. Ama dünya şirin, can aziz; canıma kıyamam. Benden sevgili anan var, ona git.”',
   },
   ana: {
-    text: 'Dumrul anasına gitti. Anası da, “Oğul, dünya tatlı, can tatlıdır; canımı veremem” dedi. Azrail, Dumrul’un canını almaya geldi.',
+    text: 'Dumrul anasına vardı: “Ana, senden can dilerim. Verir misin, yoksa ‘oğul Deli Dumrul’ diye ağlar mısın?” Anası dedi: “Oğul, oğul, ay oğul! Dokuz ay dar karnımda taşıdığım, ak sütümü doya doya emzirdiğim oğul! Dünya şirin, can aziz; canıma kıyamam, bunu böyle bil.” Anası da canını vermedi. Azrail, Deli Dumrul’un canını almaya geldi.',
   },
   veda: {
-    text: 'Dumrul, “Dur, eşimle ve iki oğlumla vedalaşayım” dedi. Eşine, “Malım mülküm senin olsun, çocukları öksüz bırakma” dedi. Eşi karşı çıktı: “Senden sonra dünyayı ne yapayım? Benim canım senin canına kurban olsun!”',
+    text: 'Dumrul, “Bre Azrail, aman! Yad kızı helalim, ondan iki oğlancığım var. Emanetimi ısmarlayayım, canımı ondan sonra al” dedi. Eşine vardı: “Yüksek kara dağlarım sana yaylak olsun; soğuk sularım sana içecek, tavla tavla atlarım sana binek olsun. Gözün kimi tutarsa, gönlün kimi severse ona var; iki oğlancığı öksüz koma.”',
+    note: 'Yad kızı helal: başka soydan gelen eş.',
+  },
+  es: {
+    text: 'Kadın dedi: “Ne dersin, ne söylersin? Göz açıp gördüğüm, gönül verip sevdiğim koç yiğidim! Senden sonra kara dağlarını ben neyleyim? Yaylarsam mezarım olsun; soğuk sularını içersem kanım olsun. Senin o muhannet anan baban bir canda ne var ki sana kıyamamışlar? Yer tanık olsun, gök tanık olsun, kadir Tanrı tanık olsun: benim canım senin canına kurban olsun!”',
+    note: 'Muhannet: namert, korkak.',
+  },
+  'ikinci-dua': {
+    text: 'Azrail hatunun canını almaya geldi. Dumrul yoldaşına kıyamadı, Allah’a yalvardı: “Ulu yollar üstüne senin için imaretler yapayım; aç görsem senin için doyurayım, çıplak görsem senin için giydireyim. Alırsan ikimizin canını birlikte al, bırakırsan ikimizin canını birlikte bırak, keremi çok kadir Tanrı!”',
+    note: 'İmaret: yoksullara yemek dağıtılan hayır evi.',
   },
   bagis: {
-    text: 'Kadının bu sözü Allah’ın hoşuna gitti. Azrail’e buyurdu: “Ana babasının canını al; bu ikisine yüz kırk yıl ömür verdim.” Azrail çekip gitti. Dumrul ile eşi uzun yıllar birlikte yaşadı.',
+    text: 'Hak Teala’ya Dumrul’un sözü hoş geldi. Azrail’e buyurdu: “Deli Dumrul’un anasının babasının canını al; o iki helalliye yüz kırk yıl ömür verdim.” Azrail, ananın babanın canını hemen aldı. Deli Dumrul yüz kırk yıl daha yoldaşıyla yaşadı.',
   },
   dede: {
-    text: 'Dedem Korkut geldi, kopuzunu çaldı, bu hikâyeyi anlattı. “Bu boy Deli Dumrul’un olsun; benden sonra yiğit ozanlar söylesin” dedi. Sonra dua etti: “Kara dağların yıkılmasın, gölgeli ulu ağacın kesilmesin.”',
-    note: 'Kopuz: telli bir saz. Boy: destan hikâyesi. Ozan: hikâyeleri sazıyla anlatan kişi.',
+    text: 'Dedem Korkut gelip boy boyladı, soy soyladı: “Bu boy Deli Dumrul’un olsun; benden sonra alp ozanlar söylesin, alnı açık cömert erenler dinlesin.” Sonra dua etti: “Yerli kara dağların yıkılmasın. Gölgeli ulu ağacın kesilmesin. Coşkun akan güzel suyun kurumasın. Kadir Tanrı seni namerde muhtaç etmesin.”',
+    note: 'Boy boylamak, soy soylamak: destan anlatmak, şiir söylemek. Alp: yiğit. Ozan: destanları kopuzuyla söyleyen kişi.',
   },
 };
