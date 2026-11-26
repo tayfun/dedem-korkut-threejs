@@ -33,8 +33,11 @@ def crowd(fear=False, skip=()):
     out = {}
     for i, x, y, s, robe, flip in spots:
         if i in skip: continue
-        out[i] = (y, at(C.extra(kinds[i], robe, fear), x, y, s, 0, flip))
+        out[i] = (y, at(C.extra(kinds[i], robe, fear), x, y + math.sin(NOW * 2.1 + i * 1.7) * 3.5, s, math.sin(NOW * 1.3 + i) * 1.2, flip))   # nefes
     return out
+
+
+NOW = 0.0   # filmin o anki saniyesi: ateş, kıvılcım ve nefes buna göre kıpırdar
 
 
 def camera(cx, cy, z):
@@ -56,7 +59,7 @@ def world(cam, actors, t=0.0, blur=False, sofra=True):
     cam = camera(*cam)
     s = layer(S.sky(), cam, 0.12, blur) + layer(S.back(), cam, 0.45, blur)
     mid = S.yurt() + S.ground()
-    items = sorted(actors + [(1640, S.fire(300, 1640, t) + S.embers(300, 1470, t))], key=lambda a: a[0])
+    items = sorted(actors + [(1640, S.fire(300, 1640, NOW * 2.3) + S.embers(300, 1470, NOW * 1.5))], key=lambda a: a[0])
     s += layer(mid, cam, 1.0, blur) + layer(''.join(b for _, b in items), cam, 1.0, False)
     if sofra: s += layer(S.sofra(), cam, 1.18, blur)
     return s
@@ -128,24 +131,24 @@ def s06(u):   # İKİLİ — Dumrul ayağa kalkar, parmağını uzatır; Azrail 
 
 def s07(u):   # YAKIN — Azrail'in ağarmış sakalı; kamera sakaldan aşağı süzülür
     a = [azrail(blink(u, 'neutral', 1.2), x=AZ[0] + 40, spread=0.9, hr=math.sin(u * 6) * 2)]
-    return world((AZ[0] + 44, lerp(1030, 1120, ease(u)), 3.1), a, u, blur=True, sofra=False)
+    return world((AZ[0] + 44, lerp(950, 1040, ease(u)), 3.1), a, u, blur=True, sofra=False)
 
 
 def s08(u):   # ÇOK YAKIN — feri sönmüş gözler; yavaş itiş
-    a = [azrail(blink(u, 'neutral', 0.8, 0.1), x=AZ[0] + 40, spread=0.9)]
-    return world((AZ[0] + 42, 992, lerp(4.3, 5.0, ease(u))), a, u, blur=True, sofra=False)
+    a = [azrail('blink' if 0.74 < u < 0.84 else 'dull', x=AZ[0] + 40, spread=0.9)]
+    return world((AZ[0] + 42, 1050, lerp(3.9, 4.5, ease(u))), a, u, blur=True, sofra=False)
 
 
 def s09(u):   # TEPKİ — Dumrul çenesini kaldırır, "kimsin?"; arkada bir yiğit korkuyla bakar
     k = spring(u)
     a = [dumrul('smug' if u > 0.12 else 'anger', x=DUM[0] - 60, hr=-10 * k, armR=-40, armL=20), crowd(True)[1], crowd(True)[3], crowd(True)[4]]
-    return world((DUM[0] + 30, 1110, lerp(1.85, 2.0, ease(u))), a, u, blur=True, sofra=False)
+    return world((DUM[0] + 30, 1040, lerp(1.85, 2.0, ease(u))), a, u, blur=True, sofra=False)
 
 
 def s10(u):   # YAKIN — Azrail kendini bildirir: kanatlar gerilir, gözler iri disk; yiğitler geri çekilir
     k = spring(u)
     a = [azrail('wrath' if u > 0.1 else 'speak', x=AZ[0] + 40, spread=lerp(0.9, 1.42, k), y=AZ[1] - 26 * k, armL=44 * k, armR=-44 * k, s=AZ[2] * (1 + 0.06 * k))] + [crowd(True)[5], crowd(True)[0]]
-    return world((AZ[0] + 40, lerp(1040, 1000, k), lerp(1.45, 1.75, k)), a, u, sofra=False)
+    return world((AZ[0] + 40, lerp(1130, 1100, k), lerp(1.45, 1.75, k)), a, u, sofra=False)
 
 
 def s11(u):   # GENİŞ — Dumrul kara kılıcını sıyırır, üstüne atılır; kamera peşinden kayar
@@ -162,19 +165,24 @@ def s12(u):   # EŞYA — kılıç boşluğu biçer; kanat tüyleri savrulur; i�
     s = bg
     arc = [(980, 1500), (700, 1180), (420, 1000), (120, 940)]
     s += ink(arc, 70 * (1 - u * 0.6), col=C.PALE, op=0.55 * (1 - u * 0.5), taper=(0.1, 0.6), wob=0)                       # kılıcın izi
-    s += at(C.sword(), lerp(1000, 300, ease(min(1, u * 1.6))), lerp(1650, 1120, ease(min(1, u * 1.6))), 2.3, lerp(-20, -74, ease(min(1, u * 1.6))))
+    sw = ease(min(1, u * 1.6))
+    s += at(C.sword(), lerp(1150, 420, sw), lerp(1800, 1330, sw), 3.0, lerp(-10, -62, sw))
+    reseed('puff')
+    for i in range(7):                                                                                                   # kaybolduğu yerde soluk bir bulut
+        a0 = i * 0.9; d = 60 + 120 * k
+        s += fill(ellipse(540 + math.cos(a0) * d, 800 + math.sin(a0) * d * 0.7, 90 * (1.2 - u * 0.5), 70 * (1.2 - u * 0.5), 9, 0.12), C.PALE, 1.0, op=max(0.0, 0.8 - u * 0.75))
     reseed('feathers')
-    for i in range(9):
-        a0 = R(0, 6.283); d = R(120, 420) * k
-        s += at(C.feather(), 520 + math.cos(a0) * d, 820 + math.sin(a0) * d + 160 * u * u, 1.5, R(0, 360) + u * 200)
-    s += at(C.dove(int(u * 9) % 2), lerp(520, 640, k), lerp(840, 600, ease(u)), 2.4 * min(1, 0.4 + k), -12)
+    fs = [(R(0, 6.283), R(120, 520), R(1.2, 2.0), R(0, 360), R(120, 320)) for _ in range(18)]      # tüy çizimi tohumu sıfırlar; önce yerleri seç
+    for a0, d0, sc, r0, rv in fs:
+        s += at(C.feather(), 540 + math.cos(a0) * d0 * k, 820 + math.sin(a0) * d0 * k + 220 * u * u, sc, r0 + u * rv)
+    s += at(C.dove(int(NOW * 9) % 2), lerp(520, 640, k), lerp(840, 560, ease(u)), 2.6 * min(1, 0.4 + k), -12)
     return s
 
 
 def s13(u):   # GENİŞ — güvercin aya doğru uçar; aşağıda Dumrul kılıcı havada kalakalır; kamera göğe kalkar
     a = [dumrul('shock', x=640, armR=-150, armL=30, hr=-14, poseR='grip', sword=True)] + [v for i, v in crowd(True).items() if i in (0, 1, 5)]
     dx, dy = lerp(560, 1000, ease(u)), lerp(820, 380, ease(u))
-    a.append((3000, at(C.dove(int(u * 12) % 2), dx, dy + math.sin(u * 20) * 10, lerp(1.0, 0.5, u), -24)))
+    a.append((3000, at(C.dove(int(NOW * 9) % 2), dx, dy + math.sin(NOW * 9) * 10, lerp(1.0, 0.5, u), -24)))
     return world((lerp(700, 860, ease(u)), lerp(1000, 700, ease(u)), 1.32), a, u, sofra=False)
 
 
@@ -208,12 +216,71 @@ def caption(img, text, dim=False):
     return img
 
 
-def frame(i, u, scale=1.0, frame_no=0):
+HOLD = {12: 1.0}   # son çekim, son altyazıdan sonra bir saniye daha durur
+FPS = 30
+
+
+def frames_of(i):
+    return round((len(SHOTS[i][1]) * CHUNK + HOLD.get(i, 0)) * FPS)
+
+
+def whip(img, amount):
+    """Bulanık savrulma geçişi: kare yatayda kayar ve sürünür. amount: -1…1."""
+    a = np.asarray(img).astype(np.float32)
+    k = int(abs(amount) * 260) | 1
+    if k > 1:
+        c = np.cumsum(np.pad(a, ((0, 0), (k // 2 + 1, k // 2), (0, 0)), mode='edge'), axis=1)
+        a = (c[:, k:] - c[:, :-k]) / k
+    sh = int(amount * 520); w = a.shape[1]                                   # kaydır; açılan kenar son sütunla dolar (sarmaz)
+    a = np.pad(a, ((0, 0), (abs(sh), abs(sh)), (0, 0)), mode='edge')[:, abs(sh) - sh: abs(sh) - sh + w]
+    return Image.fromarray(a.clip(0, 255).astype(np.uint8))
+
+
+def frame(i, u, scale=1.0, frame_no=0, f=None):
+    """Bir kare: SVG'yi kur, resme çevir, cilala, (geçişteyse) savur, en son altyazıyı bas."""
+    global NOW
     name, chunks, fn = SHOTS[i]
+    n = frames_of(i)
+    if f is not None: u = f / max(1, n - 1)
+    start = sum(frames_of(j) for j in range(i))
+    NOW = (start + (f if f is not None else u * n)) / FPS
     w, h = int(FW * scale), int(FH * scale)
     body = f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {FW} {FH}"><defs>{DEFS}</defs><rect width="{FW}" height="{FH}" fill="{S.NIGHT}"/>{fn(u)}</svg>'
-    img = finish(raster(body, w, h), frame_no, grain=4.0 * max(scale, 0.6))
+    img = finish(raster(body, w, h), frame_no or int(NOW * FPS), grain=4.0 * max(scale, 0.6))
+    if f is not None:
+        if f < 3 and i > 0: img = whip(img, (3 - f) / 3 * 0.9)                    # çekime girerken
+        if f >= n - 3 and i < len(SHOTS) - 1: img = whip(img, -(f - (n - 4)) / 3 * 0.9)   # çıkarken
+        per = CHUNK * FPS
+        ci = min(len(chunks) - 1, int(f / per))
+        return caption(img, chunks[ci], dim=(f - ci * per) < 3 and f < len(chunks) * per + 3)
     return caption(img, chunks[min(len(chunks) - 1, int(u * len(chunks)))])
+
+
+def _job(args):
+    i, f, d = args
+    frame(i, 0, 1.0, f=f).save(f'{d}/s{i:02d}/{f:04d}.jpg', quality=96, subsampling=0)
+    return i
+
+
+def render(out, work, only=None):
+    """Bütün kareleri paralel çizer; her çekimi ayrı mp4 yapar (libx264, CRF 17), sonra kopyalayarak birleştirir."""
+    import multiprocessing as mp, subprocess
+    shots = range(len(SHOTS)) if only is None else only
+    jobs = []
+    for i in shots:
+        os.makedirs(f'{work}/s{i:02d}', exist_ok=True)
+        jobs += [(i, f, work) for f in range(frames_of(i))]
+    with mp.Pool(min(11, os.cpu_count() or 4)) as pool:
+        for k, _ in enumerate(pool.imap_unordered(_job, jobs, chunksize=4)):
+            if k % 100 == 0: print('kare', k, '/', len(jobs), flush=True)
+    files = []
+    for i in shots:
+        p = f'{work}/s{i:02d}.mp4'
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', str(FPS), '-i', f'{work}/s{i:02d}/%04d.jpg', '-c:v', 'libx264', '-crf', '17', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-r', str(FPS), p], check=True)
+        files.append(p)
+    with open(f'{work}/list.txt', 'w') as fh: fh.write(''.join(f"file '{os.path.abspath(p)}'\n" for p in files))
+    subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', f'{work}/list.txt', '-c', 'copy', out], check=True)
+    print('bitti', out, sum(frames_of(i) for i in shots) / FPS, 'sn')
 
 
 def contact(out):
@@ -233,4 +300,6 @@ def contact(out):
 
 if __name__ == '__main__':
     if sys.argv[1] == 'contact': contact(sys.argv[2])
+    elif sys.argv[1] == 'render': render(sys.argv[2], sys.argv[3], [int(x) for x in sys.argv[4].split(',')] if len(sys.argv) > 4 else None)
+    elif sys.argv[1] == 'f': frame(int(sys.argv[2]), 0, 1.0, f=int(sys.argv[3])).save(sys.argv[4])
     else: frame(int(sys.argv[1]), float(sys.argv[2]), 1.0).save(sys.argv[3])

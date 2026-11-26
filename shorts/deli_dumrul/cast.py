@@ -228,6 +228,7 @@ AZ = {
     'neutral': dict(brow=0.1, open=0.55, mouth='line', jaw=0),
     'blink':   dict(brow=0.1, open=0.0, mouth='line', jaw=0),
     'stern':   dict(brow=0.5, open=0.4, mouth='frown', jaw=0),
+    'dull':    dict(brow=0.02, open=0.95, mouth='line', jaw=0),      # feri sönmüş, açık göz
     'speak':   dict(brow=0.2, open=0.6, mouth='open', jaw=26),
     'wrath':   dict(brow=0.55, open=1.0, mouth='open', jaw=40, shock=True),
 }
