@@ -15,7 +15,7 @@ import { bow, kopuz, sword } from './props';
 export function dedeKorkut(): Human {
   const d = new Human({ robe: P.cream, trim: P.teal, hat: 'turban', hatColor: P.white, beard: P.white, long: true, cloak: P.teal, mood: 'happy' });
   const k = kopuz();
-  k.position.set(0.1, 0.98, 0.3);
+  k.position.set(0.08, 1.1, 0.2);
   k.rotation.z = 1.05;
   d.rig.add(k);
   d.armR.rotation.set(-0.95, 0, -0.35);

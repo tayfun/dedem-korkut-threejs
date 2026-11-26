@@ -101,7 +101,7 @@ export function launch(tl: TL, obj: THREE.Object3D, from: [number, number, numbe
 /** Ayaktaki figürü sırtüstü yere yıkar. */
 export function fall(tl: TL, m: Human, at: number, dur = 0.5): void {
   tl.to(m.rig.rotation, { x: -Math.PI / 2, duration: dur, ease: 'power2.in' }, at);
-  tl.to(m, { yOffset: 0.27 * m.group.scale.y, duration: dur, ease: 'power2.in' }, at);
+  tl.to(m, { yOffset: 0.17 * m.group.scale.y, duration: dur, ease: 'power2.in' }, at);
 }
 
 /* ------------------------- Duruş ve jestler ------------------------ */

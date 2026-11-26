@@ -158,7 +158,7 @@ export const captive = (o: HumanOpts = {}) => beyrek({ hat: 'none', beard: P.bla
 export function deliOzan(o: HumanOpts = {}): Human {
   const b = captive({ robe: P.sand, trim: P.earth, mood: 'smug', ...o });
   const k = kopuz();
-  k.position.set(0.1, 0.98, 0.3);
+  k.position.set(0.08, 1.1, 0.2);
   k.rotation.z = 1.05;
   b.rig.add(k);
   b.armR.rotation.set(-0.95, 0, -0.35);

@@ -174,3 +174,15 @@ export function toon(color: number, opts: { side?: THREE.Side; face?: boolean } 
   }
   return m;
 }
+
+/** Köşe renkli karakter malzemesi: tek parça gövdede kaftan, ten, çizme renkleri köşelerden gelir. */
+export function toonVertex(): THREE.MeshToonMaterial {
+  const key = 'toonVertex';
+  let m = cache.get(key) as THREE.MeshToonMaterial | undefined;
+  if (!m) {
+    m = new THREE.MeshToonMaterial({ vertexColors: true, gradientMap: toonRamp() });
+    cache.set(key, m);
+    shared.add(m);
+  }
+  return m;
+}

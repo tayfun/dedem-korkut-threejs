@@ -671,7 +671,7 @@ export const scenes: SceneDef[] = [
       const tl = newTimeline();
       const d = stage.track(place(bound(dirse({ mood: 'sad' })), -3, -2, E)).sit();
       const saz = kopuz();
-      saz.position.set(0.1, 0.98, 0.3);
+      saz.position.set(0.08, 1.1, 0.2);
       saz.rotation.z = 1.05;
       saz.visible = false;
       d.rig.add(saz);

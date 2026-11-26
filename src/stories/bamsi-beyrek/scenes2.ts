@@ -177,7 +177,7 @@ export const scenes: SceneDef[] = [
       sisters.forEach((s) => grieve(s));
       const bard = stage.track(place(villager(1), -4, 2.4, W));
       const lute = kopuz();
-      lute.position.set(0.1, 0.98, 0.3);
+      lute.position.set(0.08, 1.1, 0.2);
       lute.rotation.z = 1.05;
       bard.rig.add(lute);
       const b = captive();

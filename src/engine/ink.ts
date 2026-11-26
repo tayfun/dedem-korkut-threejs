@@ -17,12 +17,16 @@ const normalMaterial = new THREE.ShaderMaterial({
   side: THREE.DoubleSide,
   vertexShader: /* glsl */ `
     #include <common>
+    #include <skinning_pars_vertex>
     varying vec3 vN;
     varying float vZ;
     void main() {
       #include <beginnormal_vertex>
+      #include <skinbase_vertex>
+      #include <skinnormal_vertex>
       #include <defaultnormal_vertex>
       #include <begin_vertex>
+      #include <skinning_vertex>
       #include <project_vertex>
       vN = normalize(transformedNormal);
       vZ = -mvPosition.z;

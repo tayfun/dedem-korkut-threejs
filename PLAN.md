@@ -88,7 +88,7 @@ Modüllerin ayrıntılı dökümü `AGENTS.md` içindeki "Kodun Düzeni" tablosu
 
 - "Canlanan minyatür": köşeli low-poly çevre ve çizgi film tarzı karakterler; üstünde mürekkep çizgisi, kâğıt dokusu ve kenar kararması.
 - Katmanlı arka plan: uzakta ufka doğru solan üç dağ sırası, yassı minyatür bulutları, ışınlı güneş ya da hilal.
-- Karakterler çizgi film tarzındadır: iri baş, iri gözler, yuvarlak hatlar, basamaklı gölge; kaş ve ağızla değişen yüz ifadeleri, göz kırpma.
+- Karakterler çizgi film tarzındadır: uzun ve ince, tek parça esneyen gövde, iri gözler, basamaklı gölge; kaş ve ağızla değişen yüz ifadeleri, göz kırpma.
 - Figürler eklemlidir (dirsek, diz); bıyık, sakal, örgü, pelerin ve kilim desenli şeritlerle ayrışır.
 - Zemin canlıdır: rüzgârda sallanan otlar, ayak altında toz, ateşten duman ve kıvılcım, gökte kuşlar.
 - Ana sayfada tezhip çerçevesi; her hikâyenin kapağı kendi sahnesinden çekilen bir karedir.
