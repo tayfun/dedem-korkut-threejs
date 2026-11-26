@@ -42,8 +42,8 @@ export function showReader(app: HTMLElement, stage: Stage, story: Story, startAt
       count.textContent = `${i + 1} / ${total}`;
       prev.disabled = i === 0;
       const last = i === total - 1;
-      next.textContent = last ? 'Hikâyeler ↩' : 'İleri →';
-      next.setAttribute('aria-label', last ? 'Hikâye listesine dön' : 'Sonraki sahne');
+      next.textContent = !last ? 'İleri →' : story.next ? `${story.next.label} →` : 'Hikâyeler ↩';
+      next.setAttribute('aria-label', !last ? 'Sonraki sahne' : story.next ? `${story.next.label}e geç` : 'Hikâye listesine dön');
       words.classList.remove('in');
       void words.offsetWidth; // animasyonu yeniden başlat
       words.classList.add('in');
@@ -57,7 +57,7 @@ export function showReader(app: HTMLElement, stage: Stage, story: Story, startAt
   ro.observe(panel);
 
   const goNext = () => {
-    if (player.index === player.total - 1) location.hash = '#/';
+    if (player.index === player.total - 1) location.hash = story.next ? `#/hikaye/${story.next.slug}` : '#/';
     else player.next();
   };
   prev.addEventListener('click', () => player.prev());

@@ -17,6 +17,8 @@ export interface Story {
   title: string;
   texts: Record<string, SceneText>;
   scenes: SceneDef[];
+  /** Devamı olan bölümlerde: son sahnedeki düğme listeye değil bu hikâyeye götürür. */
+  next?: { slug: string; label: string };
 }
 
 export interface StoryMeta {

@@ -58,7 +58,7 @@ Yeni bir hikâye yazarken önce buradaki hazır parçaları kullan; yalnızca o 
 - Dil günümüz Türkçesi, sade ve akıcı; ama özgün metnin söyleyişini ve ritmini koru ("dünya şirin, can aziz", "boy boyladı, soy soyladı"). Soylamaları kısaltabilirsin, özünü ve imgelerini koru.
 - Özel adları koru (Boğaç Han, Banı Çiçek, Salur Kazan). Eskimiş ya da kültürel sözcükleri (kavat, görklü, yumuş oğlanı, otağ) metinde bırak ve sahnenin `note` alanında açıkla.
 - Metnin temeli Dresden nüshasıdır (Ergin ve Gökyay yayınları). Emin olmadığın bir ayrıntıyı ekleme; kaynağa bakılamıyorsa bunu kullanıcıya söyle.
-- Her sahne en çok 450 karakter kadar olsun (telefonda panel ekranın yarısını geçmesin); uzun bölümleri iki sahneye böl. Her hikâye 8–20 sahne; daha uzun boyları bölümlere ayır (örnek: `bamsi-beyrek/` iki bölüm, tek klasör).
+- Her sahne en çok 450 karakter kadar olsun (telefonda panel ekranın yarısını geçmesin); uzun bölümleri iki sahneye böl. Her hikâye 8–20 sahne; daha uzun boyları bölümlere ayır (örnek: `bamsi-beyrek/` iki bölüm, tek klasör); bölümün `Story.next` alanı son sahnedeki düğmeyi sonraki bölüme bağlar.
 - Metin ile animasyon kodu ayrı dosyalarda durur (`story.ts` ve `scenes.ts`).
 - Sahneleme metinle çelişmemeli; metinde olmayan bir olayı animasyonla da ekleme.
 - Allah hiçbir sahnede gösterilmez; ilahî buyruk ışıkla anlatılır.
