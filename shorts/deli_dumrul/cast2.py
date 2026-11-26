@@ -228,12 +228,13 @@ def dede_head(expr='joy'):
 
 
 def kopuz():
-    """Kopuz: armudi gövde, uzun sap, üç tel. Gövdenin ortası (0,0), sap sağ yukarı uzanır."""
+    """Kopuz: armudi gövde, uzun sap, üç tel, burgular. Gövdenin ortası (0,0), sap sağ yukarı uzanır."""
     reseed('kopuz')
-    s = ink([(40, -30), (300, -230)], 20, col=LEATHER, taper=(0.02, 0.04), wob=0.4, press=0.1, smooth=False) + ink([(40, -18), (300, -218)], 2.2, wob=0.3, smooth=False, taper=(0, 0))
-    body = [(-90, 20), (-70, -50), (0, -70), (70, -30), (90, 40), (40, 90), (-40, 90)]
-    s += blob(body, LEATHER, 3.2) + fill([(-90, 20), (-70, -50), (-20, -66), (-30, 90), (-40, 90)], INK, 0.8, op=0.3) + blob(ellipse(10, 10, 20, 20, 8), COAT, 2.2)
-    s += ''.join(ink([(-40 + k * 8, 60 - k * 6), (296 + k * 6, -236 + k * 8)], 1.7, col=PALE, op=0.9, wob=0, smooth=False) for k in range(3)) + ''.join(stud(292 + k * 14, -246 + k * 16, 4) for k in range(3))
+    s = ink([(40, -60), (330, -300)], 26, col=LEATHER, taper=(0.02, 0.03), wob=0.4, press=0.08, smooth=False) + ink([(48, -46), (336, -288)], 2.4, wob=0.3, smooth=False, taper=(0, 0))
+    s += blob([(318, -316), (352, -330), (362, -300), (334, -284)], COAT, 2.6) + ''.join(ink([(326 + k * 12, -318 + k * 10), (346 + k * 12, -340 + k * 10)], 5, col=GOLD, op=1, taper=(0, 0.2), wob=0, smooth=False) for k in range(3))
+    body = [(-84, 10), (-72, -64), (-10, -96), (62, -64), (88, 10), (62, 84), (0, 108), (-62, 84)]
+    s += blob(body, LEATHER, 3.4) + fill([(-84, 10), (-72, -64), (-30, -88), (-36, 96), (-62, 84)], INK, 0.8, op=0.3) + blob(ellipse(4, 14, 24, 24, 8), COAT, 2.4) + ticks(body, 10, (6, 12), 1.2, 0.3, 1.8)
+    s += ''.join(ink([(-30 + k * 14, 70 - k * 6), (322 + k * 8, -306 + k * 8)], 1.8, col=PALE, op=0.95, wob=0, smooth=False) for k in range(3)) + blob([(-36, 60), (10, 50), (14, 62), (-32, 72)], COAT, 2.0)
     return s
 
 
@@ -242,9 +243,9 @@ def dede(expr='joy', hr=0):
     reseed('dede-cloak')
     for sx in (-1, 1): s += blob([(sx * 40, -12), (sx * 112, 24), (sx * 150, 300), (sx * 168, 600), (sx * 110, 600), (sx * 96, 300), (sx * 60, 60)], COBALT, 3.2)
     s += group(dede_head(expr), 0, -116, hr, 0.86, None, 0, 120)
-    s += group(kopuz(), -20, 330, -6, 1.15)                                                            # kopuz kucakta, sakalın önünde
-    s += group(sleeve(150, 34, COBALT, 'dede', True, 0.76, 'grip', 1), 100, 44, 62)                    # sağ el tellerde
-    s += group(sleeve(120, 30, COBALT, 'dede', False, 0.7, 'grip', -1), 150, 150, -150)                # sol el sapta
+    s += group(kopuz(), -40, 330, 0, 1.0)                                                              # kopuz kucakta, sakalın önünde
+    s += group(sleeve(236, 34, COBALT, 'dede', False, 0.76, 'grip', -1), -100, 44, -16)                # sol el tellerde
+    s += group(sleeve(110, 34, COBALT, 'dede', True, 0.76, 'grip', 1), 104, 44, -62)                   # sağ el sapta
     return s
 
 
@@ -294,37 +295,48 @@ def coin(x, y, r=12):
 
 # ----------------------------------------------------------------------------- at ve doğan
 def horse(spooked=False):
-    """At: yandan, sola bakar; koca göğüs, ince bacak, iri diş. Sırtın ortası (0,0)."""
+    """At: yandan, sola bakar; derin göğüs, çekik karın, ince bacak, iri diş. Sırtın ortası (0,0)."""
     reseed('horse')
     s = ''
-    for x, back in ((-150, True), (150, True), (-190, False), (110, False)):                                # bacaklar
-        leg = [(x - 20, 60), (x + 22, 60), (x + 14, 230), (x + 22, 300), (x - 18, 300), (x - 12, 230)]
-        s += fill(leg, PALE, 1.0) + (fill(leg, COBALT, 1.0, op=0.45) if back else '') + ink(leg, 3.2, closed=True) + blob([(x - 22, 296), (x + 26, 296), (x + 30, 326), (x - 26, 326)], COAT, 2.6)
-    tail = [(250, -30), (330, -20), (360, 100), (330, 220), (300, 120), (270, 30)]
-    s += fill(tail, COAT, 0.8) + ink(tail, 3.0, closed=True) + fur(tail, 5, 14, 14, 1.2, 2.0)
-    body = [(-250, -40), (-160, -110), (0, -90), (160, -100), (250, -50), (270, 40), (200, 110), (0, 120), (-200, 110), (-270, 40)]
-    s += blob(body, PALE, 3.8) + fill([(-270, 40), (-200, 110), (0, 120), (200, 110), (270, 40), (150, 60), (-150, 60)], COBALT, 1.0, op=0.32)
-    s += blob([(-70, -100), (70, -96), (90, 10), (-80, 10)], RED, 3.0) + ''.join(medallion(x, -44, 16, GOLD, 1.9) for x in (-34, 30)) + blob([(-60, -112), (-30, -150), (40, -146), (70, -106)], LEATHER, 3.0)   # eyer
-    neck = [(-250, -40), (-300, -200), (-250, -260), (-180, -240), (-150, -110)]
-    s += blob(neck, PALE, 3.6)
-    mane = [(-180, -240), (-150, -110), (-110, -120), (-120, -180), (-100, -200), (-140, -230), (-130, -262)]
+    def leg(x, back, hind):
+        p = ([(x - 30, 40), (x + 32, 40), (x + 20, 150), (x + 44, 226), (x + 30, 300), (x - 2, 300), (x + 8, 226), (x - 18, 150)] if hind
+             else [(x - 26, 40), (x + 26, 40), (x + 16, 170), (x + 20, 300), (x - 14, 300), (x - 12, 170)])
+        r = fill(p, PALE, 1.0) + (fill(p, COBALT, 1.0, op=0.45) if back else '') + ink(p, 3.2, closed=True) + ink([(p[2][0] - 4, p[2][1] + 6), (p[-1][0] + 4, p[-1][1] + 6)], 1.9, wob=0.2, smooth=False)
+        hx = p[4 if hind else 3][0]
+        return r + blob([(hx - 40, 296), (hx + 6, 296), (hx + 10, 330), (hx - 44, 330)], COAT, 2.6)
+    s += leg(-150, True, False) + leg(210, True, True)
+    tail = [(250, -50), (320, -60), (370, 40), (360, 190), (320, 250), (310, 120), (270, 20)]
+    s += fill(tail, COAT, 0.8) + ink(tail, 3.0, closed=True) + fur(tail, 6, 14, 14, 1.2, 2.0)
+    body = [(-246, -60), (-170, -124), (-60, -102), (60, -98), (170, -120), (252, -72), (278, 10), (244, 86), (120, 92), (0, 70), (-120, 104), (-226, 96), (-276, 10)]
+    s += blob(body, PALE, 3.8) + fill([(-276, 10), (-226, 96), (-120, 104), (0, 70), (120, 92), (244, 86), (278, 10), (150, 40), (-150, 50)], COBALT, 1.0, op=0.32) + ink([(-210, -20), (-196, 40), (-216, 84)], 2.0, wob=0.3) + ink([(196, -40), (220, 20), (204, 70)], 2.0, wob=0.3)
+    s += leg(-210, False, False) + leg(150, False, True)
+    s += blob([(-76, -108), (72, -102), (92, 20), (-86, 20)], RED, 3.0) + ''.join(medallion(x, -44, 16, GOLD, 1.9) for x in (-36, 30)) + ''.join(scroll(x, 2, 9, GOLD, 1.7) for x in (-60, -20, 20, 60))
+    s += blob([(-64, -118), (-40, -160), (36, -156), (72, -112)], LEATHER, 3.0) + ink([(0, 20), (0, 110)], 5, col=LEATHER, wob=0.3, taper=(0, 0), smooth=False) + blob([(-14, 104), (16, 104), (20, 138), (-18, 138)], GOLD, 2.4)   # eyer, üzengi
+    neck = [(-246, -60), (-170, -124), (-176, -230), (-226, -326), (-304, -306), (-312, -210), (-286, -90)]
+    s += blob(neck, PALE, 3.6) + fill([(-304, -306), (-312, -210), (-286, -90), (-256, -70), (-280, -200)], COBALT, 0.8, op=0.3)
+    mane = [(-226, -330), (-196, -300), (-172, -306), (-170, -258), (-146, -250), (-158, -204), (-134, -186), (-152, -148), (-132, -120), (-170, -124), (-176, -230)]
     s += fill(mane, COAT, 0.8, smooth=False) + ink(mane, 2.8, closed=True, smooth=False, wob=0.3)
-    head = [(-250, -290), (-190, -300), (-180, -240), (-250, -200), (-330, -130), (-380, -120), (-390, -160), (-340, -230)]
-    s += blob(head, PALE, 3.6) + blob([(-214, -300), (-196, -350), (-180, -296)], PALE, 2.8) + fill(ellipse(-374, -146, 6, 4, 6), INK, 0.3)
+    head = [(-230, -340), (-196, -352), (-180, -300), (-236, -246), (-330, -160), (-396, -138), (-420, -170), (-404, -210), (-350, -270), (-300, -318)]
+    s += blob(head, PALE, 3.6) + blob([(-222, -344), (-206, -400), (-186, -344)], PALE, 2.8) + fill([(-214, -350), (-206, -384), (-196, -348)], SKIN_D, 0.4) + fill(ellipse(-402, -168, 7, 5, 6), INK, 0.3) + ink([(-330, -160), (-300, -200), (-290, -250)], 2.0, wob=0.3)
     if spooked:
-        s += fill(ellipse(-262, -250, 20, 20, 9), PALE, 0.4) + ink(ellipse(-262, -250, 20, 20, 9), 3.0, closed=True) + f'<circle cx="-266" cy="-250" r="3" fill="{INK}"/>'
-        s += mouth_(-352, -118, 30, 4, 22, 0, 5, 4)
+        s += fill(ellipse(-266, -280, 22, 22, 9), PALE, 0.4) + ink(ellipse(-266, -280, 22, 22, 9), 3.0, closed=True) + f'<circle cx="-270" cy="-280" r="3" fill="{INK}"/>'
+        s += group(mouth_(0, 0, 34, 4, 26, 0, 5, 4), -372, -132, -24)
     else:
-        s += fill(ellipse(-262, -250, 10, 8, 8), INK, 0.3) + ink([(-380, -124), (-350, -116), (-330, -124)], 2.6, wob=0.2)
-    s += ink([(-330, -210), (-250, -196), (-190, -236)], 4, col=RED, wob=0.3, taper=(0.05, 0.05))                                    # yular
+        s += fill(ellipse(-266, -280, 10, 9, 8), INK, 0.3) + ink([(-282, -296), (-266, -302), (-250, -296)], 3.0, wob=0.2) + ink([(-410, -152), (-376, -140), (-350, -150)], 2.6, wob=0.2)
+    s += ink([(-350, -250), (-300, -214), (-240, -250)], 5, col=RED, wob=0.3, taper=(0.05, 0.05)) + ink([(-350, -250), (-380, -180)], 4, col=RED, wob=0.2, taper=(0.05, 0.05), smooth=False) + ink([(-300, -214), (-100, -110)], 2.6, col=RED, op=1, wob=0.6, taper=(0, 0), smooth=False)
     return s
 
 
 def falcon():
-    """Doğan: av kuşu, başında tomağa. Pençe (0,0)."""
+    """Doğan: dik duran av kuşu; başında al tomağa, kanca gaga, kısık sert göz. Pençe (0,0)."""
     reseed('falcon')
-    body = [(-30, -10), (-44, -90), (-20, -150), (20, -150), (40, -90), (34, -10)]
-    s = blob([(-10, -20), (40, 60), (4, 50), (-20, 70), (-30, -10)], COAT, 2.6) + blob(body, LEATHER, 3.0) + fill([(-30, -10), (-44, -90), (-20, -150), (-6, -150), (-10, -10)], INK, 0.8, op=0.35)
-    s += fur([(-30, -110), (30, -110), (30, -20), (-30, -20)], 4, 12, 9, 0.2, 1.9) + blob([(-24, -150), (0, -190), (26, -150), (0, -134)], RED, 2.6) + blob([(20, -160), (50, -150), (30, -138)], GOLD, 2.2)
-    s += f'<circle cx="12" cy="-158" r="3.2" fill="{INK}"/>' + ''.join(ink([(x, -6), (x - 4, 12)], 3.0, col=GOLD, op=1, wob=0, smooth=False) for x in (-16, 0, 16))
+    s = blob([(-6, -10), (34, 96), (4, 84), (-22, 100), (-30, -6)], COAT, 2.6) + ''.join(ink([(x, 20), (x + 8, 84)], 1.8, col=PALE, op=0.5, wob=0, smooth=False) for x in (-12, 4))
+    body = [(-36, 0), (-54, -90), (-34, -166), (8, -186), (42, -156), (50, -84), (32, 0)]
+    s += blob(body, PALE, 3.2) + fur([(-30, -130), (36, -130), (34, -14), (-30, -14)], 5, 13, 9, 0.2, 2.0)
+    wing = [(-50, -120), (-14, -146), (8, -70), (4, 40), (-18, 96), (-44, 20)]
+    s += blob(wing, LEATHER, 3.0) + fill([(-50, -120), (-30, -134), (-22, 80), (-44, 20)], INK, 0.8, op=0.35) + ''.join(ink([(-36 + k * 8, -70 + k * 30), (-20 + k * 4, -20 + k * 34)], 1.9, wob=0.2, smooth=False) for k in range(4))
+    head = ellipse(6, -184, 36, 32, 9, 0.04)
+    s += blob(head, LEATHER, 3.0) + blob([(-26, -196), (4, -234), (36, -200), (6, -184)], RED, 2.6) + blob(ellipse(6, -238, 7, 7, 6), GOLD, 2.0)
+    s += blob([(34, -196), (74, -184), (70, -166), (56, -150), (50, -166), (32, -168)], GOLD, 2.4) + fill(ellipse(22, -184, 6, 5, 6), PALE, 0.3) + f'<circle cx="23" cy="-184" r="2.8" fill="{INK}"/>' + ink([(10, -196), (36, -190)], 3.4, wob=0, smooth=False)
+    s += ''.join(ink([(x, -4), (x - 6, 14), (x + 4, 18)], 3.4, col=GOLD, op=1, wob=0, smooth=False, taper=(0, 0.3)) for x in (-18, 0, 18))
     return s
