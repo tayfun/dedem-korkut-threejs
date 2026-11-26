@@ -40,7 +40,7 @@ Dede Korkut hikâyelerini sade Türkçeyle anlatan, sahneleri Three.js ile prose
 
 1. `src/stories/<hikaye-adi>/` klasörünü aç.
 2. `story.ts` içine sahne metinlerini yaz.
-3. `scenes.ts` içinde her sahne için `setup` ve `timeline` yaz; önce `src/procedural/` altındaki hazır parçaları kullan.
+3. `scenes.ts` içinde her sahne için `build(stage)` yaz: nesneleri kurar, GSAP zaman çizelgesini döndürür. Önce `src/procedural/` altındaki hazır parçaları ve `src/engine/direct.ts` yardımcılarını kullan; örnek için `src/stories/deli-dumrul/` klasörüne bak.
 4. Hikâyeyi `src/stories/index.ts` listesine ekle.
 5. Tarayıcıda baştan sona izle; masaüstü ve telefon genişliğinde dene.
 6. `PLAN.md`'deki durumu güncelle, commit et, `main`'e push et.
@@ -49,3 +49,6 @@ Dede Korkut hikâyelerini sade Türkçeyle anlatan, sahneleri Three.js ile prose
 
 - Değişiklikleri tarayıcıda gerçekten çalıştırarak dene; yalnızca derlenmesi yetmez.
 - Konsolda hata ya da uyarı bırakma.
+- Geliştirme sunucusu: `npm run dev`. Tek bir sahneyi açmak için `#/hikaye/<slug>/<sahne-no>` adresini kullan.
+- Metin paneli ekranın altını kapatır; kamerayı, olay panelin üstünde kalacak biçimde kur. Telefon genişliğinde (390 piksel) de bak.
+- Bir figürün yüzü `+z` yönüne bakar; `rotation.y = Math.atan2(dx, dz)` onu bir hedefe çevirir.

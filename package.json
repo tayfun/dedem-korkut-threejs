@@ -1,0 +1,22 @@
+{
+  "name": "dedem-korkut-threejs",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Dede Korkut hikâyeleri — sade Türkçe anlatım, Three.js ile prosedürel animasyon",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "gsap": "^3.15.1",
+    "simplex-noise": "^4.0.3",
+    "three": "^0.187.0"
+  },
+  "devDependencies": {
+    "@types/three": "^0.187.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.4.0"
+  }
+}

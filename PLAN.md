@@ -55,24 +55,33 @@ src/
     deli-dumrul/
       story.ts         sahne metinleri (Türkçe)
       scenes.ts        her sahnenin 3B kurulumu ve animasyonu
+      sets.ts          hikâyeye özel mekânlar ve kişiler
   ui/                  ana sayfa, hikâye okuyucu, ileri/geri düğmeleri
   styles/
 ```
 
 ### Hikâye veri modeli
 
-Her hikâye, metni ve animasyonu eşleştiren bir sahne listesidir:
+Her hikâye, metni ve animasyonu eşleştiren bir sahne listesidir. Metinler `story.ts`, sahne kurulumları `scenes.ts` içinde durur ve sahne kimliğiyle (`id`) eşleşir:
 
 ```ts
-interface Scene {
+interface SceneText { text: string; note?: string }   // note: eski sözcük açıklaması
+interface SceneDef {
   id: string;
-  text: string;                       // sade Türkçe anlatım
-  setup(ctx: SceneContext): void;     // nesneleri sahneye yerleştir
-  timeline(ctx: SceneContext): gsap.core.Timeline; // animasyon
+  build(stage: Stage): gsap.core.Timeline;             // nesneleri kurar, animasyonu döndürür
 }
 ```
 
 Metin ile kod ayrı dosyalarda durur; böylece metin, koda dokunmadan düzeltilebilir.
+
+### Motorun parçaları
+
+- `engine/stage.ts` — renderer, kamera, kare döngüsü; `Mover` (yürüyen figür tabanı), zemine basma.
+- `engine/direct.ts` — yönetmen yardımcıları: `place`, `walkTo`, `faceTo`, `turn`, `cam`, `shakeHead`.
+- `engine/player.ts` — hikâyeyi sahne sahne oynatır.
+- `procedural/world.ts` — gök, arazi, çadır, ateş, flama, ışık hüzmesi, kılıç, kopuz.
+- `procedural/figures.ts` — insan, at, kuş; hazır kılıklar (Dede Korkut, Azrail).
+- Adres yapısı: `#/hikaye/<slug>/<sahne-no>`.
 
 ## 5. Görsel Dil
 
@@ -84,18 +93,18 @@ Metin ile kod ayrı dosyalarda durur; böylece metin, koda dokunmadan düzeltile
 
 ## 6. Aşamalar
 
-1. **Temel** — Vite + TypeScript + Three.js kurulumu, boş sahne, GitHub Pages yayını.
-2. **Motor** — sahne yöneticisi, zaman çizelgesi, ileri/geri gezinme, metin paneli.
-3. **Prosedürel kütüphane** — arazi, gök, insan figürü, at, çadır, ateş.
-4. **İlk hikâye: Deli Dumrul** — baştan sona; motorun ve stilin sınanması.
-5. **Ana sayfa** — hikâye listesi, kapak sahnesi, Dede Korkut tanıtımı.
-6. **Kalan hikâyeler** — tablodaki sırayla, her biri ayrı ayrı.
-7. **Cila** — mobil performans, erişilebilirlik, ses (kopuz ezgisi, isteğe bağlı), paylaşım kartları.
+1. ✅ **Temel** — Vite + TypeScript + Three.js kurulumu, GitHub Pages iş akışı.
+2. ✅ **Motor** — sahne yöneticisi, zaman çizelgesi, ileri/geri gezinme, metin paneli.
+3. ✅ **Prosedürel kütüphane** — arazi, gök, insan figürü, at, kuş, çadır, ateş.
+4. ✅ **İlk hikâye: Deli Dumrul** — 13 sahne.
+5. ✅ **Ana sayfa** — hikâye listesi, kapak sahnesi, Dede Korkut tanıtımı.
+6. ⬜ **Kalan hikâyeler** — tablodaki sırayla, her biri ayrı ayrı. Sıradaki: Basat ile Tepegöz.
+7. ⬜ **Cila** — mobil performans, erişilebilirlik, ses (kopuz ezgisi, isteğe bağlı), paylaşım kartları.
 
 Her aşama sonunda site çalışır durumda olmalı ve `main`'e gönderilmelidir.
 
-## 7. Açık Sorular
+## 7. Kararlar
 
-- Gezinme: düğmeyle sahne sahne mi, kaydırmayla (scroll) mı? *Öneri: düğme + klavye; kaydırma sonra eklenebilir.*
-- Ses ve seslendirme olacak mı? *Öneri: ilk sürümde yok.*
-- İkinci dil (İngilizce) gerekli mi? *Öneri: metinler ayrı dosyada tutulduğu için sonradan eklenebilir.*
+- Gezinme: düğme ve klavye (← → Boşluk, R: yeniden oynat, Esc: liste). Kaydırmayla ilerleme sonraya bırakıldı.
+- Ses ve seslendirme: ilk sürümde yok.
+- Dil: yalnızca Türkçe; metinler ayrı dosyada durduğu için ikinci dil sonradan eklenebilir.
