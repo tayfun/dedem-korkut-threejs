@@ -92,10 +92,10 @@ export function mesh(geo: THREE.BufferGeometry, material: THREE.Material, shadow
   return m;
 }
 
-const kilimCache = new Map<string, THREE.MeshStandardMaterial>();
+const kilimCache = new Map<string, THREE.MeshToonMaterial>();
 
 /** Kilim şeridi: kodla çizilen zikzak ve baklava motifli, paylaşılan malzeme. */
-export function kilim(a: number = P.red, b: number = P.ochre, c: number = P.indigo): THREE.MeshStandardMaterial {
+export function kilim(a: number = P.red, b: number = P.ochre, c: number = P.indigo): THREE.MeshToonMaterial {
   const key = `${a}|${b}|${c}`;
   let m = kilimCache.get(key);
   if (!m) {
@@ -131,8 +131,40 @@ export function kilim(a: number = P.red, b: number = P.ochre, c: number = P.indi
     tex.repeat.set(8, 1);
     tex.magFilter = THREE.NearestFilter;
     tex.colorSpace = THREE.SRGBColorSpace;
-    m = new THREE.MeshStandardMaterial({ map: tex, flatShading: true, roughness: 0.92 });
+    m = new THREE.MeshToonMaterial({ map: tex, gradientMap: toonRamp() });
     kilimCache.set(key, m);
+    shared.add(m);
+  }
+  return m;
+}
+
+/* ------------------------- Çizgi film boyası ------------------------- */
+
+let ramp: THREE.DataTexture | undefined;
+
+/** Üç basamaklı gölge: karakterlere çizgi film (cel) görünümü verir. */
+function toonRamp(): THREE.DataTexture {
+  if (!ramp) {
+    ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 200, 200, 200, 255, 255, 255, 255, 255]), 3, 1, THREE.RGBAFormat);
+    ramp.minFilter = ramp.magFilter = THREE.NearestFilter;
+    ramp.needsUpdate = true;
+  }
+  return ramp;
+}
+
+/** Yumuşak yüzeyli, basamaklı gölgeli, paylaşılan karakter malzemesi. */
+export function toon(color: number, opts: { side?: THREE.Side; face?: boolean } = {}): THREE.MeshToonMaterial {
+  const key = `toon|${color}|${opts.side ?? 0}|${opts.face ? 1 : 0}`;
+  let m = cache.get(key) as THREE.MeshToonMaterial | undefined;
+  if (!m) {
+    m = new THREE.MeshToonMaterial({ color, gradientMap: toonRamp(), side: opts.side ?? THREE.FrontSide });
+    if (opts.face) {
+      // Yüz çizimleri başın hemen üstünde durur; derinlik çakışmasını önle.
+      m.polygonOffset = true;
+      m.polygonOffsetFactor = -3;
+      m.polygonOffsetUnits = -3;
+    }
+    cache.set(key, m);
     shared.add(m);
   }
   return m;

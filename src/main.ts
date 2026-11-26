@@ -44,4 +44,7 @@ lastPath = location.hash.split('/').slice(0, 3).join('/');
 void route();
 
 // Geliştirme kolaylığı: konsoldan zaman çizelgesini hızlandırmak için.
-if (import.meta.env.DEV) void import('gsap').then((m) => ((window as unknown as { gsap: unknown }).gsap = m.default));
+if (import.meta.env.DEV) {
+  void import('gsap').then((m) => ((window as unknown as { gsap: unknown }).gsap = m.default));
+  (window as unknown as { stage: Stage }).stage = stage;
+}

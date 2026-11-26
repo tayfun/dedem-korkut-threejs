@@ -22,10 +22,12 @@ Dede Korkut hikâyelerini yetişkin okura, özgün metne sadık kalarak günüm�
 ## Görseller
 
 - Bütün görseller kodla üretilir. Hazır 3B model, resim ya da video ekleme. Kodla çizilen dokular (`kilim()` gibi canvas dokuları) serbesttir.
-- Görünüm "canlanan minyatür"dür: low-poly, düz gölgelendirme, sınırlı palet; üstüne mürekkep çizgisi, kâğıt dokusu ve kenar kararması (`src/engine/ink.ts`). Yeni renk eklemek yerine ortak paletten (`P`) seç.
+- Görünüm "canlanan minyatür"dür: köşeli low-poly çevre, çizgi film tarzı karakterler, sınırlı palet; üstüne mürekkep çizgisi, kâğıt dokusu ve kenar kararması (`src/engine/ink.ts`). Yeni renk eklemek yerine ortak paletten (`P`) seç.
 - Mürekkep çizgisi almaması gereken nesneleri (alev, ışık hüzmesi, yıldız, ot, duman) `noInk()` ile işaretle.
 - Ortak parçalar `src/procedural/` altında durur ve hikâyeler arasında yeniden kullanılır: `world.ts` (gök, dağ sıraları, bulut, arazi, çadır, ateş, eşyalar), `figures.ts` (insan, at, kuş), `life.ts` (ot, toz, duman, kuş sürüsü). Bir hikâyeye özel olanlar o hikâyenin `sets.ts` dosyasında kalır.
+- İnsanlar çizgi film tarzındadır: iri baş, iri gözler, yuvarlak hatlar, basamaklı gölge (`toon()` malzemesi). Çevre ise köşeli low-poly kalır; karakterler bu sayede öne çıkar. Yeni kişi ve hayvanları da `toon()` ile, yuvarlak geometrilerle (küre, kapsül, lathe) kur.
 - İnsan figürü eklemlidir: kollar `armL/armR` (dirsek kendiliğinden bükülür), bacaklar `legL/legR`, dizler `kneeL/kneeR`. Oturma ve diz çökme için `sit()`, `kneel()` ve `KNEEL_Y`, `KNEEL_KNEE` değerlerini kullan.
+- Yüz ifadesi anlatımın parçasıdır: her sahnede kişilere `setMood('neutral' | 'happy' | 'smug' | 'angry' | 'sad' | 'fear')` ver; sahne içinde değişecekse `tl.call(() => kisi.setMood(...), [], zaman)` kullan.
 - Çadır, ateş, kilim gibi zemine oturan her şey için `stage.keepClear(x, z, r)` çağır; yoksa içinden ot çıkar.
 - Telefonlarda akıcı çalışmalı: geometrileri ve malzemeleri paylaş, gereksiz draw call'dan kaçın, sahne değişirken kaynakları `dispose()` et. Sahne her karede iki kez çizilir (renk + çizgi geçişi); ağır sahnelerden kaçın.
 - `prefers-reduced-motion` ayarına saygı göster.

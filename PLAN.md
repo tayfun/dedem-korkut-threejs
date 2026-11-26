@@ -86,9 +86,10 @@ Metin ile kod ayrı dosyalarda durur; böylece metin, koda dokunmadan düzeltile
 
 ## 5. Görsel Dil
 
-- "Canlanan minyatür": low-poly, düz gölgelendirmeli figürler; üstünde mürekkep çizgisi, kâğıt dokusu ve kenar kararması.
+- "Canlanan minyatür": köşeli low-poly çevre ve çizgi film tarzı karakterler; üstünde mürekkep çizgisi, kâğıt dokusu ve kenar kararması.
 - Katmanlı arka plan: uzakta ufka doğru solan üç dağ sırası, yassı minyatür bulutları, ışınlı güneş ya da hilal.
-- Figürler eklemlidir (dirsek, diz); yüz, bıyık, örgü, pelerin ve kilim desenli şeritlerle ayrışır.
+- Karakterler çizgi film tarzındadır: iri baş, iri gözler, yuvarlak hatlar, basamaklı gölge; kaş ve ağızla değişen yüz ifadeleri, göz kırpma.
+- Figürler eklemlidir (dirsek, diz); bıyık, sakal, örgü, pelerin ve kilim desenli şeritlerle ayrışır.
 - Zemin canlıdır: rüzgârda sallanan otlar, ayak altında toz, ateşten duman ve kıvılcım, gökte kuşlar.
 - Ana sayfada tezhip çerçevesi; her hikâyenin kapağı kendi sahnesinden çekilen bir karedir.
 - Sınırlı, ortak renk paleti; kilim motifleri arayüzde ve giysilerde yinelenir.

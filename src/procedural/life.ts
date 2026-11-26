@@ -44,6 +44,8 @@ export function addGrass(stage: Stage, opts: { seed?: number; count?: number; ra
            transformed.z += cos(gw * 0.8) * 0.07 * position.y;
          #endif`,
       );
+    // Yaprağın arka yüzü de yukarı bakan normalle aydınlansın; yoksa yarısı kararır.
+    shader.fragmentShader = shader.fragmentShader.replace('#include <normal_fragment_begin>', 'vec3 normal = normalize(vNormal);\nvec3 nonPerturbedNormal = normal;');
   };
 
   const im = new THREE.InstancedMesh(geo, material, count);
