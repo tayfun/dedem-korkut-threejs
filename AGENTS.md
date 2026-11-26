@@ -26,15 +26,15 @@ Yeni bir hikâye yazarken önce buradaki hazır parçaları kullan; yalnızca o 
 | Yer | İçinde ne var |
 |-----|---------------|
 | `src/engine/stage.ts` | Renderer, kamera, kare döngüsü; `Mover` (yürüyen her şeyin tabanı), `keepClear`, `snapshot`. |
-| `src/engine/direct.ts` | Yönetmenlik: `place`, `walkTo`, `faceTo`, `turn`, `cam`, `pop`, `vanish`, `toss`, `mood`, `plead`, `raiseArms`, `armsDown`, `kneelDown`, `standUp`, `shakeHead`, `grieve`, `sway`. |
+| `src/engine/direct.ts` | Yönetmenlik: `place`, `walkTo`, `faceTo`, `turn`, `cam`, `pop`, `vanish`, `toss`, `mood`, `plead`, `raiseArms`, `armsDown`, `kneelDown`, `standUp`, `shakeHead`, `grieve`, `sway`, `launch` (ok, taş), `fall`. |
 | `src/engine/player.ts`, `story.ts`, `ink.ts` | Sahne oynatıcı, hikâye tipleri, mürekkep çizgisi geçişi. |
 | `src/procedural/palette.ts` | Renkler (`P`), malzemeler (`mat`, `toon`, `glow`, `kilim`), `rng`, `mesh`. |
 | `src/procedural/sky.ts`, `terrain.ts`, `life.ts` | Gök, dağ sıraları, bulut; arazi ve serpiştirme; ot, toz, duman, kuş sürüsü. |
-| `src/procedural/props.ts` | Çadır, ateş, flama, ışık hüzmesi, akçe, kılıç, topuz, kopuz. |
+| `src/procedural/props.ts` | Çadır, ateş, flama, ışık hüzmesi, akçe, kılıç, topuz, kopuz, yay, ok, şiş, yüzük, değnek. |
 | `src/procedural/sets.ts` | Ortak mekânlar: `steppeSet`, `placeTent`. |
 | `src/procedural/human.ts`, `head.ts`, `face.ts` | İnsan figürü, yontulmuş baş, çizilmiş yüz. |
-| `src/procedural/animals.ts` | At, kuş; yeni hayvanlar buraya. |
-| `src/procedural/cast.ts` | Hazır kişiler: `dedeKorkut`, `villager(i)`, `warrior`, `lady`, `elderMan`, `elderWoman`, `child`. |
+| `src/procedural/animals.ts` | `Horse`, `Lion`, `Sheep`, `Beast` (boğa, geyik, köpek), `Bird`; yeni hayvanlar buraya. |
+| `src/procedural/cast.ts` | Hazır kişiler: `dedeKorkut`, `villager(i)`, `warrior`, `lady`, `elderMan`, `elderWoman`, `child`; `mounted` (atlı), `archer` (yaylı). |
 | `src/stories/<slug>/` | `story.ts` (metin), `scenes.ts` (sahneler), `sets.ts` (o hikâyeye özel mekân ve kişiler), `index.ts`. |
 | `tools/shots.mjs` | Sahnelerin ekran görüntüsünü alan araç. |
 
@@ -46,7 +46,7 @@ Yeni bir hikâye yazarken önce buradaki hazır parçaları kullan; yalnızca o 
 - İnsanlar çizgi film tarzındadır: iri baş, iri gözler, yuvarlak hatlar, basamaklı gölge (`toon()` malzemesi). Çevre ise köşeli low-poly kalır; karakterler bu sayede öne çıkar. Yeni kişi ve hayvanları da `toon()` ile, yuvarlak geometrilerle (küre, kapsül, lathe) kur.
 - İnsan figürü eklemlidir: kollar `armL/armR` (dirsek kendiliğinden bükülür), bacaklar `legL/legR`, dizler `kneeL/kneeR`. Oturma ve diz çökme için `sit()`, `kneel()` ve `KNEEL_Y`, `KNEEL_KNEE` değerlerini kullan.
 - Baş küre değildir: `headPoint()` ile yontulur (çene, burun, elmacık kemiği, göz çukuru).
-- Yüz 2B çizilir (`src/procedural/face.ts`): göz, kaş, bıyık ve ağız eğrilerle bir tuvale çizilip başa giydirilir. Yüz tipleri: `man`, `woman`, `child`, `elder`, `grim`; yeni bir tip gerekiyorsa `KINDS` tablosuna ekle. Yüze 3B parça (göz, ağız) ekleme; sakal ve kulak dışında her şey çizimdir.
+- Yüz 2B çizilir (`src/procedural/face.ts`): göz, kaş, bıyık ve ağız eğrilerle bir tuvale çizilip başa giydirilir. Yüz tipleri: `man`, `woman`, `child`, `elder`, `grim`, `cyclops`; yeni bir tip gerekiyorsa `KINDS` tablosuna ekle. Yüze 3B parça (göz, ağız) ekleme; sakal ve kulak dışında her şey çizimdir.
 - Yüz ifadesi anlatımın parçasıdır: her sahnede kişilere `setMood('neutral' | 'happy' | 'smug' | 'angry' | 'sad' | 'fear')` ver; sahne içinde değişecekse `tl.call(() => kisi.setMood(...), [], zaman)` kullan.
 - Çadır, ateş, kilim gibi zemine oturan her şey için `stage.keepClear(x, z, r)` çağır; yoksa içinden ot çıkar.
 - Telefonlarda akıcı çalışmalı: geometrileri ve malzemeleri paylaş, gereksiz draw call'dan kaçın, sahne değişirken kaynakları `dispose()` et. Sahne her karede iki kez çizilir (renk + çizgi geçişi); ağır sahnelerden kaçın.

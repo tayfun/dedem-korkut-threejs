@@ -1,6 +1,9 @@
+import { place } from '../engine/direct';
+import type { Stage } from '../engine/stage';
+import { Horse } from './animals';
 import { Human, type HumanOpts } from './human';
 import { P } from './palette';
-import { kopuz } from './props';
+import { bow, kopuz } from './props';
 
 /**
  * Oyuncu kadrosu: hikâyeler arasında paylaşılan hazır kişiler.
@@ -48,3 +51,19 @@ export const elderWoman = (o: HumanOpts = {}) => new Human({ robe: P.indigo, tri
 
 /** Çocuk: `i` kılığı ve boyu değiştirir. */
 export const child = (i = 0, o: HumanOpts = {}) => new Human({ robe: i ? P.ochre : P.green, trim: P.red, hat: 'bork', hatColor: P.red, scale: i ? 0.55 : 0.66, blush: true, hair: P.darkBrown, ...o });
+
+/** Atlı bir kişi: atı sahneye koyar, biniciyi eyere oturtur; atı döndürür (yürütülecek olan attır). */
+export function mounted(stage: Stage, who: Human, x: number, z: number, ry: number, color: number = P.brown): Horse {
+  const h = stage.track(place(new Horse(color), x, z, ry));
+  stage.track(who, false);
+  h.mount(who);
+  return h;
+}
+
+/** Figüre yay verir: yay sol elde, kol öne uzanmış. */
+export function archer(m: Human): Human {
+  m.handL.add(bow());
+  m.armL.rotation.x = -1.5;
+  m.armSwing = 0.2;
+  return m;
+}

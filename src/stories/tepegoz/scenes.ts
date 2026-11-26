@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { armsDown, cam, faceTo, fall, grieve, kneelDown, launch, mood, newTimeline, place, plead, pop, raiseArms, shakeHead, standUp, sway, toss, turn, vanish, walkTo } from '../../engine/direct';
 import type { Stage } from '../../engine/stage';
 import type { SceneDef } from '../../engine/story';
-import { Horse, Lion, Sheep } from '../../procedural/animals';
-import { child, dedeKorkut, elderWoman, lady, villager, warrior } from '../../procedural/cast';
+import { Lion, Sheep } from '../../procedural/animals';
+import { archer, child, dedeKorkut, elderWoman, lady, mounted, villager, warrior } from '../../procedural/cast';
 import type { Human } from '../../procedural/human';
 import { P, mat, mesh } from '../../procedural/palette';
 import { arrow, bow, ring, spit, sword } from '../../procedural/props';
@@ -17,22 +17,6 @@ type V3 = [number, number, number];
 
 const E = Math.PI / 2; // doğuya (+x) bakış
 const W = -Math.PI / 2; // batıya (-x) bakış
-
-/** Atlı bir kişi: atı sahneye koyar, biniciyi eyere oturtur. */
-function rider(stage: Stage, who: Human, x: number, z: number, ry: number, color: number = P.brown): Horse {
-  const h = stage.track(place(new Horse(color), x, z, ry));
-  stage.track(who, false);
-  h.mount(who);
-  return h;
-}
-
-/** Yaylı bir okçunun duruşu: yay sol elde, kol öne uzanmış. */
-function withBow(m: Human): Human {
-  m.handL.add(bow());
-  m.armL.rotation.x = -1.5;
-  m.armSwing = 0.2;
-  return m;
-}
 
 /** Bir ok atar; hedefe varınca iki parçaya ayrılıp yere düşer. */
 function brokenArrow(tl: TL, stage: Stage, from: V3, to: V3, at: number): void {
@@ -95,8 +79,8 @@ export const scenes: SceneDef[] = [
       const boy = stage.track(place(wildBoy(), 9.4, 3.6, W)).sit();
       const herder = stage.track(place(villager(3), -5, 0.5, E));
       herder.armR.rotation.x = -1.5;
-      const han = rider(stage, bayindir(), -22, 3, E, P.darkBrown);
-      const kz = rider(stage, kazan(), -24, 6, E);
+      const han = mounted(stage, bayindir(), -22, 3, E, P.darkBrown);
+      const kz = mounted(stage, kazan(), -24, 6, E);
       const a = stage.track(place(aruz(), -20, 1, E));
       a.walkSpeed = 11;
       stage.setCamera([-10, 4, 17], [-2, 1.5, 2]);
@@ -255,7 +239,7 @@ export const scenes: SceneDef[] = [
       blob.position.set(-1.6, 1.16, 0.6);
       const baby = stage.track(place(tepegoz(0.5, { mood: 'neutral' }), -1.6, 0.6, W)).sit();
       baby.group.scale.setScalar(0.001);
-      const han = rider(stage, bayindir(), -10, 5, 1.2, P.darkBrown);
+      const han = mounted(stage, bayindir(), -10, 5, 1.2, P.darkBrown);
       const kz = stage.track(place(kazan(), -5.2, 2.2, E));
       const a = stage.track(place(aruz(), -11, 1.6, E));
       stage.setCamera([-6, 3.2, 14], [-3.5, 1.4, 1]);
@@ -375,9 +359,9 @@ export const scenes: SceneDef[] = [
       const t = stage.track(place(tepegoz(), 1, -1.5, -1.1));
       t.walkSpeed = 6;
       const spots: [number, number][] = [[-10, 2], [-11.6, 4.4], [-9.4, 6], [-12.6, 0.2]];
-      const men = spots.map(([x, z], i) => stage.track(place(withBow(warrior({ robe: [P.teal, P.green, P.indigo, P.brown][i], cloak: undefined })), x, z, Math.atan2(1 - x, -1.5 - z))));
+      const men = spots.map(([x, z], i) => stage.track(place(archer(warrior({ robe: [P.teal, P.green, P.indigo, P.brown][i], cloak: undefined })), x, z, Math.atan2(1 - x, -1.5 - z))));
       men.forEach((m) => (m.walkSpeed = 15));
-      const kz = rider(stage, kazan(), -15, 3, E);
+      const kz = mounted(stage, kazan(), -15, 3, E);
       const a = stage.track(place(aruz(), -14, 6.4, E));
       const tr = stage.add(tree(1.5));
       tr.position.set(4.6, 0, -3);
@@ -544,7 +528,7 @@ export const scenes: SceneDef[] = [
       const t = sleeping(stage, 2, -2);
       t.walkSpeed = 6;
       const kocas = [stage.track(place(koca(0), FIRE.x + 1.6, FIRE.z + 1.4, -2.2)).sit(), stage.track(place(koca(1), FIRE.x + 2, FIRE.z - 1.2, -1.2)).sit()];
-      const b = stage.track(place(withBow(basat()), -13, 4, 1.2));
+      const b = stage.track(place(archer(basat()), -13, 4, 1.2));
       stage.setCamera([-7, 4, 20], [-5, 2, 0]);
 
       [1.0, 2.4, 3.8].forEach((at) => brokenArrow(tl, stage, [-12.5, 1.6, 4.2], [-0.4, 1.6, -1.6], at));
@@ -845,7 +829,7 @@ export const scenes: SceneDef[] = [
       b.handR.add(big);
       b.armR.rotation.x = -2.6;
       b.armSwing = 0.2;
-      const riders = [rider(stage, koca(0), 10, 2.4, W, 0xd8d2c4), rider(stage, koca(1), 12, 4, W, 0xd8d2c4)];
+      const riders = [mounted(stage, koca(0), 10, 2.4, W, 0xd8d2c4), mounted(stage, koca(1), 12, 4, W, 0xd8d2c4)];
       riders.forEach((h) => (h.walkSpeed = 13));
       const a = stage.track(place(aruz(), -24, 5, E));
       const kz = stage.track(place(kazan(), -26, 6.6, E));

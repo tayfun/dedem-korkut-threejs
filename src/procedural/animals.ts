@@ -3,7 +3,7 @@ import { Mover } from '../engine/stage';
 import { HIP, type Human } from './human';
 import { P, kilim, mat, mesh, toon } from './palette';
 
-/** Hayvanlar: at, aslan, koyun, kuş. Yeni hayvanlar da buraya eklenir. */
+/** Hayvanlar: at, aslan, koyun, boğa, geyik, köpek, kuş. Yeni hayvanlar da buraya eklenir. */
 
 /** At: önü +z yönünde. `seat` binicinin oturduğu noktadır; `rig` arka ayaklar üzerinde şaha kalkar. */
 export class Horse extends Mover {
@@ -319,5 +319,88 @@ export class Sheep extends Mover {
     const ph = t * this.walkSpeed + this.phase;
     [0, Math.PI, Math.PI, 0].forEach((off, i) => (this.legs[i].rotation.x = Math.sin(ph + off) * 0.6 * a));
     this.rig.position.y = Math.abs(Math.sin(ph)) * 0.04 * a;
+  }
+}
+
+export type BeastKind = 'bull' | 'deer' | 'dog';
+
+const BEASTS: Record<BeastKind, { color: number; r: number; len: number; top: number; leg: number; x: number; head: number; neck: number; speed: number }> = {
+  bull: { color: P.darkBrown, r: 0.5, len: 1.1, top: 0.85, leg: 0.12, x: 0.3, head: 0.3, neck: 0.1, speed: 10 },
+  deer: { color: P.lion, r: 0.27, len: 0.75, top: 0.85, leg: 0.05, x: 0.16, head: 0.16, neck: 0.55, speed: 14 },
+  dog: { color: P.stone, r: 0.18, len: 0.5, top: 0.42, leg: 0.05, x: 0.11, head: 0.15, neck: 0.12, speed: 15 },
+};
+
+/** Dört ayaklı yalın hayvan: boğa (boynuzlu), geyik (çatal boynuzlu), köpek. Önü +z yönünde. */
+export class Beast extends Mover {
+  rig = new THREE.Group();
+  head = new THREE.Group();
+  private legs: THREE.Group[];
+  private phase = Math.random() * 10;
+
+  constructor(kind: BeastKind, color?: number) {
+    super();
+    const d = BEASTS[kind];
+    this.walkSpeed = d.speed;
+    const fur = toon(color ?? d.color);
+    this.group.add(this.rig);
+    const y = d.top + d.r * 0.75;
+    const body = mesh(new THREE.CapsuleGeometry(d.r, d.len, 5, 14), fur);
+    body.rotation.x = Math.PI / 2;
+    body.position.y = y;
+    this.rig.add(body);
+    if (kind === 'bull') {
+      const hump = mesh(new THREE.SphereGeometry(d.r * 0.85, 12, 10), fur);
+      hump.position.set(0, y + d.r * 0.45, d.len * 0.4);
+      this.rig.add(hump);
+    }
+    this.legs = fourLegs(this.rig, fur, d.x, d.len * 0.5, -d.len * 0.5, d.top, d.leg);
+
+    const front = d.len / 2 + d.r * 0.6;
+    if (d.neck > 0.3) {
+      const neck = mesh(new THREE.CapsuleGeometry(d.leg * 1.6, d.neck, 4, 8), fur);
+      neck.position.set(0, y + d.neck * 0.55, front - 0.05);
+      neck.rotation.x = 0.35;
+      this.rig.add(neck);
+    }
+    this.head.position.set(0, y + d.neck, front + d.neck * 0.25);
+    const skull = mesh(new THREE.SphereGeometry(d.head, 12, 10), fur);
+    skull.scale.set(0.85, 0.9, 1.15);
+    const muzzle = mesh(new THREE.SphereGeometry(d.head * 0.6, 10, 8), toon(kind === 'bull' ? P.cream : P.black));
+    muzzle.position.set(0, -d.head * 0.3, d.head * 0.95);
+    muzzle.scale.set(1.1, 0.8, 0.9);
+    this.head.add(skull, muzzle);
+    for (const sx of [-1, 1]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(d.head * 0.14, 8, 6), toon(0x1a1210));
+      eye.position.set(sx * d.head * 0.55, d.head * 0.2, d.head * 0.85);
+      const ear = mesh(new THREE.SphereGeometry(d.head * 0.3, 6, 5), fur);
+      ear.scale.set(1.5, 0.5, 0.8);
+      ear.position.set(sx * d.head * 0.95, d.head * 0.45, -d.head * 0.1);
+      this.head.add(eye, ear);
+      if (kind === 'bull') {
+        const horn = mesh(new THREE.ConeGeometry(0.07, 0.5, 6), toon(P.cream));
+        horn.position.set(sx * 0.36, 0.3, 0.05);
+        horn.rotation.z = -sx * 0.9;
+        this.head.add(horn);
+      } else if (kind === 'deer') {
+        for (const [dy, rz, len] of [[0.22, 0.25, 0.4], [0.3, 0.9, 0.22], [0.36, -0.3, 0.2]]) {
+          const tine = mesh(new THREE.ConeGeometry(0.02, len, 4), toon(P.cream));
+          tine.position.set(sx * (0.08 + rz * 0.08), dy + len * 0.3, -0.04);
+          tine.rotation.z = -sx * rz;
+          this.head.add(tine);
+        }
+      }
+    }
+    this.rig.add(this.head);
+    const tail = mesh(new THREE.CapsuleGeometry(d.leg * 0.6, d.top * (kind === 'bull' ? 0.7 : 0.25), 3, 6), kind === 'deer' ? toon(P.white) : fur);
+    tail.position.set(0, y + d.r * 0.3, -front + 0.02);
+    tail.rotation.x = kind === 'dog' ? -0.9 : 0.3;
+    this.rig.add(tail);
+  }
+
+  update(t: number): void {
+    const a = this.walkAmp;
+    const ph = t * this.walkSpeed + this.phase;
+    [0, Math.PI, Math.PI, 0].forEach((off, i) => (this.legs[i].rotation.x = Math.sin(ph + off) * 0.6 * a));
+    this.rig.position.y = Math.abs(Math.sin(ph)) * 0.05 * a;
   }
 }
