@@ -1,0 +1,330 @@
+"""Deli Dumrul — "Azrail'e Kılıç Çeken Adam": kadro. Her hikâyenin kadrosu ve paleti kendine özgüdür."""
+import math
+from ..kit import *
+
+# Kilitli palet: bir mavi, bütün kadro için tek ten, bir soluk, iki vurgu.
+COBALT, SKIN, PALE, GOLD, RED = '#2a3fa3', '#ee6f58', '#e7dcf2', '#e3a72c', '#b3231c'
+SKIN_D, SKIN_L = '#c0473f', '#f89e84'      # gölgede koyu ten, ışıkta açık ten
+
+EXPR = {
+    'neutral': dict(brow=0.0, by=0, open=1.0, pupil=4.5, mouth='closed', jaw=0),
+    'blink':   dict(brow=0.0, by=1, open=0.0, pupil=4.5, mouth='closed', jaw=0),
+    'anger':   dict(brow=0.55, by=8, open=0.85, pupil=3.0, mouth='snarl', jaw=14, flare=1),
+    'smug':    dict(brow=-0.18, by=-3, open=0.62, pupil=4.0, mouth='grin', jaw=8),
+    'shock':   dict(brow=-0.3, by=-22, open=1.0, pupil=2.8, mouth='gape', jaw=46, shock=True),
+}
+
+
+def dumrul_head(expr='neutral'):
+    """Deli Dumrul'un başı: koca çene, pala bıyık, börk. Tanıtıcı özelliği çenesi ve bıyığı."""
+    e = EXPR[expr]; jaw = e['jaw']
+    J = lambda x, y: (x, y + jaw * max(0.0, min(1.25, (y - 30) / 150)))
+    reseed('dumrul-head')
+    skull = [J(*p) for p in [(-95, -150), (-30, -180), (50, -176), (112, -138), (128, -70), (150, -10), (178, 62), (168, 132), (112, 186), (20, 208), (-72, 198), (-142, 152), (-174, 82), (-162, 10), (-126, -62)]]
+    s = clipdef('dh', skull)
+    # kulaklar
+    for sx in (-1, 1):
+        reseed(f'dumrul-ear{sx}')
+        ear = [(sx * 150, -40), (sx * 184, -52), (sx * 196, -18), (sx * 184, 22), (sx * 156, 20)]
+        s += blob(ear, SKIN_D if sx < 0 else SKIN, 3.6) + ink([(sx * 166, -28), (sx * 178, -12), (sx * 168, 6)], 2.0, wob=0.2)
+    reseed('dumrul-skull')
+    s += fill(skull, SKIN, 1.4)
+    # gölge: bir yanak ve çene altı; ışık: alın ve elmacık
+    s += fill([J(*p) for p in [(-200, -160), (-70, -150), (-96, -40), (-118, 40), (-80, 120), (-10, 176), (90, 196), (60, 260), (-220, 260)]], SKIN_D, 1.2, clip='dh')
+    s += fill(ellipse(66, 22, 40, 26, 9, 0.12), SKIN_L, 1.0, clip='dh') + fill(ellipse(40, -86, 46, 16, 8, 0.1), SKIN_L, 1.0, clip='dh')
+    s += ink(skull, 3.6, closed=True, press=0.5)
+    # çene çukuru, gıdı, sakal dipleri
+    reseed('dumrul-chin')
+    s += ink([J(-34, 150), J(6, 164), J(46, 150)], 2.6, wob=0.3) + ink([J(-96, 172), J(0, 196), J(92, 176)], 2.2, wob=0.4)
+    s += dots([J(*p) for p in [(-150, 70), (150, 70), (150, 150), (60, 196), (-60, 196), (-150, 150)]], 70, (0.9, 1.7))
+    s += ticks([J(*p) for p in [(-140, 90), (-70, 90), (-60, 180), (-130, 160)]], 9, (4, 7), 1.2, 0.4, 1.8)
+    # börk: kürk bant ve kırmızı tepe
+    reseed('dumrul-hat')
+    dome = [(-112, -150), (-96, -214), (-24, -252), (58, -244), (106, -204), (120, -150)]
+    s += blob(dome, RED, 4.0) + fill([(-112, -150), (-100, -205), (-60, -232), (-50, -150)], COBALT, 1.0, op=0.35)
+    s += medallion(22, -200, 17, GOLD) + blob(ellipse(4, -256, 13, 12, 7, 0.1), GOLD, 3.2) + sparkle(9, -261, 7)
+    band = [(-150, -150), (-120, -176), (-20, -186), (90, -180), (148, -160), (156, -126), (110, -104), (0, -98), (-110, -106), (-156, -124)]
+    s += blob(band, PALE, 4.0) + fill([(-156, -124), (-150, -150), (-120, -176), (-70, -182), (-80, -104), (-110, -106)], COBALT, 1.0, op=0.3)
+    s += fur(band, 4, 11, 10, 0.5, 2.3)
+    # göz torbaları ve gözler
+    reseed('dumrul-eyes')
+    ex = (-40, 36); ey = -30
+    for cx in ex:
+        s += ink([(cx - 15, ey + 15), (cx, ey + 21), (cx + 16, ey + 14)], 2.0, wob=0.2) + ink([(cx - 11, ey + 22), (cx + 1, ey + 27), (cx + 12, ey + 22)], 1.8, wob=0.2)
+    sh = e.get('shock', False)
+    for cx in ex:
+        s += eye(cx, ey - (6 if sh else 0), 17, 12.5, PALE, SKIN_D, e['open'], e['pupil'], (1.5, 2 if not sh else 0), lid=0.26, shock=sh)
+    # kaşlar: kalın, kara, dikenli
+    reseed('dumrul-brows')
+    for sx, cx in ((-1, ex[0]), (1, ex[1])):
+        b = e['brow']; y0 = ey - 27 + e['by']
+        inner = (cx - sx * 22, y0 + b * 24); outer = (cx + sx * 30, y0 - b * 10 + 3)
+        mid = ((inner[0] + outer[0]) / 2, min(inner[1], outer[1]) - 7 + abs(b) * 5)
+        s += ink([inner, mid, outer], 13, taper=(0.06, 0.5), press=0.25, wob=0.5)
+        for k in (0.25, 0.5, 0.72):   # dikenler
+            px, py = inner[0] + (outer[0] - inner[0]) * k, inner[1] + (outer[1] - inner[1]) * k - 6
+            s += ink([(px, py), (px + sx * 5, py - 9)], 3.0, col=INK, taper=(0, 0.8), wob=0, smooth=False)
+        if b > 0.2: s += ink([(cx - sx * 30, y0 + b * 24 - 14), (cx - sx * 27, y0 + b * 24 + 6)], 2.2, wob=0, smooth=False)
+    # alın kırışıkları
+    s += ink([(-40, -84), (0, -90), (44, -84)], 2.0, wob=0.4) + ink([(-26, -72), (4, -76), (30, -72)], 1.8, wob=0.3)
+    # burun: uzun, iri, ucu yumru
+    reseed('dumrul-nose')
+    fl = e.get('flare', 0) * 5
+    nose = [(-10, -46), (6, -48), (22, -4), (38 + fl, 30), (22 + fl, 46), (0, 48), (-20 - fl, 38), (-12, 6)]
+    s += fill(nose, SKIN_L, 1.0) + ink([(8, -46), (24, -4), (40 + fl, 30), (24 + fl, 47), (2, 49)], 3.6, wob=0.4, taper=(0.3, 0.2))
+    s += ink([(-12, 8), (-22 - fl, 36), (-8, 46)], 2.6, wob=0.3)
+    s += fill(ellipse(-9 - fl * 0.5, 41, 5 + fl * 0.4, 3.2, 6), INK, 0.3) + fill(ellipse(16 + fl * 0.5, 43, 5 + fl * 0.4, 3.2, 6), INK, 0.3)
+    # burun kanadından gıdıya inen derin kıvrımlar
+    s += ink([(-34, 30), J(-70, 70), J(-84, 122)], 2.8, wob=0.5, taper=(0.2, 0.5)) + ink([(48, 32), J(86, 72), J(96, 124)], 2.8, wob=0.5, taper=(0.2, 0.5))
+    # ağız (bıyığın altında; sırıtış bıyığı aşacak kadar geniş)
+    reseed('dumrul-mouth')
+    m = e['mouth']; mx, my = 6, 96 + jaw * 0.45
+    if m == 'closed':
+        s += ink([(mx - 44, my + 2), (mx, my + 8), (mx + 46, my)], 3.2, wob=0.4) + ink([(mx - 22, my + 22), (mx + 2, my + 26), (mx + 26, my + 21)], 2.0, wob=0.2)
+    elif m == 'grin':
+        s += mouth(mx, my + 4, 86, 2, 30, 20, SKIN_D, FINE, RED, PALE, gum=RED, top=8, bot=7)
+        s += fill([(mx + 22, my + 4), (mx + 40, my + 2), (mx + 38, my + 20), (mx + 24, my + 21)], GOLD, 0.4, smooth=False) + sparkle(mx + 34, my + 8, 6)
+        s += ink([(mx - 98, my - 30), (mx - 108, my - 12), (mx - 100, my + 6)], 2.4, wob=0.2) + ink([(mx + 100, my - 32), (mx + 110, my - 14), (mx + 102, my + 4)], 2.4, wob=0.2)
+    elif m == 'snarl':
+        s += mouth(mx, my + 6, 74, 6, 26, -8, SKIN_D, FINE, RED, PALE, top=7, bot=7)
+    else:
+        s += mouth(mx, my + 14, 50, 14, 58, 0, SKIN_D, FINE, RED, PALE, top=6, bot=6)
+    # pala bıyık: som kara, alt kenarı dikenli
+    reseed('dumrul-moustache')
+    for sx in (-1, 1):
+        topc = [(6, 44), (6 + sx * 50, 36), (6 + sx * 104, 46), (6 + sx * 150, 28), (6 + sx * 166, 6)]
+        top_s = catmull(topc, False, 6)
+        low = [(6 + sx * 160, 22), (6 + sx * 142, 62), (6 + sx * 128, 56), (6 + sx * 116, 82), (6 + sx * 98, 68), (6 + sx * 84, 88), (6 + sx * 66, 70), (6 + sx * 50, 84), (6 + sx * 34, 66), (6 + sx * 18, 74), (6, 60)]
+        s += fill(top_s + low, INK, 0.8, smooth=False)
+    s += ink([(6, 46), (6, 62)], 1.6, col=FINE, wob=0, smooth=False)
+    return s
+
+
+def hand(lit=True, pose='open', ring=True, flip=1):
+    """El: avuç, boğumlu dolgun parmaklar, boğum çentikleri, parmak ucunda biten kısa koyu tırnak, yüzük.
+    Bilek (0,0)'dadır, parmaklar aşağı uzanır. pose: open | fist | grip."""
+    reseed(f'hand-{lit}-{pose}-{flip}')
+    c = SKIN if lit else SKIN_D
+    s = ''
+    palm = [(-34, -4), (0, -12), (34, -4), (40, 40), (30, 66), (-28, 68), (-40, 38)]
+    curl = {'open': 1.0, 'fist': 0.36, 'grip': 0.5}[pose]
+    fingers = [(-27, 62, 46, -0.10), (-9, 68, 54, -0.03), (9, 68, 52, 0.04), (26, 62, 42, 0.12)]
+    if pose != 'open': s += blob(palm, c, 3.2)
+    for i, (fx, fy, fl, fa) in enumerate(fingers):
+        l = fl * curl; ca, sa = math.cos(fa + 1.571), math.sin(fa + 1.571)
+        tip = (fx + ca * l, fy + sa * l); nx, ny = -sa, ca
+        f = [(fx - nx * 9, fy - ny * 9), (fx + ca * l * 0.5 - nx * 10.5, fy + sa * l * 0.5 - ny * 10.5), (tip[0] - nx * 8, tip[1] - ny * 8), (tip[0] + ca * 7, tip[1] + sa * 7),
+             (tip[0] + nx * 8, tip[1] + ny * 8), (fx + ca * l * 0.5 + nx * 10.5, fy + sa * l * 0.5 + ny * 10.5), (fx + nx * 9, fy + ny * 9)]
+        s += blob(f, c, 3.0)
+        for k in ((0.45, 0.48) if pose == 'open' else (0.5,)):   # boğum çentikleri
+            mx, my = fx + ca * l * k, fy + sa * l * k
+            s += ink([(mx - nx * 6, my - ny * 6), (mx + nx * 6, my + ny * 6 + 1)], 1.8, wob=0, smooth=False)
+        nb = (tip[0] - ca * 5, tip[1] - sa * 5)   # tırnak: parmak ucunu geçmez
+        s += fill([(nb[0] - nx * 5, nb[1] - ny * 5), (tip[0] + ca * 2 - nx * 4, tip[1] + sa * 2 - ny * 4), (tip[0] + ca * 2 + nx * 4, tip[1] + sa * 2 + ny * 4), (nb[0] + nx * 5, nb[1] + ny * 5)], SKIN_D if lit else FINE, 0.3, smooth=False)
+        if ring and i == 1: s += fill([(fx - 11, fy + 6), (fx + 11, fy + 7), (fx + 11, fy + 15), (fx - 11, fy + 14)], GOLD, 0.4, smooth=False) + sparkle(fx + 3, fy + 10, 5)
+    if pose == 'open': s += blob(palm, c, 3.2)
+    for kx in (-26, -9, 9, 25): s += ink([(kx - 6, 60), (kx, 55), (kx + 6, 60)], 1.8, wob=0)   # boğum tümsekleri
+    th = [(flip * 30, 2), (flip * 56, 14), (flip * 64, 40), (flip * 52, 52), (flip * 36, 36)]
+    s += blob(th, c, 3.0) + fill([(flip * 55, 36), (flip * 63, 40), (flip * 57, 50), (flip * 50, 46)], SKIN_D if lit else FINE, 0.3, smooth=False)
+    s += ink([(-18, 20), (4, 30), (22, 22)], 1.8, wob=0.2)
+    return s
+
+
+def sword():
+    """Kara kılıç: kabza (0,0)'da, namlu yukarı uzanır."""
+    reseed('sword')
+    blade = [(-13, -10), (-16, -150), (-4, -290), (26, -390), (34, -300), (20, -150), (14, -10)]
+    s = fill(blade, COBALT, 1.0) + fill([(4, -10), (8, -150), (20, -290), (26, -390), (34, -300), (20, -150), (14, -10)], INK, 0.8, op=0.75)
+    s += ink(blade, 3.2, closed=True) + ink([(-6, -30), (-8, -150), (4, -280)], 1.8, col=PALE, op=0.9, wob=0.2) + sparkle(-4, -250, 13)
+    s += blob([(-48, -14), (0, -22), (48, -14), (50, 2), (0, 8), (-50, 2)], GOLD, 3.2) + blob([(-11, 4), (11, 4), (12, 62), (-12, 62)], RED, 3.0)
+    s += ''.join(ink([(-11, y), (11, y + 5)], 1.8, wob=0, smooth=False) for y in (16, 28, 40, 52)) + blob(ellipse(0, 72, 14, 12, 7), GOLD, 3.0)
+    return s
+
+
+def dumrul_body():
+    """Gövde: fıçı gibi; boyun kökü (0,0)'da. Kırmızı kaftan, altın madalyonlar, kuşak."""
+    reseed('dumrul-body')
+    torso = [(-70, -14), (70, -14), (176, 22), (214, 150), (222, 300), (196, 430), (-196, 430), (-222, 300), (-214, 150), (-176, 22)]
+    s = clipdef('db', torso)
+    for sx in (-1, 1):   # çizmeler
+        s += blob([(sx * 40, 420), (sx * 132, 420), (sx * 138, 500), (sx * 172, 520), (sx * 170, 548), (sx * 34, 548)], COBALT, 3.4)
+        s += ink([(sx * 44, 470), (sx * 130, 474)], 2.0, wob=0.3) + ''.join(ink([(sx * (60 + k * 22), 530), (sx * (64 + k * 22), 540)], 1.8, wob=0, smooth=False) for k in range(4))
+    s += fill(torso, RED, 1.5)
+    s += '<g clip-path="url(#db)">' + ''.join(medallion(-168 + j * 84 + (42 if i % 2 else 0), 62 + i * 78, 19, GOLD, 2.0) for i in range(5) for j in range(5)) + '</g>'   # brokar
+    s += fill([(-240, -20), (-60, -20), (-96, 140), (-70, 300), (-110, 440), (-240, 440)], COBALT, 1.2, clip='db', op=0.42)   # gölge yanı
+    s += fill([(-16, -14), (16, -14), (22, 430), (-22, 430)], GOLD, 1.0, clip='db') + ''.join(ink([(-12, y), (12, y)], 1.8, wob=0, smooth=False) for y in range(20, 420, 26))
+    s += ink(torso, 4.0, closed=True, press=0.45)
+    belt = [(-218, 268), (0, 286), (220, 268), (224, 312), (0, 332), (-222, 312)]
+    s += blob(belt, PALE, 3.4) + fur(belt, 2, 14, 7, 0.2, 1.9) + blob(ellipse(0, 308, 30, 25, 9), GOLD, 3.4) + medallion(0, 308, 14, RED, 1.8) + sparkle(12, 298, 8)
+    s += blob([(-74, -30), (0, -12), (74, -30), (60, 12), (0, 26), (-60, 12)], PALE, 3.4) + fur([(-70, -26), (70, -26), (58, 12), (-58, 12)], 2, 12, 8, 0.4, 2.0)
+    return s
+
+
+def dumrul_arm(side=1, lit=True, pose='open'):
+    """Kol: omuz (0,0)'da, aşağı sarkar; el ucunda. Kaldırmak için omuzdan döndürülür."""
+    reseed(f'dumrul-arm{side}')
+    arm = [(-44, -10), (30, -22), (56, 60), (52, 170), (40, 236), (-36, 236), (-52, 160), (-60, 60)]
+    s = fill(arm, RED, 1.4)
+    if not lit: s += fill(arm, COBALT, 1.4, op=0.42)
+    s += medallion(-4, 70, 17, GOLD, 2.0) + medallion(2, 150, 17, GOLD, 2.0)
+    s += ink(arm, 3.8, closed=True, press=0.45) + ink([(-30, 110), (-6, 122), (22, 108)], 2.0, wob=0.3)
+    s += blob([(-44, 224), (44, 224), (48, 258), (-48, 258)], GOLD, 3.2) + ''.join(ink([(x, 230), (x + 3, 252)], 1.8, wob=0, smooth=False) for x in range(-36, 40, 14))
+    s += group(hand(lit, pose, True, side), 0, 262)
+    return s
+
+
+def dumrul(expr='neutral', armL=8, armR=-8, hr=0, poseR='open', sword_in_hand=False):
+    """Bütün figür (tasarım sayfası ve tek kare için). Boyun kökü (0,0)."""
+    s = group(dumrul_arm(-1, False), -186, 44, armL)
+    s += dumrul_body()
+    extra = group(sword(), 0, 318, 180) if sword_in_hand else ''   # namlu, kolun uzantısında
+    s += group((extra if sword_in_hand else '') + dumrul_arm(1, True, poseR), 186, 44, armR)
+    s += group(dumrul_head(expr), 0, -150, hr, 0.86, None, 0, 150)
+    return s
+
+
+AZ = {
+    'neutral': dict(brow=0.1, open=0.55, mouth='line', jaw=0),
+    'blink':   dict(brow=0.1, open=0.0, mouth='line', jaw=0),
+    'stern':   dict(brow=0.5, open=0.4, mouth='frown', jaw=0),
+    'speak':   dict(brow=0.2, open=0.6, mouth='open', jaw=26),
+    'wrath':   dict(brow=0.55, open=1.0, mouth='open', jaw=40, shock=True),
+}
+
+
+def azrail_head(expr='neutral'):
+    """Azrail: uzun dar yüz, kanca burun, feri sönmüş çukur gözler, ağarmış dikenli sakal, kukuleta."""
+    e = AZ[expr]; jaw = e['jaw']
+    J = lambda x, y: (x, y + jaw * max(0.0, min(1.3, (y - 50) / 90)))
+    reseed('az-hood')
+    hood = [(-128, -110), (-70, -214), (16, -236), (104, -196), (146, -96), (150, 60), (118, 210), (40, 150), (-40, 150), (-112, 210), (-140, 60)]
+    s = blob(hood, COBALT, 3.8) + fill([(-128, -110), (-70, -214), (0, -234), (-30, -100), (-60, 60), (-112, 210), (-140, 60)], INK, 1.0, op=0.38)
+    s += ''.join(ink([(x, -214 + abs(x) * 0.25), (x + 6, -150)], 1.9, wob=0.3) for x in (-62, 28, 84))
+    reseed('az-skull')
+    skull = [J(*p) for p in [(-58, -146), (0, -166), (60, -146), (86, -80), (84, 0), (72, 70), (44, 128), (0, 150), (-44, 128), (-74, 70), (-88, 0), (-88, -80)]]
+    s += clipdef('ah', skull) + fill(skull, SKIN, 1.3)
+    s += fill([(-120, -180), (-30, -170), (-52, -60), (-58, 40), (-20, 160), (-120, 180)], SKIN_D, 1.0, clip='ah')
+    s += fill(ellipse(-34, -22, 26, 20, 8, 0.1), SKIN_D, 0.8, clip='ah') + fill(ellipse(36, -22, 26, 20, 8, 0.1), SKIN_D, 0.8, clip='ah')   # göz çukurları
+    s += fill(ellipse(46, 34, 22, 14, 8, 0.1), SKIN_L, 0.8, clip='ah') + fill(ellipse(10, -104, 34, 12, 8, 0.1), SKIN_L, 0.8, clip='ah')   # elmacık, alın
+    s += ink(skull, 3.4, closed=True, press=0.5)
+    s += ''.join(ink([(-40, y), (4, y - 5), (46, y)], 1.9, wob=0.4) for y in (-118, -104, -90))
+    reseed('az-eyes')
+    sh = e.get('shock', False)
+    for cx in (-34, 36):
+        for k in range(3): s += ink([(cx - 15 + k, -6 + k * 7), (cx, 1 + k * 7), (cx + 16 - k, -7 + k * 7)], 1.9, wob=0.2)   # üst üste torbalar
+        s += eye(cx, -24, 15, 10, PALE, SKIN_D, e['open'], 2.6, (0, 2), lid=0.5, shock=sh)
+    reseed('az-brows')
+    for sx, cx in ((-1, -34), (1, 36)):
+        b = e['brow']; inner = (cx - sx * 20, -44 + b * 22); outer = (cx + sx * 28, -52 - b * 6)
+        pts = [inner, ((inner[0] + outer[0]) / 2, min(inner[1], outer[1]) - 10), outer, (outer[0] + sx * 10, outer[1] + 12), ((inner[0] + outer[0]) / 2, (inner[1] + outer[1]) / 2 + 6)]
+        s += blob(pts, PALE, 2.6) + ''.join(ink([(inner[0] + sx * k, inner[1] - 4), (inner[0] + sx * (k + 6), inner[1] - 15)], 1.8, wob=0, smooth=False) for k in (8, 20, 32))
+    reseed('az-nose')
+    nose = [(-10, -44), (8, -46), (26, 6), (34, 44), (16, 70), (-6, 66), (-2, 48), (-18, 40), (-12, 0)]
+    s += fill(nose, SKIN_L, 0.9) + ink([(8, -46), (28, 6), (36, 44), (16, 72), (-6, 66), (0, 50)], 3.4, wob=0.3, taper=(0.3, 0.3)) + ink([(-12, 4), (-20, 40), (-6, 48)], 2.4, wob=0.2)
+    s += fill(ellipse(-10, 44, 4.5, 3, 6), INK, 0.3)
+    s += ink([(-30, 36), J(-52, 70), J(-56, 104)], 2.6, wob=0.4, taper=(0.2, 0.5)) + ink([(40, 40), J(56, 72), J(58, 104)], 2.6, wob=0.4, taper=(0.2, 0.5))
+    reseed('az-mouth')
+    my = 96 + jaw * 0.5
+    if e['mouth'] == 'open': s += mouth(4, my, 30, 4, 14 + jaw * 0.7, 0, SKIN_D, FINE, RED, PALE, top=5, bot=4)
+    elif e['mouth'] == 'frown': s += ink([(-30, my + 8), (4, my - 2), (38, my + 9)], 3.0, wob=0.3)
+    else: s += ink([(-28, my + 2), (4, my), (36, my + 3)], 2.8, wob=0.3)
+    reseed('az-beard')
+    beard = [J(*p) for p in [(-78, 56), (-58, 92), (-34, 110), (0, 118), (36, 110), (60, 92), (80, 56), (72, 130), (84, 196), (58, 186), (52, 270), (30, 236), (14, 330), (-4, 262), (-24, 312), (-36, 224), (-62, 252), (-58, 176), (-82, 196), (-72, 130)]]
+    s += fill(beard, PALE, 1.0, smooth=False) + fill([J(*p) for p in [(-78, 56), (-58, 92), (-30, 112), (-30, 300), (-62, 252), (-58, 176), (-82, 196), (-72, 130)]], COBALT, 0.8, smooth=False, op=0.3)
+    s += ink(beard, 2.8, closed=True, smooth=False, wob=0.2) + fur(beard, 7, 13, 12, 0.1, 2.0)
+    for sx in (-1, 1):   # sarkık ak bıyık
+        m = [(4, 76), (4 + sx * 30, 70), (4 + sx * 58, 90), (4 + sx * 70, 140), (4 + sx * 54, 120), (4 + sx * 46, 102), (4 + sx * 22, 92), (4, 90)]
+        s += fill([(x, y) for x, y in m], PALE, 0.8, smooth=False) + ink(m, 2.4, closed=True, smooth=False, wob=0.2)
+    return s
+
+
+def wing(side=1, spread=1.0):
+    """Al kanat: kök (0,0)'da; yukarı ve yana açılır."""
+    reseed(f'wing{side}')
+    k = spread
+    pts = [(0, 0), (side * 70 * k, -150), (side * 190 * k, -250), (side * 300 * k, -230), (side * 268 * k, -150), (side * 318 * k, -70), (side * 250 * k, -30), (side * 286 * k, 60), (side * 206 * k, 60), (side * 220 * k, 170), (side * 140 * k, 130), (side * 130 * k, 250), (side * 60 * k, 190), (0, 150)]
+    s = fill(pts, RED, 1.2, smooth=False)
+    if side < 0: s += fill(pts, COBALT, 1.2, smooth=False, op=0.4)
+    s += ink(pts, 3.4, closed=True, smooth=False, wob=0.3)
+    for a, b in (((side * 60 * k, -90), (side * 250 * k, -200)), ((side * 50 * k, -20), (side * 240 * k, -60)), ((side * 40 * k, 50), (side * 190 * k, 30)), ((side * 30 * k, 110), (side * 120 * k, 110))):
+        s += ink([a, b], 2.2, wob=0.4, taper=(0.1, 0.6), smooth=False) + dashrow([a, b], 22, 16, 0.9 * side, 2.0, smooth=False)
+    return s
+
+
+def azrail_body():
+    """Uzun, sıska gövde: boyun kökü (0,0). Kobalt cübbe, kemikli eller."""
+    reseed('az-body')
+    robe = [(-46, -10), (46, -10), (96, 30), (104, 200), (128, 520), (140, 640), (-140, 640), (-128, 520), (-104, 200), (-96, 30)]
+    s = clipdef('ab', robe) + fill(robe, COBALT, 1.4) + fill([(-160, -20), (-10, -20), (-30, 300), (-10, 650), (-160, 650)], INK, 1.0, clip='ab', op=0.4)
+    s += ''.join(ink([(x, 120 + abs(x) * 0.6), (x * 1.25, 400), (x * 1.5, 630)], 2.2, wob=0.6, taper=(0.3, 0.2)) for x in (-60, -14, 34, 74))
+    s += ink(robe, 3.8, closed=True, press=0.45)
+    s += blob([(-100, 236), (0, 250), (102, 236), (104, 262), (0, 276), (-102, 262)], GOLD, 3.0) + ''.join(ink([(x, 244), (x + 4, 268)], 1.8, wob=0, smooth=False) for x in range(-88, 96, 18))
+    hem = [(-140, 600), (140, 600), (142, 640), (-142, 640)]
+    s += fill(hem, RED, 1.0, clip='ab') + ''.join(scroll(x, 620, 11, GOLD, 2.0) for x in range(-120, 130, 34))
+    return s
+
+
+def azrail_arm(side=1, lit=True):
+    reseed(f'az-arm{side}')
+    arm = [(-26, -8), (22, -14), (40, 80), (58, 250), (-34, 262), (-40, 90)]
+    s = fill(arm, COBALT, 1.2)
+    if not lit: s += fill(arm, INK, 1.2, op=0.4)
+    s += ink(arm, 3.4, closed=True, press=0.4) + ink([(-10, 60), (4, 150), (20, 240)], 2.0, wob=0.5)
+    s += group(hand(lit, 'open', False, side), 12, 262, 0, 0.78, 1.05)
+    return s
+
+
+def azrail(expr='neutral', armL=10, armR=-10, spread=1.0, hr=0):
+    s = group(wing(-1, spread), -40, 60) + group(wing(1, spread), 40, 60)
+    s += group(azrail_arm(-1, False), -84, 40, armL) + azrail_body() + group(azrail_arm(1, True), 84, 40, armR)
+    s += group(azrail_head(expr), 0, -118, hr, 0.9, None, 0, 118)
+    return s
+
+
+def dove(flap=0):
+    """Güvercin: Azrail'in büründüğü kuş. flap: 0 kanat yukarı, 1 kanat aşağı."""
+    reseed('dove')
+    body = [(-70, 0), (-30, -26), (30, -24), (64, -40), (86, -28), (70, -8), (40, 18), (-20, 24)]
+    s = blob([(-70, 0), (-128, -22), (-120, 12), (-134, 30), (-64, 14)], PALE, 2.8)
+    wy = -110 if flap == 0 else 70
+    s += blob([(-26, -10), (-60, wy * 0.6), (-30, wy), (10, wy * 0.9), (36, wy * 0.45), (30, -10)], PALE, 3.0)
+    s += ''.join(ink([(x, -6), (x * 1.4 - 6, wy * 0.75)], 1.9, wob=0.3) for x in (-14, 4, 20))
+    s += blob(body, PALE, 3.0) + fill([(-70, 0), (-20, 24), (40, 18), (60, 0), (0, 6)], COBALT, 0.8, op=0.3)
+    s += blob([(86, -30), (106, -24), (86, -18)], GOLD, 2.2) + f'<circle cx="70" cy="-28" r="3.2" fill="{INK}"/>'
+    return s
+
+
+def extra(kind=0):
+    """Yiğitler: aynı çizgi, daha az iz. Oturur hâlde, belden yukarı tek çizim. Boyun kökü (0,0)."""
+    reseed(f'extra{kind}')
+    robe = [COBALT, GOLD, PALE][kind % 3]
+    w = [150, 96, 124][kind % 3]
+    torso = [(-w * 0.5, -6), (w * 0.5, -6), (w, 40), (w * 1.12, 230), (-w * 1.12, 230), (-w, 40)]
+    s = blob(torso, robe, 3.4) + fill([(-w * 1.12, 230), (-w, 40), (-w * 0.5, -6), (-w * 0.2, -6), (-w * 0.4, 230)], INK, 1.0, op=0.3)
+    s += ink([(0, 0), (4, 226)], 2.0, wob=0.4) + ''.join(ink([(-w * 0.5, y), (w * 0.5, y + 4)], 1.8, wob=0.5, taper=(0.3, 0.3)) for y in (110, 170))
+    hy = -86
+    if kind % 3 == 0:    # iri, yuvarlak, kel; minik takke
+        head = ellipse(0, hy, 104, 96, 12, 0.05)
+        s += blob(head, SKIN, 3.4) + fill(ellipse(-44, hy + 20, 52, 70, 8), SKIN_D, 1.0, op=0.9) + ink(head, 3.2, closed=True)
+        s += blob([(-40, hy - 86), (0, hy - 120), (42, hy - 86), (0, hy - 78)], RED, 3.0)
+        s += ink([(-64, hy + 46), (0, hy + 66), (66, hy + 44)], 2.2, wob=0.3) + ink([(-70, hy + 66), (0, hy + 84), (70, hy + 64)], 2.0, wob=0.3)
+        mo = [(-50, hy + 16), (0, hy + 4), (50, hy + 16), (40, hy + 30), (0, hy + 20), (-40, hy + 30)]
+    elif kind % 3 == 1:  # sıska, uzun boyun, sivri kalpak
+        s += blob([(-22, -70), (22, -70), (26, 6), (-26, 6)], SKIN_D, 3.0)
+        head = [(-52, hy - 110), (0, hy - 126), (54, hy - 110), (62, hy - 40), (40, hy + 20), (0, hy + 34), (-38, hy + 20), (-60, hy - 40)]
+        s += blob(head, SKIN, 3.4) + blob([(-60, hy - 100), (0, hy - 250), (62, hy - 100), (0, hy - 88)], COBALT, 3.2) + blob([(-70, hy - 96), (0, hy - 112), (72, hy - 96), (70, hy - 76), (0, hy - 70), (-68, hy - 76)], PALE, 3.0)
+        mo = [(-38, hy - 14), (0, hy - 22), (40, hy - 14), (58, hy + 16), (30, hy - 2), (0, hy - 8), (-28, hy - 2), (-56, hy + 16)]
+        hy -= 46
+    else:                # kısa, köşeli, koca kaşlı
+        head = [(-84, hy - 60), (0, hy - 76), (86, hy - 60), (96, hy + 30), (60, hy + 76), (-58, hy + 76), (-94, hy + 30)]
+        s += blob(head, SKIN, 3.4) + blob([(-90, hy - 54), (-60, hy - 110), (60, hy - 110), (92, hy - 54), (0, hy - 40)], GOLD, 3.2) + fur([(-80, hy - 60), (80, hy - 60), (60, hy - 100), (-60, hy - 100)], 2, 14, 8, 0.4, 1.9)
+        s += ink([(-70, hy - 26), (-10, hy - 12)], 13, taper=(0.05, 0.4), wob=0.3, smooth=False) + ink([(72, hy - 26), (12, hy - 12)], 13, taper=(0.05, 0.4), wob=0.3, smooth=False)
+        mo = [(-44, hy + 34), (0, hy + 26), (46, hy + 34), (36, hy + 48), (0, hy + 40), (-34, hy + 48)]
+    # kadeh tutan el ve kuşak: figürü "oturan adam" yapan birkaç iz
+    s += blob([(-w * 1.05, 156), (0, 164), (w * 1.05, 156), (w * 1.07, 176), (0, 186), (-w * 1.07, 176)], RED, 2.8)
+    s += blob([(w * 0.34, 96), (w * 0.34 + 44, 96), (w * 0.34 + 36, 140), (w * 0.34 + 8, 140)], GOLD, 2.8) + sparkle(w * 0.34 + 30, 108, 6)
+    s += blob(ellipse(w * 0.34 + 22, 138, 30, 22, 8, 0.08), SKIN, 3.0) + ''.join(ink([(w * 0.34 + 4 + k * 12, 130), (w * 0.34 + 6 + k * 12, 146)], 1.8, wob=0, smooth=False) for k in range(4))
+    for cx in (-26, 28):
+        s += fill(ellipse(cx, hy - 8, 10, 7, 8), PALE, 0.4) + f'<circle cx="{cx + 1}" cy="{hy - 7}" r="3" fill="{INK}"/>' + ink([(cx - 13, hy - 13), (cx, hy - 16), (cx + 13, hy - 13)], 3.6, wob=0.2)
+    s += ink([(2, hy - 8), (10, hy + 14), (0, hy + 20)], 2.8, wob=0.3) + fill(mo, INK, 0.8, smooth=False)
+    return s
