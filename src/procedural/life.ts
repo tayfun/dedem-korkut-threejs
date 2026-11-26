@@ -113,6 +113,7 @@ class Puffs {
     this.next = (this.next + 1) % this.items.length;
     p.mesh.position.set(x, y, z);
     p.mesh.rotation.set(Math.random() * 3, Math.random() * 3, 0);
+    p.mesh.scale.setScalar(0.0001); // ilk karede tam boy görünmesin
     p.mesh.visible = true;
     Object.assign(p, { life: 0, dur, size, vx, vy, vz });
   }
