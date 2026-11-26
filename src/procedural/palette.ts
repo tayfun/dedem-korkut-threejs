@@ -25,6 +25,11 @@ export const P = {
   steel: 0xb8bcc2,
   flame: 0xff8a1e,
   flameCore: 0xffd75a,
+  water: 0x4a8fa8,
+  lion: 0xc9953f,
+  lionDark: 0x8a5a22,
+  wool: 0xf2ecdf,
+  ogre: 0x9aa07a,
 } as const;
 
 const cache = new Map<string, THREE.Material>();

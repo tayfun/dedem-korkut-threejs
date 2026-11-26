@@ -24,6 +24,8 @@ export interface HumanOpts {
   long?: boolean;
   /** Yanaklarda pembelik. */
   blush?: boolean;
+  /** Gözü kör edilmiş olarak başlar (Tepegöz). */
+  blind?: boolean;
   /** Yüz tipi; verilmezse sakal, başlık ve boydan çıkarılır. */
   face?: FaceKind;
   /** Göz rengi. */
@@ -197,6 +199,7 @@ export class Human extends Mover {
     if (o.wings !== undefined) this.addWings(o.wings);
     if (o.scale) this.group.scale.setScalar(o.scale);
     this.setMood(o.mood ?? 'neutral');
+    if (o.blind) this.blind();
   }
 
   private addFace(o: HumanOpts): void {
@@ -341,6 +344,20 @@ export class Human extends Mover {
   setMood(mood: Mood): this {
     this.mood = mood;
     this.face?.set(mood, this.eyesClosed);
+    return this;
+  }
+
+  /** Gözü kör eder (Tepegöz): göz kapanır, kanlı çizilir. */
+  blind(): this {
+    this.eyesClosed = true;
+    this.face?.wound();
+    return this;
+  }
+
+  /** Figürü sırtüstü yere yatırır; baş, baktığı yönün tersine düşer. */
+  lie(): this {
+    this.rig.rotation.x = -Math.PI / 2;
+    this.yOffset = 0.27 * this.group.scale.y;
     return this;
   }
 

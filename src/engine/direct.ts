@@ -88,6 +88,22 @@ export function toss(tl: TL, obj: THREE.Object3D, from: [number, number, number]
   tl.set(obj, { visible: false }, at + dur + 0.02);
 }
 
+/** Bir nesneyi (ok, taş) düz bir çizgide fırlatır; +z ekseni uçuş yönüne döner. Varınca kaybolur. */
+export function launch(tl: TL, obj: THREE.Object3D, from: [number, number, number], to: [number, number, number], at: number, dur = 0.35): void {
+  obj.position.set(...from);
+  obj.lookAt(...to);
+  obj.visible = false;
+  tl.set(obj, { visible: true }, at);
+  tl.to(obj.position, { x: to[0], y: to[1], z: to[2], duration: dur, ease: 'none' }, at);
+  tl.set(obj, { visible: false }, at + dur + 0.01);
+}
+
+/** Ayaktaki figürü sırtüstü yere yıkar. */
+export function fall(tl: TL, m: Human, at: number, dur = 0.5): void {
+  tl.to(m.rig.rotation, { x: -Math.PI / 2, duration: dur, ease: 'power2.in' }, at);
+  tl.to(m, { yOffset: 0.27 * m.group.scale.y, duration: dur, ease: 'power2.in' }, at);
+}
+
 /* ------------------------- Duruş ve jestler ------------------------ */
 
 /** Yüz ifadesini zaman çizelgesinin bir anında değiştirir. */

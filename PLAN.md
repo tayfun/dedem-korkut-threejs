@@ -31,7 +31,7 @@ Dede Korkut Kitabı'ndaki on iki boy ile 2018'de bulunan on üçüncü boy aras�
 - Hedef okur yetişkinlerdir. Özgün metne sadık kalınır: olay eklenmez, sert bölümler yumuşatılmaz.
 - Günümüz Türkçesi, sade ve akıcı; özgün söyleyiş ve ritim korunur, soylamalar kısaltılır.
 - Eskimiş sözcükler metinde kalır, sahne altındaki notta açıklanır.
-- Her hikâye 8–18 sahneye bölünür; bir sahne en çok 450 karakter kadardır.
+- Her hikâye 8–20 sahneye bölünür; bir sahne en çok 450 karakter kadardır.
 - Her hikâye Dede Korkut'un gelip boy boylaması ve dua etmesiyle biter; bu kalıp korunur.
 - Dayanak: Dresden nüshası. Kaynakça ve uyarlama ilkeleri sitede `#/kaynaklar` sayfasındadır.
 
@@ -102,7 +102,7 @@ Modüllerin ayrıntılı dökümü `AGENTS.md` içindeki "Kodun Düzeni" tablosu
 3. ✅ **Prosedürel kütüphane** — arazi, gök, insan figürü, at, kuş, çadır, ateş.
 4. ✅ **İlk hikâye: Deli Dumrul** — 16 sahne.
 5. ✅ **Ana sayfa ve Kaynaklar sayfası** — hikâye listesi, kapak sahnesi, kaynakça.
-6. ⬜ **Kalan hikâyeler** — tablodaki sırayla, her biri ayrı ayrı. Sıradaki: Basat ile Tepegöz.
+6. 🔶 **Kalan hikâyeler** — tablodaki sırayla, her biri ayrı ayrı. ✅ Basat ile Tepegöz (19 sahne). Sıradaki: Boğaç Han.
 7. ✅ **Görsel cila** — minyatür görünümü, katmanlı arka plan, eklemli figürler, canlı zemin, kapaklar ve tezhip çerçevesi.
 8. ⬜ **Son cila** — gerçek telefonda performans ölçümü, erişilebilirlik, ses (isteğe bağlı), paylaşım kartları.
 

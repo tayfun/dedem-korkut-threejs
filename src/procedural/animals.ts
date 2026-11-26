@@ -3,7 +3,7 @@ import { Mover } from '../engine/stage';
 import { HIP, type Human } from './human';
 import { P, kilim, mat, mesh, toon } from './palette';
 
-/** Hayvanlar: at ve kuş. Yeni hayvanlar da buraya eklenir. */
+/** Hayvanlar: at, aslan, koyun, kuş. Yeni hayvanlar da buraya eklenir. */
 
 /** At: önü +z yönünde. `seat` binicinin oturduğu noktadır; `rig` arka ayaklar üzerinde şaha kalkar. */
 export class Horse extends Mover {
@@ -193,5 +193,131 @@ export class Bird extends Mover {
     const f = Math.sin(t * 16 + this.phase) * 0.9 * this.flap;
     this.wings[0].rotation.z = -f;
     this.wings[1].rotation.z = f;
+  }
+}
+
+/** Dört ayaklı hayvanlar için ortak bacak düzeni: dört kapsül, çapraz adım. */
+function fourLegs(parent: THREE.Object3D, material: THREE.Material, x: number, zFront: number, zBack: number, top: number, radius: number): THREE.Group[] {
+  const legs: THREE.Group[] = [];
+  for (const [lx, lz] of [[-x, zFront], [x, zFront], [-x, zBack], [x, zBack]]) {
+    const pivot = new THREE.Group();
+    pivot.position.set(lx, top, lz);
+    const leg = mesh(new THREE.CapsuleGeometry(radius, top - radius * 2, 4, 8), material);
+    leg.position.y = -top / 2;
+    pivot.add(leg);
+    parent.add(pivot);
+    legs.push(pivot);
+  }
+  return legs;
+}
+
+/** Aslan: yeleli, önü +z yönünde. */
+export class Lion extends Mover {
+  rig = new THREE.Group();
+  head = new THREE.Group();
+  private legs: THREE.Group[];
+  private tail = new THREE.Group();
+  private phase = Math.random() * 10;
+
+  constructor() {
+    super();
+    this.walkSpeed = 9;
+    const fur = toon(P.lion);
+    const dark = toon(P.lionDark);
+    this.group.add(this.rig);
+    const body = mesh(new THREE.CapsuleGeometry(0.33, 0.8, 5, 14), fur);
+    body.rotation.x = Math.PI / 2;
+    body.position.y = 0.85;
+    const chest = mesh(new THREE.SphereGeometry(0.38, 12, 10), fur);
+    chest.position.set(0, 0.92, 0.4);
+    this.rig.add(body, chest);
+    this.legs = fourLegs(this.rig, fur, 0.2, 0.42, -0.5, 0.7, 0.1);
+
+    this.head.position.set(0, 1.15, 0.72);
+    const mane = mesh(new THREE.SphereGeometry(0.46, 14, 10), dark);
+    mane.position.z = -0.1;
+    mane.scale.set(1, 1.05, 0.8);
+    const skull = mesh(new THREE.SphereGeometry(0.3, 14, 10), fur);
+    skull.position.z = 0.12;
+    const muzzle = mesh(new THREE.SphereGeometry(0.16, 10, 8), toon(P.cream));
+    muzzle.position.set(0, -0.08, 0.38);
+    muzzle.scale.set(1.1, 0.8, 1);
+    const nose = mesh(new THREE.SphereGeometry(0.05, 8, 6), toon(P.black));
+    nose.position.set(0, -0.02, 0.52);
+    this.head.add(mane, skull, muzzle, nose);
+    for (const sx of [-1, 1]) {
+      const eye = new THREE.Mesh(new THREE.SphereGeometry(0.04, 8, 6), toon(0x1a1210));
+      eye.position.set(sx * 0.13, 0.08, 0.37);
+      const ear = mesh(new THREE.SphereGeometry(0.09, 8, 6), fur);
+      ear.position.set(sx * 0.24, 0.3, 0.02);
+      this.head.add(eye, ear);
+    }
+    this.rig.add(this.head);
+
+    this.tail.position.set(0, 1.0, -0.72);
+    const t = mesh(new THREE.CapsuleGeometry(0.035, 0.7, 3, 6), fur);
+    t.position.y = -0.36;
+    const tuft = mesh(new THREE.SphereGeometry(0.09, 8, 6), dark);
+    tuft.position.y = -0.76;
+    this.tail.add(t, tuft);
+    this.tail.rotation.x = 0.9;
+    this.rig.add(this.tail);
+  }
+
+  update(t: number): void {
+    const a = this.walkAmp;
+    const ph = t * this.walkSpeed + this.phase;
+    [0, Math.PI, Math.PI, 0].forEach((off, i) => (this.legs[i].rotation.x = Math.sin(ph + off) * 0.6 * a));
+    this.rig.position.y = Math.abs(Math.sin(ph)) * 0.05 * a;
+    this.tail.rotation.z = Math.sin(t * 2.4 + this.phase) * 0.35;
+  }
+}
+
+/** Koyun; `ram` ise kıvrık boynuzlu koç. Önü +z yönünde. */
+export class Sheep extends Mover {
+  rig = new THREE.Group();
+  private legs: THREE.Group[];
+  private phase = Math.random() * 10;
+
+  constructor(ram = false) {
+    super();
+    this.walkSpeed = 12;
+    const wool = toon(P.wool);
+    const dark = toon(P.darkBrown);
+    this.group.add(this.rig);
+    const body = mesh(new THREE.SphereGeometry(0.4, 12, 10), wool);
+    body.scale.set(0.85, 0.8, 1.25);
+    body.position.y = 0.62;
+    this.rig.add(body);
+    for (const [x, y, z] of [[0.18, 0.86, 0.2], [-0.2, 0.84, -0.1], [0.1, 0.88, -0.3], [-0.12, 0.86, 0.3]]) {
+      const puff = mesh(new THREE.SphereGeometry(0.2, 8, 6), wool);
+      puff.position.set(x, y, z);
+      this.rig.add(puff);
+    }
+    this.legs = fourLegs(this.rig, dark, 0.16, 0.28, -0.3, 0.4, 0.05);
+    const head = mesh(new THREE.SphereGeometry(0.16, 10, 8), dark);
+    head.scale.set(0.85, 1, 1.25);
+    head.position.set(0, 0.8, 0.55);
+    this.rig.add(head);
+    for (const sx of [-1, 1]) {
+      const ear = mesh(new THREE.SphereGeometry(0.06, 6, 5), dark);
+      ear.scale.set(1.6, 0.5, 0.8);
+      ear.position.set(sx * 0.17, 0.84, 0.48);
+      this.rig.add(ear);
+      if (ram) {
+        const horn = mesh(new THREE.TorusGeometry(0.13, 0.04, 6, 10, 4.2), toon(P.cream));
+        horn.position.set(sx * 0.17, 0.9, 0.44);
+        horn.rotation.set(0, (sx * Math.PI) / 2, 0.4);
+        this.rig.add(horn);
+      }
+    }
+    if (ram) this.group.scale.setScalar(1.25);
+  }
+
+  update(t: number): void {
+    const a = this.walkAmp;
+    const ph = t * this.walkSpeed + this.phase;
+    [0, Math.PI, Math.PI, 0].forEach((off, i) => (this.legs[i].rotation.x = Math.sin(ph + off) * 0.6 * a));
+    this.rig.position.y = Math.abs(Math.sin(ph)) * 0.04 * a;
   }
 }

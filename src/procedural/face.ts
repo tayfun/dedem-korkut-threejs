@@ -17,7 +17,7 @@ const SIZE = 384;
 export type Mood = 'neutral' | 'happy' | 'smug' | 'angry' | 'sad' | 'fear';
 
 /** Yüz tipi: göz büyüklüğü, kaş kalınlığı, kirpik, dudak ve kırışıklıkları belirler. */
-export type FaceKind = 'man' | 'woman' | 'child' | 'elder' | 'grim';
+export type FaceKind = 'man' | 'woman' | 'child' | 'elder' | 'grim' | 'cyclops';
 
 export interface FaceStyle {
   kind: FaceKind;
@@ -28,6 +28,8 @@ export interface FaceStyle {
   blush?: boolean;
   /** true ise ağız çizilmez (sakal örtüyor). */
   noMouth?: boolean;
+  /** Gözü kör edilmiş: kapalı ve kanlı çizilir. */
+  wounded?: boolean;
 }
 
 interface KindDef {
@@ -47,6 +49,7 @@ const KINDS: Record<FaceKind, KindDef> = {
   child: { eye: 1.8, brow: 0.55, mouth: 1.3, lashes: 0, lips: false, wrinkles: false, sparkle: true },
   elder: { eye: 1.22, brow: 1.5, mouth: 1.4, lashes: 0, lips: false, wrinkles: true, sparkle: false },
   grim: { eye: 1.25, brow: 1.7, mouth: 1.4, lashes: 0, lips: false, wrinkles: true, sparkle: false },
+  cyclops: { eye: 2.3, brow: 1.5, mouth: 2.1, lashes: 0, lips: false, wrinkles: false, sparkle: false },
 };
 
 let patchGeo: THREE.BufferGeometry | undefined;
@@ -347,12 +350,32 @@ function draw(c: Ctx, s: FaceStyle, mood: Mood, blink: boolean): void {
     }
   }
 
-  for (const sx of [-1, 1]) {
+  if (s.kind === 'cyclops') {
+    // Tepegöz: alnın ortasında tek, iri bir göz.
     c.save();
-    c.translate(sx * 0.46, 0.035);
-    c.scale(sx * k.eye, k.eye);
-    drawEye(c, s, k, mood, blink);
+    c.translate(0, 0.1);
+    c.scale(k.eye, k.eye);
+    drawEye(c, s, k, mood, blink || !!s.wounded);
     c.restore();
+    if (s.wounded) {
+      // Kör edilmiş göz: kapaktan süzülen kan.
+      c.fillStyle = '#8a1c16';
+      for (const [x, len] of [[-0.16, 0.34], [0.02, 0.5], [0.2, 0.28]]) {
+        c.beginPath();
+        c.moveTo(x - 0.03, 0.06);
+        c.quadraticCurveTo(x - 0.035, -len * 0.6, x, -len);
+        c.quadraticCurveTo(x + 0.035, -len * 0.6, x + 0.03, 0.06);
+        c.fill();
+      }
+    }
+  } else {
+    for (const sx of [-1, 1]) {
+      c.save();
+      c.translate(sx * 0.46, 0.035);
+      c.scale(sx * k.eye, k.eye);
+      drawEye(c, s, k, mood, blink);
+      c.restore();
+    }
   }
 
   c.lineCap = 'round';
@@ -399,6 +422,21 @@ function draw(c: Ctx, s: FaceStyle, mood: Mood, blink: boolean): void {
     c.restore();
   }
   if (!s.noMouth) drawMouth(c, s, k, mood);
+  if (s.kind === 'cyclops') {
+    // Alt çeneden çıkan iki diş.
+    c.fillStyle = '#fffaf1';
+    c.strokeStyle = INK;
+    c.lineWidth = 0.012;
+    for (const sx of [-1, 1]) {
+      c.beginPath();
+      c.moveTo(sx * 0.1, -0.66);
+      c.lineTo(sx * 0.14, -0.5);
+      c.lineTo(sx * 0.19, -0.66);
+      c.closePath();
+      c.fill();
+      c.stroke();
+    }
+  }
 }
 
 /** Bir figürün çizilmiş yüzü: yama, tuval ve doku. */
@@ -434,6 +472,12 @@ export class DrawnFace {
     if (mood === this.mood && blink === this.blink) return;
     this.mood = mood;
     this.blink = blink;
+    this.redraw();
+  }
+
+  /** Gözü kör eder: bundan sonra kapalı ve kanlı çizilir. */
+  wound(): void {
+    this.style.wounded = true;
     this.redraw();
   }
 

@@ -152,3 +152,55 @@ export function addBanner(stage: Stage, x: number, z: number, color: number = P.
   }
   return g;
 }
+
+/** Yay: kabzası orijinde, kirişi +z yönünde gerilir; ele takılır. */
+export function bow(): THREE.Group {
+  const g = new THREE.Group();
+  const arc = mesh(new THREE.TorusGeometry(0.42, 0.022, 5, 14, 2.3), mat(P.darkBrown));
+  arc.rotation.z = Math.PI / 2 - 1.15;
+  arc.position.x = -0.42 * Math.cos(1.15);
+  const string = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.77, 3), mat(P.cream), false);
+  string.position.x = 0.0;
+  g.add(arc, string);
+  g.rotation.y = Math.PI / 2;
+  return g;
+}
+
+/** Ok: ucu +z yönünde. */
+export function arrow(): THREE.Group {
+  const g = new THREE.Group();
+  const shaft = mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.8, 4), mat(P.brown), false);
+  shaft.rotation.x = Math.PI / 2;
+  const tip = mesh(new THREE.ConeGeometry(0.035, 0.1, 4), mat(P.steel), false);
+  tip.rotation.x = Math.PI / 2;
+  tip.position.z = 0.45;
+  const fletch = mesh(new THREE.BoxGeometry(0.09, 0.005, 0.14), mat(P.red), false);
+  fletch.position.z = -0.34;
+  g.add(shaft, tip, fletch);
+  return g;
+}
+
+/** Şiş (süglük): sapı orijinde, ucu +y yönünde; `hot` ise ucu kızgındır. */
+export function spit(hot = false): THREE.Group {
+  const g = new THREE.Group();
+  const rod = mesh(new THREE.CylinderGeometry(0.02, 0.028, 1.5, 5), mat(P.steel));
+  rod.position.y = 0.7;
+  g.add(rod);
+  if (hot) {
+    const tip = noInk(new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.4, 5), glow(P.flame)));
+    tip.position.y = 1.5;
+    g.add(tip);
+  }
+  return g;
+}
+
+export function ring(): THREE.Mesh {
+  return mesh(new THREE.TorusGeometry(0.09, 0.03, 6, 12), mat(P.gold, { emissive: 0x6a4a00 }));
+}
+
+/** Çoban değneği: sapı orijinde, ucu +y yönünde. */
+export function staff(length = 1.9): THREE.Mesh {
+  const m = mesh(new THREE.CylinderGeometry(0.025, 0.035, length, 5), mat(P.darkBrown));
+  m.geometry.translate(0, length / 2 - 0.5, 0);
+  return m;
+}
