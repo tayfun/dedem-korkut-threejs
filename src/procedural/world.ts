@@ -20,13 +20,15 @@ interface SkyDef {
   hemiI: number;
   dir: [number, number, number];
   stars: number;
+  /** Bulut renginin ufuk rengine karışma oranı. */
+  cloud: number;
 }
 
 const SKIES: Record<SkyPreset, SkyDef> = {
-  day: { top: 0x4d8fc7, bottom: 0xead9b4, sun: 0xfff1d6, sunI: 2.4, hemiSky: 0xcfe3f5, hemiGround: 0x8a7a55, hemiI: 1.0, dir: [30, 42, 22], stars: 0 },
-  dawn: { top: 0x6f9fd0, bottom: 0xffd4a0, sun: 0xffe0b0, sunI: 2.1, hemiSky: 0xd8dcf0, hemiGround: 0x8a7050, hemiI: 0.95, dir: [36, 22, 18], stars: 0 },
-  dusk: { top: 0x2d2c5c, bottom: 0xe7854a, sun: 0xffa868, sunI: 1.9, hemiSky: 0x8c82b8, hemiGround: 0x5a4030, hemiI: 0.75, dir: [-38, 16, 14], stars: 0.35 },
-  night: { top: 0x0a0f24, bottom: 0x2b3560, sun: 0x9fb4e8, sunI: 1.1, hemiSky: 0x5065a8, hemiGround: 0x24243a, hemiI: 1.0, dir: [-24, 36, 18], stars: 1 },
+  day: { top: 0x4d8fc7, bottom: 0xead9b4, sun: 0xfff1d6, sunI: 2.4, hemiSky: 0xcfe3f5, hemiGround: 0x8a7a55, hemiI: 1.0, dir: [30, 42, 22], stars: 0, cloud: 0.12 },
+  dawn: { top: 0x6f9fd0, bottom: 0xffd4a0, sun: 0xffe0b0, sunI: 2.1, hemiSky: 0xd8dcf0, hemiGround: 0x8a7050, hemiI: 0.95, dir: [36, 22, 18], stars: 0, cloud: 0.3 },
+  dusk: { top: 0x2d2c5c, bottom: 0xe7854a, sun: 0xffa868, sunI: 1.9, hemiSky: 0x8c82b8, hemiGround: 0x5a4030, hemiI: 0.75, dir: [-38, 16, 14], stars: 0.35, cloud: 0.45 },
+  night: { top: 0x0a0f24, bottom: 0x2b3560, sun: 0x9fb4e8, sunI: 1.1, hemiSky: 0x5065a8, hemiGround: 0x24243a, hemiI: 1.0, dir: [-24, 36, 18], stars: 1, cloud: 0.82 },
 };
 
 export interface Sky {
@@ -81,12 +83,55 @@ export function addSky(stage: Stage, preset: SkyPreset): Sky {
   stage.add(sun);
   stage.add(sun.target);
 
-  // Güneş ya da ay: ışığın geldiği yönde, uzakta parlak bir disk.
+  // Güneş (ışınlı) ya da ay (hilal): ışığın geldiği yönde, uzakta.
   const discMat = new THREE.MeshBasicMaterial({ color: d.sun, fog: false });
-  const disc = new THREE.Mesh(new THREE.CircleGeometry(preset === 'night' ? 12 : 20, 20), discMat);
+  const disc = new THREE.Group();
+  if (preset === 'night') {
+    disc.add(new THREE.Mesh(crescentGeometry(13), discMat));
+  } else {
+    disc.add(new THREE.Mesh(new THREE.CircleGeometry(17, 24), discMat));
+    const rays = noInk(new THREE.Mesh(raysGeometry(21, 16), discMat));
+    disc.add(rays);
+    if (!stage.reducedMotion) stage.onTick((_t, dt) => (rays.rotation.z += dt * 0.05));
+  }
   disc.position.set(...d.dir).normalize().multiplyScalar(520);
   disc.lookAt(0, 0, 0);
   stage.add(disc);
+
+  // Uzak dağ sıraları: ufuk rengine doğru solan üç katman.
+  const ridgeMix = [0.55, 0.38, 0.22];
+  const ridgeMats = ridgeMix.map(() => new THREE.MeshBasicMaterial({ fog: false, side: THREE.DoubleSide }));
+  const ridgeTint = new THREE.Color();
+  const paintRidges = () => {
+    ridgeTint.copy(uniforms.top.value).multiplyScalar(0.6);
+    ridgeMix.forEach((k, i) => ridgeMats[i].color.lerpColors(uniforms.bottom.value, ridgeTint, k));
+  };
+  paintRidges();
+  [
+    [250, 38, 31],
+    [340, 58, 32],
+    [450, 84, 33],
+  ].forEach(([radius, height, seed], i) => stage.add(new THREE.Mesh(ridgeGeometry(radius, height, seed), ridgeMats[i])));
+
+  // Minyatür bulutları: yassı, kıvrımlı; gökte çok yavaş döner.
+  const cloudMat = new THREE.MeshBasicMaterial({ fog: false });
+  const white = new THREE.Color(0xfff8ea);
+  let cloudMix = d.cloud;
+  const paintClouds = () => cloudMat.color.lerpColors(white, uniforms.bottom.value, cloudMix);
+  paintClouds();
+  const clouds = new THREE.Group();
+  const cr = rng(41);
+  for (let i = 0; i < 9; i++) {
+    const c = new THREE.Mesh(cloudGeometry(100 + i), cloudMat);
+    const a = (i / 9) * Math.PI * 2 + cr() * 0.4;
+    const y = 70 + cr() * 90;
+    c.position.set(Math.sin(a) * 470, y, Math.cos(a) * 470);
+    c.lookAt(0, y, 0);
+    c.scale.setScalar(0.8 + cr() * 0.7);
+    clouds.add(c);
+  }
+  stage.add(clouds);
+  if (!stage.reducedMotion) stage.onTick((_t, dt) => (clouds.rotation.y += dt * 0.004));
 
   // Yıldızlar
   const r = rng(7);
@@ -114,6 +159,7 @@ export function addSky(stage: Stage, preset: SkyPreset): Sky {
         hemiI: hemi.intensity,
         stars: starMat.opacity,
         dir: sun.position.clone(),
+        cloud: cloudMix,
       };
       const target = {
         top: new THREE.Color(e.top),
@@ -136,6 +182,9 @@ export function addSky(stage: Stage, preset: SkyPreset): Sky {
             fog.color.copy(uniforms.bottom.value);
             sun.color.lerpColors(from.sun, target.sun, k.v);
             discMat.color.copy(sun.color);
+            cloudMix = THREE.MathUtils.lerp(from.cloud, e.cloud, k.v);
+            paintRidges();
+            paintClouds();
             hemi.color.lerpColors(from.hs, target.hs, k.v);
             hemi.groundColor.lerpColors(from.hg, target.hg, k.v);
             sun.intensity = THREE.MathUtils.lerp(from.sunI, e.sunI, k.v);
@@ -150,6 +199,72 @@ export function addSky(stage: Stage, preset: SkyPreset): Sky {
       );
     },
   };
+}
+
+/** Işın çemberi: uzun ve kısa üçgenler sırayla dizilir. */
+function raysGeometry(inner: number, count: number): THREE.BufferGeometry {
+  const v: number[] = [];
+  for (let i = 0; i < count; i++) {
+    const a = (i / count) * Math.PI * 2;
+    const w = (Math.PI / count) * 0.55;
+    const len = inner + (i % 2 ? 9 : 17);
+    v.push(Math.cos(a - w) * inner, Math.sin(a - w) * inner, 0, Math.cos(a + w) * inner, Math.sin(a + w) * inner, 0, Math.cos(a) * len, Math.sin(a) * len, 0);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+  g.computeVertexNormals();
+  return g;
+}
+
+function crescentGeometry(r: number): THREE.BufferGeometry {
+  const s = new THREE.Shape();
+  const open = THREE.MathUtils.degToRad(110);
+  s.absarc(0, 0, r, -open, open, false);
+  const cx = -r * 0.75;
+  const ex = Math.cos(open) * r - cx;
+  const ey = Math.sin(open) * r;
+  s.absarc(cx, 0, Math.hypot(ex, ey), Math.atan2(ey, ex), -Math.atan2(ey, ex), true);
+  return new THREE.ShapeGeometry(s, 24);
+}
+
+/** Çepeçevre bir dağ sırası: sivri doruklu, içe bakan bir şerit. */
+function ridgeGeometry(radius: number, height: number, seed: number): THREE.BufferGeometry {
+  const noise = createNoise2D(rng(seed));
+  const N = 150;
+  const v: number[] = [];
+  const idx: number[] = [];
+  for (let i = 0; i <= N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    const cx = Math.cos(a);
+    const sz = Math.sin(a);
+    const ridged = 1 - Math.abs(noise(cx * 2.2, sz * 2.2));
+    const fine = 1 - Math.abs(noise(cx * 7 + 9, sz * 7));
+    const h = height * (0.15 + 0.6 * ridged * ridged * ridged + 0.25 * fine * fine);
+    v.push(cx * radius, -30, sz * radius, cx * radius, h, sz * radius);
+    if (i < N) idx.push(i * 2, i * 2 + 1, i * 2 + 2, i * 2 + 1, i * 2 + 3, i * 2 + 2);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(v, 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Yassı, kıvrım kıvrım bir bulut: yan yana yaylardan oluşur. */
+function cloudGeometry(seed: number): THREE.BufferGeometry {
+  const r = rng(seed);
+  const s = new THREE.Shape();
+  const n = 4 + Math.floor(r() * 3);
+  const radii = Array.from({ length: n }, (_, i) => (9 + r() * 9) * (1 - Math.abs(i - (n - 1) / 2) / n));
+  let x = 0;
+  const xs = radii.map((rad, i) => (x += i ? (radii[i - 1] + rad) * 0.62 : 0));
+  const w = xs[n - 1];
+  s.moveTo(-radii[0] - w / 2, 0);
+  radii.forEach((rad, i) => s.absarc(xs[i] - w / 2, 0, rad, Math.PI, 0, true));
+  s.lineTo(radii[n - 1] + w / 2, -3);
+  s.quadraticCurveTo(0, -7, -radii[0] - w / 2, -3);
+  s.closePath();
+  return new THREE.ShapeGeometry(s, 10);
 }
 
 /* ------------------------------------------------------------------ */
@@ -266,41 +381,6 @@ export function tree(scale = 1): THREE.Group {
   g.add(trunk, crown);
   g.scale.setScalar(scale);
   return g;
-}
-
-export function cloud(scale = 1, seed = 1): THREE.Group {
-  const g = new THREE.Group();
-  const r = rng(seed);
-  const geo = new THREE.IcosahedronGeometry(1, 0);
-  const m = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0x8f8f8f, flatShading: true, roughness: 1, fog: false });
-  for (let i = 0; i < 5; i++) {
-    const b = new THREE.Mesh(i === 0 ? geo : geo.clone(), i === 0 ? m : m.clone());
-    b.position.set((i - 2) * 1.4, r() * 0.6, r() * 1.2);
-    b.scale.set(1.3 + r(), 0.7 + r() * 0.5, 1 + r());
-    g.add(b);
-  }
-  g.scale.setScalar(scale);
-  return g;
-}
-
-/** Gökyüzüne birkaç bulut koyar ve yavaşça sürükler. */
-export function addClouds(stage: Stage, count = 6, seed = 5): void {
-  const r = rng(seed);
-  const list: THREE.Group[] = [];
-  for (let i = 0; i < count; i++) {
-    const c = cloud(6 + r() * 7, seed + i);
-    c.position.set((r() * 2 - 1) * 220, 60 + r() * 40, -150 - r() * 160);
-    stage.add(c);
-    list.push(c);
-  }
-  if (!stage.reducedMotion) {
-    stage.onTick((_t, dt) => {
-      for (const c of list) {
-        c.position.x += dt * 0.6;
-        if (c.position.x > 240) c.position.x = -240;
-      }
-    });
-  }
 }
 
 /* ------------------------------------------------------------------ */

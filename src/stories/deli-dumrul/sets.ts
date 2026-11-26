@@ -4,7 +4,7 @@ import type { Stage } from '../../engine/stage';
 import { place } from '../../engine/direct';
 import { Human, type HumanOpts } from '../../procedural/figures';
 import { P, mat, mesh, rng } from '../../procedural/palette';
-import { addBanner, addClouds, addFire, addSky, addTerrain, coin, mace, makeGround, scatter, tent, type Sky, type SkyPreset } from '../../procedural/world';
+import { addBanner, addFire, addSky, addTerrain, coin, mace, makeGround, scatter, tent, type Sky, type SkyPreset } from '../../procedural/world';
 
 /** Deli Dumrul hikâyesine özel mekânlar, kılıklar ve küçük yardımcılar. */
 
@@ -77,7 +77,6 @@ export function bridgeSet(stage: Stage, sky: SkyPreset = 'day'): Sky {
   stage.ground = (x, z) => (Math.abs(z) < BR.halfW && Math.abs(x) < BR.L ? Math.max(g(x, z), deckY(x)) : g(x, z));
   addBanner(stage, -8.6, -2.3, P.red);
   addBanner(stage, 8.6, -2.3, P.red);
-  if (sky === 'day') addClouds(stage);
   return s;
 }
 
@@ -108,7 +107,6 @@ export function steppeSet(stage: Stage, sky: SkyPreset, seed = 5): Sky {
   const s = addSky(stage, sky);
   addTerrain(stage, makeGround({ seed }), seed + 8);
   scatter(stage, { seed: seed + 1, rocks: 26, shrubs: 50, trees: 6, keepOut: 9, radius: 70 });
-  if (sky === 'day' || sky === 'dawn') addClouds(stage, 6, seed);
   return s;
 }
 
