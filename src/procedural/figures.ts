@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { Mover } from '../engine/stage';
+import { DrawnFace } from './face';
 import { P, kilim, mat, mesh, toon } from './palette';
 import { kopuz } from './world';
 
@@ -27,6 +28,8 @@ export interface HumanOpts {
   long?: boolean;
   /** Yanaklarda pembelik. */
   blush?: boolean;
+  /** Yüz 3B parçalar yerine 2B çizimle yapılır (göz, kaş, bıyık, ağız). */
+  drawnFace?: boolean;
   mood?: Mood;
   scale?: number;
   wings?: number;
@@ -38,13 +41,13 @@ const HIP = 0.72;
 const FRONT = new THREE.Vector3(0, 0, 1);
 
 /** Bir yönde (yaw sağ-sol, pitch yukarı-aşağı) birim vektör. */
-const dir = (yaw: number, pitch: number) => new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
+export const dir = (yaw: number, pitch: number) => new THREE.Vector3(Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
 
 /**
  * Yontulmuş başın yüzeyi: küreden yola çıkar; çeneye doğru daralır, burun, kaş kemeri,
  * elmacık kemiği, dudak ve çene çıkıntı yapar, göz çukurları içeri girer.
  */
-function headPoint(d: THREE.Vector3): THREE.Vector3 {
+export function headPoint(d: THREE.Vector3): THREE.Vector3 {
   const yaw = Math.atan2(d.x, d.z);
   const pitch = Math.asin(THREE.MathUtils.clamp(d.y, -1, 1));
   const bump = (y0: number, p0: number, sy: number, sp: number) => Math.exp(-((yaw - y0) ** 2 / (2 * sy * sy) + (pitch - p0) ** 2 / (2 * sp * sp)));
@@ -55,8 +58,8 @@ function headPoint(d: THREE.Vector3): THREE.Vector3 {
     (0.15 * bump(0, -0.04, 0.085, 0.2) + // burun sırtı
       0.17 * bump(0, -0.22, 0.12, 0.07) + // burun ucu
       0.05 * pair(0.19, -0.25, 0.07, 0.05) + // burun kanatları
-      -0.045 * pair(0.36, 0.04, 0.15, 0.11) + // göz çukurları
-      0.035 * pair(0.34, 0.32, 0.26, 0.07) + // kaş kemeri
+      -0.045 * pair(0.45, 0.04, 0.17, 0.12) + // göz çukurları
+      0.035 * pair(0.42, 0.34, 0.28, 0.07) + // kaş kemeri
       0.035 * pair(0.62, -0.2, 0.2, 0.17) + // elmacık kemikleri
       0.04 * bump(0, -0.55, 0.22, 0.06) + // dudaklar
       0.07 * bump(0, -1.0, 0.35, 0.22)); // çene
@@ -147,6 +150,8 @@ export class Human extends Mover {
   private brows: THREE.Group[] = [];
   private browBase = 0;
   private mouths: Partial<Record<'smile' | 'open', THREE.Mesh>> = {};
+  private face?: DrawnFace;
+  private mood: Mood = 'neutral';
   private phase = Math.random() * 10;
 
   constructor(o: HumanOpts = {}) {
@@ -273,13 +278,30 @@ export class Human extends Mover {
   }
 
   private addFace(o: HumanOpts): void {
+    if (o.drawnFace) {
+      this.face = new DrawnFace({
+        skin: o.skin ?? P.skin,
+        brow: o.beard ?? o.moustache ?? o.hair ?? P.black,
+        moustache: o.moustache,
+        blush: o.blush,
+        noMouth: o.beard !== undefined,
+      });
+      this.head.add(this.face.mesh);
+      if (o.beard !== undefined) {
+        const b = mesh(new THREE.SphereGeometry(0.21, 16, 12), toon(o.beard));
+        b.scale.set(1.0, 1.3, 0.72);
+        b.position.set(0, -0.3, 0.12);
+        this.head.add(b);
+      }
+      return;
+    }
     const white = toon(0xfbf6ee, { face: true });
     const iris = toon(0x4a2c16, { face: true });
     const black = toon(0x140c08, { face: true });
     const browMat = toon(o.beard ?? o.moustache ?? o.hair ?? P.black, { face: true });
     for (const sx of [-1, 1]) {
       // Badem göz: yatık ak, renkli iris, gözbebeği, ışıltı ve üst kirpik çizgisi.
-      const eye = onFace(new THREE.Group(), sx * 0.36, 0.03, 0.01);
+      const eye = onFace(new THREE.Group(), sx * 0.43, 0.03, 0.01);
       const sclera = new THREE.Mesh(new THREE.CircleGeometry(0.062, 20), white);
       sclera.scale.y = 0.74;
       const ring = new THREE.Mesh(new THREE.CircleGeometry(0.036, 16), iris);
@@ -303,7 +325,7 @@ export class Human extends Mover {
       const brow = new THREE.Group();
       brow.add(browMesh);
       brow.userData.side = sx;
-      const holder = onFace(new THREE.Group(), sx * 0.36, 0.33, 0.012);
+      const holder = onFace(new THREE.Group(), sx * 0.43, 0.33, 0.012);
       holder.add(brow);
       this.brows.push(brow);
       this.head.add(holder);
@@ -466,6 +488,8 @@ export class Human extends Mover {
 
   /** Yüz ifadesini değiştirir: kaşların eğimi ve ağzın biçimi. */
   setMood(mood: Mood): this {
+    this.mood = mood;
+    this.face?.set(mood, this.eyesClosed);
     const m = MOODS[mood];
     for (const b of this.brows) {
       b.rotation.z = m.brow * b.userData.side;
@@ -520,6 +544,7 @@ export class Human extends Mover {
     // Göz kırpma: birkaç saniyede bir, kısa süreli.
     const blink = this.eyesClosed || (t * 0.27 + this.phase) % 1 < 0.035;
     for (const e of this.eyes) e.scale.y = blink ? 0.08 : 1;
+    this.face?.set(this.mood, blink);
     if (this.cloak) this.cloak.rotation.x = 0.06 + 0.3 * a + Math.sin(t * 2.2 + this.phase) * 0.03 + Math.abs(s) * 0.06 * a;
     if (this.wingL && this.wingR) {
       const f = Math.sin(t * 4.5 + this.phase) * this.flap;

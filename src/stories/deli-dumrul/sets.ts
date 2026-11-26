@@ -126,7 +126,7 @@ export function addTent(stage: Stage, x: number, z: number, ry = 0, color: numbe
 /* ---------------------------- Kişiler ----------------------------- */
 
 export function dumrul(withMace = false): Human {
-  const d = new Human({ robe: P.red, trim: P.ochre, hat: 'bork', hatColor: P.indigo, scale: 1.1, moustache: P.black, hair: P.black, cloak: P.indigo, mood: 'smug' });
+  const d = new Human({ robe: P.red, trim: P.ochre, hat: 'bork', hatColor: P.indigo, scale: 1.1, moustache: P.black, hair: P.black, cloak: P.indigo, mood: 'smug', drawnFace: true });
   if (withMace) {
     const m = mace();
     m.rotation.x = Math.PI / 2;

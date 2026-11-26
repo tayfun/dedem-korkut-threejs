@@ -60,7 +60,12 @@ export class Stage {
       const m = o as THREE.Mesh;
       if (m.geometry) m.geometry.dispose();
       const mats = Array.isArray(m.material) ? m.material : m.material ? [m.material] : [];
-      for (const mt of mats) if (!isSharedMaterial(mt)) mt.dispose();
+      for (const mt of mats) {
+        if (isSharedMaterial(mt)) continue;
+        // Figüre özel dokular (çizilmiş yüz gibi) malzemeyle birlikte bırakılır.
+        (mt as THREE.MeshToonMaterial).map?.dispose();
+        mt.dispose();
+      }
       const l = o as THREE.DirectionalLight;
       if (l.isLight) l.dispose();
     });

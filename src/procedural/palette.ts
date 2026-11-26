@@ -143,7 +143,7 @@ export function kilim(a: number = P.red, b: number = P.ochre, c: number = P.indi
 let ramp: THREE.DataTexture | undefined;
 
 /** Üç basamaklı gölge: karakterlere çizgi film (cel) görünümü verir. */
-function toonRamp(): THREE.DataTexture {
+export function toonRamp(): THREE.DataTexture {
   if (!ramp) {
     ramp = new THREE.DataTexture(new Uint8Array([120, 120, 120, 255, 200, 200, 200, 255, 255, 255, 255, 255]), 3, 1, THREE.RGBAFormat);
     ramp.minFilter = ramp.magFilter = THREE.NearestFilter;
