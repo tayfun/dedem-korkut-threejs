@@ -86,10 +86,12 @@ Metin ile kod ayrı dosyalarda durur; böylece metin, koda dokunmadan düzeltile
 
 ## 5. Görsel Dil
 
-- Low-poly, düz gölgelendirmeli (flat shading) stilize figürler; minyatür ve kilim sanatından esinlenen sınırlı renk paleti.
-- Karakterler basit geometrilerden (kapsül, koni, kutu) kurulur; kimlikleri renk ve başlıkla ayrılır.
-- Bozkır, dağ, çadır (otağ), at, ateş ve gökyüzü ortak kütüphaneden gelir.
-- Kilim motifleri sayfa süslemelerinde ve sahne geçişlerinde kullanılır.
+- "Canlanan minyatür": low-poly, düz gölgelendirmeli figürler; üstünde mürekkep çizgisi, kâğıt dokusu ve kenar kararması.
+- Katmanlı arka plan: uzakta ufka doğru solan üç dağ sırası, yassı minyatür bulutları, ışınlı güneş ya da hilal.
+- Figürler eklemlidir (dirsek, diz); yüz, bıyık, örgü, pelerin ve kilim desenli şeritlerle ayrışır.
+- Zemin canlıdır: rüzgârda sallanan otlar, ayak altında toz, ateşten duman ve kıvılcım, gökte kuşlar.
+- Ana sayfada tezhip çerçevesi; her hikâyenin kapağı kendi sahnesinden çekilen bir karedir.
+- Sınırlı, ortak renk paleti; kilim motifleri arayüzde ve giysilerde yinelenir.
 - `prefers-reduced-motion` açıksa animasyonlar sadeleşir.
 
 ## 6. Aşamalar
@@ -100,7 +102,8 @@ Metin ile kod ayrı dosyalarda durur; böylece metin, koda dokunmadan düzeltile
 4. ✅ **İlk hikâye: Deli Dumrul** — 16 sahne.
 5. ✅ **Ana sayfa ve Kaynaklar sayfası** — hikâye listesi, kapak sahnesi, kaynakça.
 6. ⬜ **Kalan hikâyeler** — tablodaki sırayla, her biri ayrı ayrı. Sıradaki: Basat ile Tepegöz.
-7. ⬜ **Cila** — mobil performans, erişilebilirlik, ses (kopuz ezgisi, isteğe bağlı), paylaşım kartları.
+7. ✅ **Görsel cila** — minyatür görünümü, katmanlı arka plan, eklemli figürler, canlı zemin, kapaklar ve tezhip çerçevesi.
+8. ⬜ **Son cila** — gerçek telefonda performans ölçümü, erişilebilirlik, ses (isteğe bağlı), paylaşım kartları.
 
 Her aşama sonunda site çalışır durumda olmalı ve `main`'e gönderilmelidir.
 

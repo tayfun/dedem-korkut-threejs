@@ -125,9 +125,7 @@ export class Stage {
     this.resize();
   }
 
-  private resize(): void {
-    const w = window.innerWidth;
-    const h = window.innerHeight;
+  private resize(w = window.innerWidth, h = window.innerHeight): void {
     this.renderer.setSize(w, h, false);
     this.ink.setSize(w, h, this.renderer.getPixelRatio());
     const aspect = w / h;
@@ -149,6 +147,11 @@ export class Stage {
     const now = performance.now();
     const dt = Math.min((now - this.last) / 1000, 0.05);
     this.last = now;
+    this.step(dt);
+    this.ink.render(this.scene, this.camera);
+  }
+
+  private step(dt: number): void {
     this.time += dt;
     if (this.pending.length) this.flush();
     for (const m of this.movers) {
@@ -160,6 +163,20 @@ export class Stage {
     }
     for (const fn of this.ticks) fn(this.time, dt);
     this.camera.lookAt(this.look);
+  }
+
+  /** Sahnenin o anki hâlini verilen boyutta bir resme (data URL) çevirir. */
+  snapshot(w: number, h: number): string {
+    const inset = this.inset;
+    this.inset = 0;
+    this.renderer.setPixelRatio(1);
+    this.resize(w, h);
+    this.step(0);
     this.ink.render(this.scene, this.camera);
+    const url = this.canvas.toDataURL('image/jpeg', 0.86);
+    this.inset = inset;
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.resize();
+    return url;
   }
 }

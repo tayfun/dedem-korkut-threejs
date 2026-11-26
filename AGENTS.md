@@ -21,10 +21,13 @@ Dede Korkut hikâyelerini yetişkin okura, özgün metne sadık kalarak günüm�
 
 ## Görseller
 
-- Bütün görseller kodla üretilir. Hazır 3B model, resim ya da video ekleme.
-- Ortak parçalar (insan, at, çadır, arazi, gök, ateş) `src/procedural/` altında durur ve hikâyeler arasında yeniden kullanılır. Bir hikâyeye özel olanlar o hikâyenin klasöründe kalır.
-- Stil: low-poly, düz gölgelendirme, sınırlı renk paleti. Yeni renk eklemek yerine ortak paletten seç.
-- Telefonlarda akıcı çalışmalı: geometrileri ve malzemeleri paylaş, gereksiz draw call'dan kaçın, sahne değişirken kaynakları `dispose()` et.
+- Bütün görseller kodla üretilir. Hazır 3B model, resim ya da video ekleme. Kodla çizilen dokular (`kilim()` gibi canvas dokuları) serbesttir.
+- Görünüm "canlanan minyatür"dür: low-poly, düz gölgelendirme, sınırlı palet; üstüne mürekkep çizgisi, kâğıt dokusu ve kenar kararması (`src/engine/ink.ts`). Yeni renk eklemek yerine ortak paletten (`P`) seç.
+- Mürekkep çizgisi almaması gereken nesneleri (alev, ışık hüzmesi, yıldız, ot, duman) `noInk()` ile işaretle.
+- Ortak parçalar `src/procedural/` altında durur ve hikâyeler arasında yeniden kullanılır: `world.ts` (gök, dağ sıraları, bulut, arazi, çadır, ateş, eşyalar), `figures.ts` (insan, at, kuş), `life.ts` (ot, toz, duman, kuş sürüsü). Bir hikâyeye özel olanlar o hikâyenin `sets.ts` dosyasında kalır.
+- İnsan figürü eklemlidir: kollar `armL/armR` (dirsek kendiliğinden bükülür), bacaklar `legL/legR`, dizler `kneeL/kneeR`. Oturma ve diz çökme için `sit()`, `kneel()` ve `KNEEL_Y`, `KNEEL_KNEE` değerlerini kullan.
+- Çadır, ateş, kilim gibi zemine oturan her şey için `stage.keepClear(x, z, r)` çağır; yoksa içinden ot çıkar.
+- Telefonlarda akıcı çalışmalı: geometrileri ve malzemeleri paylaş, gereksiz draw call'dan kaçın, sahne değişirken kaynakları `dispose()` et. Sahne her karede iki kez çizilir (renk + çizgi geçişi); ağır sahnelerden kaçın.
 - `prefers-reduced-motion` ayarına saygı göster.
 
 ## Hikâye Metinleri
@@ -50,7 +53,7 @@ Dede Korkut hikâyelerini yetişkin okura, özgün metne sadık kalarak günüm�
 1. `src/stories/<hikaye-adi>/` klasörünü aç.
 2. `story.ts` içine sahne metinlerini yaz.
 3. `scenes.ts` içinde her sahne için `build(stage)` yaz: nesneleri kurar, GSAP zaman çizelgesini döndürür. Önce `src/procedural/` altındaki hazır parçaları ve `src/engine/direct.ts` yardımcılarını kullan; örnek için `src/stories/deli-dumrul/` klasörüne bak.
-4. Hikâyeyi `src/stories/index.ts` listesine ekle.
+4. Hikâyeyi `src/stories/index.ts` listesine ekle; `cover` alanıyla ana sayfadaki kapak karesini seç (sahne sırası ve zaman çizelgesinin anı).
 5. Tarayıcıda baştan sona izle; masaüstü ve telefon genişliğinde dene.
 6. `PLAN.md`'deki durumu güncelle, commit et, `main`'e push et.
 
