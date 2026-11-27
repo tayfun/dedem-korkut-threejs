@@ -7,6 +7,7 @@ Ses dosyaları audio/ klasöründe kalıcı olarak durur. Dosya yoksa film eski,
 import json, os, subprocess, sys
 
 VOICE, MODEL = 'HV5rAif1q1ITHdvxqyMw', 'eleven_v4'      # Alp — derin, sinematik bariton
+STORY = 'deli_dumrul'    # başka hikâye, kendi scenes.py dosyasında STORY, ORDER ve DIR değerlerini değiştirir
 ORDER = ['kopru', 'ovunme', 'oba', 'soru', 'buyruk', 'sofra', 'at', 'yalvaris', 'dua', 'baba', 'ana', 'veda', 'es', 'ikinci-dua', 'bagis', 'dede']
 DIR = os.path.join(os.path.dirname(__file__), 'audio')
 FPS = 30
@@ -53,14 +54,24 @@ def apply_film(film):
     film.VOICE = t
 
 
+def _scenes():
+    import importlib
+    return importlib.import_module(f'shorts.{STORY}.scenes')
+
+
 def scene_text(slug):
-    from . import scenes, film
-    return ' '.join(' '.join(c) for _, c, _ in film.SHOTS) if slug == 'sofra' else ' '.join(s['c'].replace('|', ' ') for s in scenes.SCENES[slug])
+    if STORY == 'deli_dumrul' and slug == 'sofra':
+        from . import film
+        return ' '.join(' '.join(c) for _, c, _ in film.SHOTS)
+    return ' '.join(s['c'].replace('|', ' ') for s in _scenes().SCENES[slug])
 
 
 def scene_frames(slug):
-    from . import scenes, film, engine
-    return sum(film.frames_of(i) for i in range(len(film.SHOTS))) if slug == 'sofra' else sum(engine.frames_of(s) for s in scenes.SCENES[slug])
+    from . import engine
+    if STORY == 'deli_dumrul' and slug == 'sofra':
+        from . import film
+        return sum(film.frames_of(i) for i in range(len(film.SHOTS)))
+    return sum(engine.frames_of(s) for s in _scenes().SCENES[slug])
 
 
 def generate():

@@ -46,6 +46,9 @@ KINDS = {
     'extra0': (230, lambda p, e: C.extra(0, p.get('robe'), e == 'fear')), 'extra1': (230, lambda p, e: C.extra(1, p.get('robe'), e == 'fear')), 'extra2': (230, lambda p, e: C.extra(2, p.get('robe'), e == 'fear')),
 }
 BLINKERS = ('neutral', 'smug', 'stern', 'joy', 'grief', 'anger')
+STILL = ['extra', 'dead', 'horse', 'falcon', 'trav', 'dove', 'goblet', 'rider']     # göz kırpmayanlar (ad ön eki); hikâyeler ekleyebilir
+HEADS = ['dumrul', 'azrail', 'father', 'mother', 'wife', 'dede']                    # başı gövdenin ardından gelenler
+EXTRA_MOTION = {}                                                                   # hikâyeye özgü ikincil hareket: tür → fn(p, t, idx) → (dx, dy, drot)
 BLINK = {'dumrul': 'blink', 'azrail': 'blink'}
 
 
@@ -83,7 +86,7 @@ def actor(spec, u, idx=0, nfr=45):
     p = pose(spec, u, nfr); q = pose(spec, u - 4.0 / nfr, nfr)            # dört kare önceki duruş: hız buradan çıkar
     vx, vy, vr = p['x'] - q['x'], p['y'] - q['y'], p.get('rot', 0) - q.get('rot', 0)
     e = p.get('e', 'neutral')
-    still = kind.startswith(('extra', 'dead', 'horse', 'falcon', 'trav', 'dove', 'goblet', 'rider'))
+    still = kind.startswith(tuple(STILL))
     if e in BLINKERS and abs((F.NOW * 0.52 + idx * 0.37) % 1 - 0.5) < 0.03 and not still: e = 'blink'
     s = p.get('s', 0.6); t = F.NOW
     foot, fn = KINDS[kind]
@@ -102,6 +105,8 @@ def actor(spec, u, idx=0, nfr=45):
     elif kind == 'falcon': rot += 7 * round(math.sin(t * 1.4))                             # başını bir o yana bir bu yana eğer
     elif kind == 'azrail': y += 5 * math.sin(t * 1.2)                                      # ağır ağır süzülür
     elif kind == 'dede': rot += 2 * math.sin(t * 3)                                        # kopuzla sallanır
+    if kind in EXTRA_MOTION:
+        dx, dy, dr = EXTRA_MOTION[kind](p, t, idx); x += dx; y += dy * s; rot += dr
     # --- yürüyüş, dörtnal: basarken ezilir, havadayken uzar
     if p.get('walk'):
         c = abs(math.sin(t * 9 + idx)); y -= c * 22 * s; sy *= 0.95 + 0.09 * c
@@ -123,7 +128,7 @@ def actor(spec, u, idx=0, nfr=45):
     sw = clamp(vx * 0.3 / s + vr * 0.9 + (p.get('hr', 0) - q.get('hr', 0)) * 0.9, -24, 24) + 2.5 * math.sin(t * 1.7 + idx)
     if kind in ('horse', 'rider'): sw += 9 * math.sin(t * (13 if p.get('gallop') else 2.3))
     C.SWAY = -sw if p.get('flip') else sw
-    if 'hr' in p or kind in ('dumrul', 'azrail', 'father', 'mother', 'wife', 'dede'):
+    if 'hr' in p or kind in HEADS:
         p['hr'] = p.get('hr', 0) + clamp(vx * 0.1 / s - vy * 0.08 / s, -9, 9)             # baş, gövdenin ardından gelir
     body = group(fn(p, e), 0, 0, 0, sx, sy, 0, foot)
     return (p.get('z', p['y'] + foot * s), at(body, x, y, s, rot, p.get('flip', False)))
@@ -302,14 +307,14 @@ def contact(shots, out, title=''):
 
 def _job(args):
     slug, i, f, d, scale, n = args
-    from . import scenes
+    scenes = F._voice._scenes()
     frame(scenes.SCENES[slug], i, scale=scale, f=f).save(f'{d}/s{i:02d}/{n:04d}.jpg', quality=96 if scale >= 1 else 90, subsampling=0)
 
 
 def render(slug, out, work, draft=False):
     """draft=True: yarı çözünürlük, saniyede 15 kare, hızlı kodlama — zamanlamayı ve oyunculuğu görmek için."""
     import multiprocessing as mp, subprocess, shutil
-    from . import scenes
+    scenes = F._voice._scenes()
     shots = scenes.SCENES[slug]
     scale, step = (0.5, 2) if draft else (1.0, 1)
     jobs = []
