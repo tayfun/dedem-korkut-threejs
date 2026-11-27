@@ -8,6 +8,9 @@ PALETTES = {
     # Basat ile Tepegöz: menekşe mavisi, turuncu-kızıl ten, krem, çayır yeşili ve kan kırmızısı; altın yalnızca maden ve aslanda
     'tepegoz': dict(COBALT='#4a55c2', SKIN='#f07a3c', PALE='#f4e7c6', GOLD='#e0a02a', RED='#a8231f', SKIN_D='#bf4f26', SKIN_L='#f9a368',
                     COAT='#241512', LEATHER='#7d4a2a', NIGHT='#1c2163', DAY='#bfd2f0', EARTH='#a8703c', EARTH_D='#6f4526', GREEN='#4f8f3c'),
+    # Boğaç Han: çini mavisi-yeşili, sıcak ten, fildişi, al ve safran; ak, kızıl, kara otağlar paletin üç ucudur
+    'bogac': dict(COBALT='#1f6f80', SKIN='#ea9056', PALE='#f3ead0', GOLD='#e6ae34', RED='#b3262a', SKIN_D='#bd6032', SKIN_L='#f7b982',
+                  COAT='#1d1512', LEATHER='#86512c', NIGHT='#123842', DAY='#cfe6e2', EARTH='#c69254', EARTH_D='#8a5a2e', GREEN='#6c9a3c'),
 }
 NAME = 'deli_dumrul'
 

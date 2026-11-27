@@ -19,7 +19,7 @@ EX = {
 DROP = {'o': 0.07, 'gape': 0.2, 'snarl': 0.05, 'grin': 0.04}
 
 
-def gface(name, w, h, jaw=1.0, nose=(60, 22, 0.0), eye=(0.27, -0.14, 13, 9), brow=(INK, 10), mth=(0.44, 0.34), expr='neutral', bags=2, wrinkles=2, lash=False):
+def gface(name, w, h, jaw=1.0, nose=(60, 22, 0.0), eye=(0.27, -0.14, 13, 9), brow=(INK, 10), mth=(0.44, 0.34), expr='neutral', bags=2, wrinkles=2, lash=False, folds=True):
     """Kişiye özgü kafatası + ortak ifade takımı. (svg, çene düşüşü) döndürür; saç, sakal ve başlık sonradan eklenir."""
     e = EX[expr]; drop = DROP.get(e['m'], 0) * h
     reseed(name + '-skull')
@@ -57,7 +57,7 @@ def gface(name, w, h, jaw=1.0, nose=(60, 22, 0.0), eye=(0.27, -0.14, 13, 9), bro
     npts = [(-nw * 0.3, top), (nw * 0.25, top - 2), (nw * 0.7, top + L * 0.55), (nw, top + L * 0.85), (nw * 0.5 - hook * nw, top + L + hook * 16), (-nw * 0.3 - hook * nw * 0.6, top + L * 0.98), (-nw * 0.8, top + L * 0.8), (-nw * 0.4, top + L * 0.4)]
     s += fill(npts, SKIN_L, 0.9) + ink([npts[1], npts[2], npts[3], npts[4], npts[5]], 3.2, wob=0.3, taper=(0.3, 0.25)) + ink([npts[7], npts[6], (npts[5][0] + 4, npts[5][1] - 3)], 2.2, wob=0.2)
     s += fill(ellipse(-nw * 0.35, top + L * 0.88, 4.2, 2.8, 6), INK, 0.3)
-    s += ink([(-nw - 4, top + L * 0.8), (-w * 0.42, h * mth[1] - 4), (-w * 0.46, h * mth[1] + 22 + drop)], 2.2, wob=0.4, taper=(0.2, 0.5)) + ink([(nw + 8, top + L * 0.84), (w * 0.44, h * mth[1] - 4), (w * 0.48, h * mth[1] + 22 + drop)], 2.2, wob=0.4, taper=(0.2, 0.5))
+    if folds: s += ink([(-nw - 4, top + L * 0.8), (-w * 0.42, h * mth[1] - 4), (-w * 0.46, h * mth[1] + 22 + drop)], 2.2, wob=0.4, taper=(0.2, 0.5)) + ink([(nw + 8, top + L * 0.84), (w * 0.44, h * mth[1] - 4), (w * 0.48, h * mth[1] + 22 + drop)], 2.2, wob=0.4, taper=(0.2, 0.5))
     reseed(name + '-mouth')
     my = h * mth[1] + drop * 0.45; mw = w * mth[0]; m = e['m']
     if m == 'line': s += ink([(-mw, my + 1), (0, my + 4), (mw, my)], 2.9, wob=0.3) + ink([(-mw * 0.5, my + 15), (0, my + 18), (mw * 0.5, my + 14)], 1.8, wob=0.2)
