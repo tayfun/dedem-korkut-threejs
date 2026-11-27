@@ -217,6 +217,8 @@ SHOTS = [
     ('Geniş: gökte güvercin', ['uçtu gitti.'], s13),
 ]
 CHUNK = 1.1   # altyazı parçası başına saniye (seslendirme yok)
+GRAIN = float(os.environ.get('CEL_GRAIN', 0))   # film kumu; 0 = kapalı (CEL_GRAIN=4 eski görünüm)
+CAPTION_Y = 0.86   # altyazının üst kenarı, kare yüksekliğine oranla: resmi kapatmasın diye en altta
 
 
 def caption(img, text, dim=False):
@@ -228,7 +230,7 @@ def caption(img, text, dim=False):
     while d.textlength(text, font=f) > w * 0.94 and size > 20:      # uzun parça kareye sığsın
         size -= 2; f = caption_font(size)
     tw = d.textlength(text, font=f)
-    x, y = (w - tw) / 2, h * 0.70
+    x, y = (w - tw) / 2, h * CAPTION_Y
     col = (255, 226, 26) if not dim else (150, 132, 30)
     d.text((x, y), text, font=f, fill=col, stroke_width=max(3, int(w * 0.009)), stroke_fill=(23, 11, 8))
     return img
@@ -262,7 +264,7 @@ def frame(i, u, scale=1.0, frame_no=0, f=None):
     NOW = (start + (f if f is not None else u * n)) / FPS
     w, h = int(FW * scale), int(FH * scale)
     body = f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {FW} {FH}"><defs>{DEFS}</defs><rect width="{FW}" height="{FH}" fill="{S.NIGHT}"/>{fn(u)}</svg>'
-    img = finish(raster(body, w, h), frame_no or int(NOW * FPS), grain=4.0 * max(scale, 0.6))
+    img = finish(raster(body, w, h), frame_no or int(NOW * FPS), grain=GRAIN * max(scale, 0.6))
     if f is not None:
         if f < 3 and i > 0: img = whip(img, (3 - f) / 3 * 0.9)                    # çekime girerken
         if f >= n - 3 and i < len(SHOTS) - 1: img = whip(img, -(f - (n - 4)) / 3 * 0.9)   # çıkarken
@@ -273,26 +275,28 @@ def frame(i, u, scale=1.0, frame_no=0, f=None):
 
 
 def _job(args):
-    i, f, d = args
-    frame(i, 0, 1.0, f=f).save(f'{d}/s{i:02d}/{f:04d}.jpg', quality=96, subsampling=0)
+    i, f, d, scale, n = args
+    frame(i, 0, scale, f=f).save(f'{d}/s{i:02d}/{n:04d}.jpg', quality=96 if scale >= 1 else 90, subsampling=0)
     return i
 
 
-def render(out, work, only=None):
+def render(out, work, only=None, draft=False):
     """Bütün kareleri paralel çizer; her çekimi ayrı mp4 yapar (libx264, CRF 17), sonra kopyalayarak birleştirir."""
     import multiprocessing as mp, subprocess
+    import shutil
     shots = range(len(SHOTS)) if only is None else only
+    scale, step = (0.5, 2) if draft else (1.0, 1)
     jobs = []
     for i in shots:
-        os.makedirs(f'{work}/s{i:02d}', exist_ok=True)
-        jobs += [(i, f, work) for f in range(frames_of(i))]
+        shutil.rmtree(f'{work}/s{i:02d}', ignore_errors=True); os.makedirs(f'{work}/s{i:02d}')
+        jobs += [(i, f, work, scale, n) for n, f in enumerate(range(0, frames_of(i), step))]
     with mp.Pool(min(11, os.cpu_count() or 4)) as pool:
         for k, _ in enumerate(pool.imap_unordered(_job, jobs, chunksize=4)):
             if k % 100 == 0: print('kare', k, '/', len(jobs), flush=True)
     files = []
     for i in shots:
         p = f'{work}/s{i:02d}.mp4'
-        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', str(FPS), '-i', f'{work}/s{i:02d}/%04d.jpg', '-c:v', 'libx264', '-crf', '17', '-preset', 'medium', '-pix_fmt', 'yuv420p', '-r', str(FPS), p], check=True)
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', str(FPS // step), '-i', f'{work}/s{i:02d}/%04d.jpg', '-c:v', 'libx264', '-crf', '24' if draft else '17', '-preset', 'veryfast' if draft else 'medium', '-pix_fmt', 'yuv420p', '-r', str(FPS // step), p], check=True)
         files.append(p)
     with open(f'{work}/list.txt', 'w') as fh: fh.write(''.join(f"file '{os.path.abspath(p)}'\n" for p in files))
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', f'{work}/list.txt', '-c', 'copy', out], check=True)
@@ -316,6 +320,7 @@ def contact(out):
 
 if __name__ == '__main__':
     if sys.argv[1] == 'contact': contact(sys.argv[2])
+    elif sys.argv[1] == 'draft': render(sys.argv[2], sys.argv[3], draft=True)
     elif sys.argv[1] == 'render': render(sys.argv[2], sys.argv[3], [int(x) for x in sys.argv[4].split(',')] if len(sys.argv) > 4 else None)
     elif sys.argv[1] == 'f': frame(int(sys.argv[2]), 0, 1.0, f=int(sys.argv[3])).save(sys.argv[4])
     else: frame(int(sys.argv[1]), float(sys.argv[2]), 1.0).save(sys.argv[3])

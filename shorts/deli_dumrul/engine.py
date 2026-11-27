@@ -212,7 +212,7 @@ def frame(shots, i, u=0.6, scale=1.0, f=None):
     start = sum(frames_of(x) for x in shots[:i])
     F.NOW = (start + (f if f is not None else u * n)) / FPS
     w, h = int(FW * scale), int(FH * scale)
-    img = finish(compose(shot, u, w, h), int(F.NOW * FPS), grain=4.0 * max(scale, 0.6))
+    img = finish(compose(shot, u, w, h), int(F.NOW * FPS), grain=F.GRAIN * max(scale, 0.6))
     if f is None: return F.caption(img, ch[min(len(ch) - 1, int(u * len(ch)))])
     if f < 3 and i > 0: img = F.whip(img, (3 - f) / 3 * 0.9)
     if f >= n - 3 and i < len(shots) - 1: img = F.whip(img, (f - (n - 4)) / 3 * 0.9)
