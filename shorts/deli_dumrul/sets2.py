@@ -4,17 +4,41 @@ from ..kit import *
 from .cast import COBALT, SKIN, SKIN_L, SKIN_D, PALE, GOLD, RED, COAT, LEATHER
 from . import sets as S
 from .cast import strap
+from ..kit import _scatter
 
 DAY = '#b7c4f0'       # gündüz göğü: mavinin açığı
 W, H = 1500, 1920
+
+
+EARTH, EARTH_D = '#b0683a', '#7a4426'   # toprak ve koyusu (yer, köprünün taşından ayrışsın diye)
+
+
+def cloud(cx, cy, k, name, col=PALE, lit=None, shade=COBALT):
+    """Küme bulut: irili ufaklı, düzensiz yumrular; altı düzçe ve gölgeli. Her bulut adına göre başka biçim alır."""
+    reseed('cloud' + name)
+    n = int(R(4, 8)); lobes = []; x = cx - k * R(120, 190)
+    for i in range(n):
+        mid = 1 - abs(i - (n - 1) / 2) / (n / 2 + 0.5)
+        r = k * R(34, 62) * (0.55 + 0.75 * mid) * R(0.8, 1.25)
+        lobes.append((x, cy - r * R(0.35, 0.8) - k * R(0, 26) * mid, r * R(1.0, 1.35), r))
+        x += r * R(0.8, 1.25)
+    x0, x1 = lobes[0][0] - lobes[0][2] * 0.7, lobes[-1][0] + lobes[-1][2] * 0.7
+    base = [(x0, cy - 6 * k), (x0 + 20 * k, cy + R(6, 16) * k), ((x0 + x1) / 2 + R(-40, 40) * k, cy + R(10, 22) * k), (x1 - 24 * k, cy + R(4, 14) * k), (x1, cy - 8 * k), ((x0 + x1) / 2, cy - 30 * k)]
+    shapes = [ellipse(lx, ly, rx, ry, 10, 0.06) for lx, ly, rx, ry in lobes] + [base]
+    s = ''.join(ink(p, 3.0, closed=True, wob=0.8, press=0.5) for p in shapes) + ''.join(fill(p, col, 1.2) for p in shapes)      # önce çizgiler, sonra dolgular: yalnız dış çevre kalır
+    s += fill([(x0 + 10 * k, cy - 4 * k), ((x0 + x1) / 2, cy - 16 * k), (x1 - 10 * k, cy - 6 * k), (x1 - 30 * k, cy + 10 * k), ((x0 + x1) / 2, cy + 16 * k), (x0 + 26 * k, cy + 10 * k)], shade, 1.0, op=0.22)
+    for lx, ly, rx, ry in lobes[::2]:
+        s += ink([(lx - rx * 0.5, ly + ry * 0.1), (lx - rx * 0.1, ly - ry * 0.25), (lx + rx * 0.4, ly + ry * 0.05)], 2.0, wob=0.4)        # yumru kıvrımı
+        if lit: s += fill(ellipse(lx + rx * 0.15, ly - ry * 0.4, rx * 0.5, ry * 0.3, 8, 0.1), lit, 0.8, op=0.55)
+    return s
 
 
 def day_sky():
     reseed('daysky')
     s = f'<rect x="-1500" y="-1500" width="{W + 3000}" height="{H + 3000}" fill="{DAY}"/>'
     s += fill(ellipse(1180, 260, 70, 70, 12, 0.01), PALE, 0.8) + sparkle(1180, 260, 120, '#fff6d8')
-    for cx, cy, k in ((300, 330, 1.0), (880, 480, 0.7), (1380, 620, 0.8)):
-        s += fill([(cx - 150 * k, cy), (cx - 90 * k, cy - 46 * k), (cx - 10 * k, cy - 70 * k), (cx + 80 * k, cy - 50 * k), (cx + 150 * k, cy), (cx, cy + 14 * k)], PALE, 1.4)
+    for i, (cx, cy, k) in enumerate(((300, 330, 1.0), (900, 500, 0.62), (1400, 640, 0.8), (-200, 600, 0.9), (640, 190, 0.45))):
+        s += cloud(cx, cy, k, f'day{i}')
     return s
 
 
@@ -27,25 +51,75 @@ def day_hills():
     return s + ink(far[:-2], 3.0, smooth=False, wob=0.5, taper=(0, 0))
 
 
+def stones(poly, cid, course=46, wmin=58, wmax=118, name='wall'):
+    """Bir alanı tek tek çizilmiş, sıra sıra örülmüş kesme taşlarla doldurur; her taşın tonu biraz başkadır."""
+    reseed('stones-' + name)
+    xs = [p[0] for p in poly]; ys = [p[1] for p in poly]
+    s = clipdef(cid, poly, smooth=False) + f'<g clip-path="url(#{cid})">' + fill(poly, INK, 0, smooth=False)
+    y = min(ys); row = 0
+    while y < max(ys):
+        x = min(xs) - R(0, wmax) * (row % 2 + 0.3)
+        while x < max(xs):
+            w = R(wmin, wmax); g = 3
+            q = [(x + g + R(-2, 2), y + g + R(-2, 2)), (x + w - g + R(-2, 2), y + g + R(-2, 2)), (x + w - g + R(-2, 2), y + course - g + R(-2, 2)), (x + g + R(-2, 2), y + course - g + R(-2, 2))]
+            s += fill(q, PALE, 1.2, smooth=False)
+            tone = R(0, 1)
+            s += fill(q, COBALT if tone < 0.6 else LEATHER, 0, smooth=False, op=R(0.06, 0.3) if tone < 0.6 else R(0.1, 0.28))
+            if R(0, 1) > 0.55: s += ink([(x + w * R(0.2, 0.4), y + course * R(0.3, 0.7)), (x + w * R(0.5, 0.8), y + course * R(0.3, 0.7))], 1.8, wob=0.4, taper=(0.2, 0.5), smooth=False)   # yontma izi
+            if R(0, 1) > 0.8: s += dots(q, 5, (1.0, 1.8))
+            x += w
+        y += course; row += 1
+    return s + '</g>'
+
+
 def bridge():
-    """Kuru çay ve üstündeki taş köprü; yanında haraç direği ve al bayrak."""
+    """Kuru çay ve üstündeki kesme taş köprü; yanında haraç direği ve al bayrak. Yer toprak, çay yatağı çatlak balçık, köprü taş."""
     reseed('bridge-ground')
-    s = fill([(-900, 1180), (W + 900, 1170), (W + 900, H + 900), (-900, H + 900)], SKIN, 1.5, smooth=False)
+    s = fill([(-900, 1180), (W + 900, 1170), (W + 900, H + 900), (-900, H + 900)], EARTH, 1.5, smooth=False)
+    s += fill([(-900, 1180), (W + 900, 1170), (W + 900, 1230), (700, 1250), (-900, 1240)], SKIN, 1.5, smooth=False, op=0.55)                 # ufka yakın, güneşte ağaran toprak
+    area = [(-300, 1230), (W + 300, 1230), (W + 300, H + 100), (-300, H + 100)]
+    s += ticks(area, 150, (8, 20), 0.05, 0.25, 2.2, EARTH_D)                                                                               # toprak izleri
+    for x, y in _scatter(area, 46):                                                                                                         # kesekler ve çakıllar
+        r = R(7, 20)
+        s += blob(ellipse(x, y, r, r * 0.6, 6, 0.25), EARTH_D if R(0, 1) > 0.35 else PALE, 2.0) + fill(ellipse(x + r * 0.2, y - r * 0.2, r * 0.45, r * 0.22, 5), SKIN_L, 0.4, op=0.6)
+    for x, y in _scatter(area, 22):                                                                                                         # kuru ot öbekleri
+        s += ''.join(ink([(x + k * 5, y), (x + k * 9 + R(-3, 3), y - R(16, 34))], 2.4, col=EARTH_D, op=1, taper=(0, 0.7), wob=0, smooth=False) for k in (-2, -1, 0, 1, 2))
     bed = [(-200, 1560), (200, 1420), (700, 1380), (1300, 1430), (1700, 1560), (1700, 1760), (800, 1700), (-200, 1800)]
-    s += fill(bed, SKIN_L, 1.6, smooth=False) + ink(bed[:5], 3.0, smooth=False, wob=0.8, taper=(0, 0))
-    for x, y in ((260, 1560), (520, 1500), (820, 1560), (1100, 1520), (680, 1660), (380, 1700), (1280, 1640)): s += cracks(x, y, 120, R(0, 6.28), 2, 2.2)   # çatlamış çay yatağı
-    for x, y in ((180, 1640), (960, 1690), (1360, 1560)): s += blob(ellipse(x, y, 34, 20, 7, 0.2), PALE, 2.8) + fill(ellipse(x - 8, y + 6, 22, 9, 6), COBALT, 0.6, op=0.4)
+    s += fill([(x, y - 26) for x, y in bed[:5]] + bed[4::-1], EARTH_D, 1.6, smooth=False)                                                    # yarın dik kıyısı
+    s += fill(bed, SKIN_L, 1.6, smooth=False) + fill(bed, EARTH, 1.6, smooth=False, op=0.4) + ink(bed[:5], 3.4, smooth=False, wob=0.9, taper=(0, 0))
+    for x, y in ((260, 1560), (520, 1500), (820, 1560), (1100, 1520), (680, 1660), (380, 1700), (1280, 1640), (960, 1460), (140, 1700), (1450, 1600)):
+        s += cracks(x, y, 130, R(0, 6.28), 2, 2.4)                                                                                           # çatlamış çay yatağı
+    for x, y in ((180, 1640), (960, 1690), (1360, 1560), (600, 1590), (1120, 1660)):
+        s += blob(ellipse(x, y, R(24, 40), R(14, 22), 7, 0.2), PALE, 2.8) + fill(ellipse(x - 8, y + 6, 22, 9, 6), COBALT, 0.6, op=0.4)        # dere taşları
     reseed('bridge')
     deck = [(120, 1250), (420, 1130), (750, 1090), (1080, 1130), (1380, 1250), (1380, 1310), (1080, 1196), (750, 1160), (420, 1196), (120, 1310)]
     wall = [(120, 1310), (420, 1196), (750, 1160), (1080, 1196), (1380, 1310), (1380, 1560), (1220, 1560), (1180, 1420), (1040, 1320), (750, 1290), (460, 1320), (320, 1420), (280, 1560), (120, 1560)]
-    s += fill(wall, PALE, 1.4, smooth=False) + fill([(120, 1310), (420, 1196), (640, 1168), (540, 1320), (460, 1320), (320, 1420), (280, 1560), (120, 1560)], COBALT, 1.2, smooth=False, op=0.55)
     hole = [(460, 1320), (750, 1290), (1040, 1320), (1180, 1420), (1220, 1560), (280, 1560), (320, 1420)]
-    s += fill(hole, SKIN_L, 1.0, smooth=False) + fill([(460, 1320), (750, 1290), (1040, 1320), (1180, 1420), (1196, 1470), (1030, 1380), (750, 1352), (470, 1380), (304, 1470), (320, 1420)], COBALT, 1.0, smooth=False, op=0.7)   # kemerin iç yüzü gölgede
-    s += fill([(280, 1560), (304, 1470), (470, 1500), (760, 1486), (1050, 1500), (1196, 1470), (1220, 1560)], COBALT, 0.8, smooth=False, op=0.35) + ink(hole[:5], 3.0, smooth=False, wob=0.5, taper=(0, 0))
-    s += '<g>' + masonry(130, 1210, 1370, 1540, 40, 2.0) + '</g>' + ink(wall, 3.6, closed=True, smooth=False, wob=0.6)
-    s += fill(deck, SKIN_L, 1.2, smooth=False) + ink(deck, 3.4, closed=True, smooth=False, wob=0.6) + cracks(900, 1400, 90, 1.3, 2, 2.0) + cracks(300, 1480, 70, 2.0, 1, 2.0)
+    # kemerin içinden görünen karşı kıyı ve iç yüzün gölgesi
+    s += fill(hole, SKIN_L, 1.0, smooth=False) + fill(hole, EARTH, 1.0, smooth=False, op=0.4)
+    s += fill([(460, 1320), (750, 1290), (1040, 1320), (1180, 1420), (1196, 1470), (1030, 1380), (750, 1352), (470, 1380), (304, 1470), (320, 1420)], COBALT, 1.0, smooth=False, op=0.8)
+    s += fill([(280, 1560), (304, 1470), (470, 1500), (760, 1486), (1050, 1500), (1196, 1470), (1220, 1560)], COBALT, 0.8, smooth=False, op=0.4)
+    s += stones(wall, 'bw')
+    s += fill([(120, 1310), (420, 1196), (640, 1168), (540, 1320), (460, 1320), (320, 1420), (280, 1560), (120, 1560)], COBALT, 1.2, smooth=False, op=0.38)   # gölgede kalan yan
+    # kemer taşları: kemer boyunca dizili kama taşlar, ortada kilit taşı
+    arch = catmull([(280, 1560), (320, 1420), (460, 1320), (750, 1290), (1040, 1320), (1180, 1420), (1220, 1560)], False, 4)
+    for i in range(len(arch) - 1):
+        (x0, y0), (x1, y1) = arch[i], arch[i + 1]
+        dx, dy = x1 - x0, y1 - y0; d = math.hypot(dx, dy) or 1; nx, ny = dy / d, -dx / d
+        key = abs(i - (len(arch) - 1) / 2) < 0.6; t = 62 if key else 46
+        q = [(x0, y0), (x1, y1), (x1 + nx * t + dx * 0.08, y1 + ny * t), (x0 + nx * t - dx * 0.08, y0 + ny * t)]
+        s += fill(q, PALE, 1.0, smooth=False) + fill(q, GOLD if key else COBALT, 0, smooth=False, op=0.5 if key else R(0.04, 0.2)) + ink(q, 2.6, closed=True, smooth=False, wob=0.4)
+    s += ink(wall, 3.8, closed=True, smooth=False, wob=0.6)
+    # korkuluk: yan yana yatırılmış kapak taşları
+    top = catmull(deck[:5], False, 5); bot = catmull(deck[9:4:-1], False, 5)
+    s += fill(deck, PALE, 1.2, smooth=False)
+    for i in range(len(top) - 1):
+        q = [top[i], top[i + 1], bot[i + 1], bot[i]]
+        s += fill(q, PALE, 0.8, smooth=False) + fill(q, SKIN_L if i % 3 else COBALT, 0, smooth=False, op=R(0.1, 0.3)) + ink(q, 2.6, closed=True, smooth=False, wob=0.4)
+        if i % 2: s += ticks(q, 2, (6, 12), 0.2, 0.4, 1.8)
+    s += ink(deck, 3.6, closed=True, smooth=False, wob=0.6) + cracks(900, 1400, 80, 1.3, 2, 2.2) + cracks(300, 1480, 70, 2.0, 1, 2.2)
+    for x, y in ((150, 1556), (1350, 1556), (1240, 1556), (262, 1556)): s += ''.join(ink([(x + k * 6, y), (x + k * 10, y - R(14, 30))], 2.4, col=EARTH_D, op=1, taper=(0, 0.7), wob=0, smooth=False) for k in (-1, 0, 1))   # ayaklardaki otlar
     s += ink([(1420, 1300), (1424, 900)], 12, col=LEATHER, taper=(0.02, 0.1), wob=0.6, press=0.1, smooth=False) + blob([(1426, 910), (1560, 930), (1530, 980), (1570, 1030), (1426, 1020)], RED, 3.0) + medallion(1480, 968, 20, GOLD, 2.0)
-    s += ticks([(-200, 1200), (W + 200, 1200), (W + 200, 1380), (-200, 1380)], 60, (5, 10), 1.57, 0.5, 2.0)
     return s
 
 
@@ -105,9 +179,8 @@ def heaven():
         a = -0.9 + i * 0.225; x1 = 750 + math.sin(a) * 2400; w = 70 + (i % 3) * 40
         s += fill([(750 - 30, 60), (750 + 30, 60), (x1 + w, 2100), (x1 - w, 2100)], [GOLD, PALE, GOLD][i % 3], 0, smooth=False, op=0.26 + 0.1 * (i % 2))
     s += fill(ellipse(750, 80, 220, 120, 12, 0.02), PALE, 0, op=0.9) + sparkle(750, 80, 260, '#fff6d8')
-    for cx, cy, k in ((240, 520, 1.3), (1220, 470, 1.4), (700, 640, 1.8), (80, 880, 1.2), (1400, 900, 1.3)):
-        cl = [(cx - 150 * k, cy), (cx - 96 * k, cy - 50 * k), (cx - 20 * k, cy - 78 * k), (cx + 70 * k, cy - 56 * k), (cx + 150 * k, cy), (cx + 60 * k, cy + 30 * k), (cx - 70 * k, cy + 30 * k)]
-        s += fill(cl, COBALT, 1.6) + fill([cl[1], cl[2], cl[3], (cx, cy - 30 * k)], SKIN_L, 1.2, op=0.9) + ink(cl, 3.0, closed=True, wob=0.8)
+    for i, (cx, cy, k) in enumerate(((240, 520, 1.3), (1220, 470, 1.5), (700, 660, 1.9), (80, 900, 1.2), (1400, 920, 1.35))):
+        s += cloud(cx, cy, k, f'heaven{i}', COBALT, SKIN_L, INK)
     for _ in range(40): s += f'<circle cx="{R(0, W):.0f}" cy="{R(900, 1800):.0f}" r="{R(1.2, 3):.1f}" fill="{PALE}" opacity="{R(0.4, 0.9):.2f}"/>'
     return s
 

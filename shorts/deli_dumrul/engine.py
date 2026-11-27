@@ -49,25 +49,84 @@ BLINKERS = ('neutral', 'smug', 'stern', 'joy', 'grief', 'anger')
 BLINK = {'dumrul': 'blink', 'azrail': 'blink'}
 
 
-def actor(spec, u, idx=0):
+# Zamanlama: her kişinin kendi temposu (yay sıklığı, sönüm). Ağır Dumrul geç oturur, Azrail taşmadan durur, oğlancıklar çabuktur.
+TEMPO = {'dumrul': (1.7, 4.0), 'rider': (1.7, 4.0), 'father': (1.3, 3.2), 'mother': (1.6, 4.0), 'azrail': (0.9, 6.5), 'boy0': (3.0, 5.5), 'boy1': (3.0, 5.5),
+         'dede': (1.2, 4.0), 'wife': (2.2, 5.0), 'trav': (2.6, 5.0), 'horse': (1.6, 4.0)}
+clamp = lambda v, lo, hi: max(lo, min(hi, v))
+
+
+def pose(spec, u, nfr):
+    """Oyuncunun u anındaki duruşu. Hazırlık (anticipation): harekete geçmeden birkaç kare önce ters yöne hafifçe çekilir.
+    Yay (arc): 'arc' verilmişse yer değiştirme düz çizgide değil kavis üstünde olur."""
     kind, p0 = spec[0], spec[1]
     p1 = spec[2] if len(spec) > 2 else None
     t0 = spec[3] if len(spec) > 3 else 0.12
-    p = dict(p0)
+    p = dict(p0); k = 0.0
     if p1:
-        k = (ease if p1.get('glide') else spring)((u - t0) / max(1e-6, 1 - t0)) if u > t0 else 0.0
+        d = max(1e-6, 1 - t0)
+        if p1.get('glide'): k = ease((u - t0) / d) if u > t0 else 0.0
+        else:
+            ant = min(t0, 5.0 / nfr)
+            if u > t0: k = spring((u - t0) / d, *TEMPO.get(kind, (2.2, 5.0)))
+            elif ant > 0 and u > t0 - ant: k = -0.16 * math.sin(math.pi * (u - (t0 - ant)) / ant)
         for key, v in p1.items():
             if isinstance(v, bool) or not isinstance(v, (int, float)): p[key] = v if u > t0 else p0.get(key, v)
             else: p[key] = lerp(p0.get(key, v), v, k)
+        arc = p1.get('arc', 0.18 * abs(p1.get('x', p0['x']) - p0['x']) if kind == 'dove' else 0)
+        if arc: p['y'] -= arc * math.sin(math.pi * clamp(k, 0, 1))
+    p['_t0'] = t0 if p1 else None
+    return p
+
+
+def actor(spec, u, idx=0, nfr=45):
+    kind = spec[0]
+    p = pose(spec, u, nfr); q = pose(spec, u - 4.0 / nfr, nfr)            # dört kare önceki duruş: hız buradan çıkar
+    vx, vy, vr = p['x'] - q['x'], p['y'] - q['y'], p.get('rot', 0) - q.get('rot', 0)
     e = p.get('e', 'neutral')
-    if e in BLINKERS and abs((F.NOW * 0.52 + idx * 0.37) % 1 - 0.5) < 0.03 and not kind.startswith(('extra', 'dead', 'horse', 'falcon', 'trav', 'dove', 'goblet', 'rider')): e = 'blink'
-    s = p.get('s', 0.6)
+    still = kind.startswith(('extra', 'dead', 'horse', 'falcon', 'trav', 'dove', 'goblet', 'rider'))
+    if e in BLINKERS and abs((F.NOW * 0.52 + idx * 0.37) % 1 - 0.5) < 0.03 and not still: e = 'blink'
+    s = p.get('s', 0.6); t = F.NOW
     foot, fn = KINDS[kind]
-    bob = math.sin(F.NOW * 2.1 + idx * 1.7) * 2.5 * s                                    # nefes
-    if p.get('walk'): bob += abs(math.sin(F.NOW * 9 + idx)) * 22 * s                      # yürüyüş, koşu
-    rot = p.get('rot', 0) + (math.sin(F.NOW * 13) * 5 if p.get('gallop') else 0) + (math.sin(F.NOW * 26) * 2.5 * p.get('shake', 0))
-    if p.get('gallop'): bob += abs(math.sin(F.NOW * 13)) * 40 * s
-    return (p.get('z', p['y'] + foot * s), at(fn(p, e), p['x'], p['y'] - bob, s, rot, p.get('flip', False)))
+    x, y, rot = p['x'], p['y'], p.get('rot', 0)
+    y -= math.sin(t * 2.1 + idx * 1.7) * 2.5 * s                                         # nefes
+    sx = sy = 1.0
+    # --- ikincil hareket: herkesin kendi küçük işi
+    if kind.startswith('extra'):
+        if e == 'fear': rot += math.sin(t * 31 + idx) * 1.3                               # korkudan titrer
+        else:
+            rot += 2.5 * math.sin(t * 1.1 + idx * 2)
+            ph = (t * 0.23 + idx * 0.31) % 1
+            if ph < 0.14: w = math.sin(math.pi * ph / 0.14); rot -= 9 * w; y -= 9 * w * s   # kadehinden bir yudum
+    elif kind.startswith('mourner'): rot += 5 * math.sin(t * 2.4 + idx * 1.3); y += 6 * s * math.sin(t * 4.8 + idx)   # ağıtla sallanır
+    elif kind.startswith('boy'): y -= abs(math.sin(t * 3 + idx)) * 7 * s                   # yerinde duramaz
+    elif kind == 'falcon': rot += 7 * round(math.sin(t * 1.4))                             # başını bir o yana bir bu yana eğer
+    elif kind == 'azrail': y += 5 * math.sin(t * 1.2)                                      # ağır ağır süzülür
+    elif kind == 'dede': rot += 2 * math.sin(t * 3)                                        # kopuzla sallanır
+    # --- yürüyüş, dörtnal: basarken ezilir, havadayken uzar
+    if p.get('walk'):
+        c = abs(math.sin(t * 9 + idx)); y -= c * 22 * s; sy *= 0.95 + 0.09 * c
+    if p.get('gallop'):
+        c = abs(math.sin(t * 13)); y -= c * 40 * s; rot += math.sin(t * 13) * 5; sy *= 0.93 + 0.12 * c
+    rot += math.sin(t * 26) * 2.5 * p.get('shake', 0)
+    # --- ezilme ve uzama: hızlı düşey harekette uzar; 'land' anında yere çarpıp ezilir, sonra toparlanır
+    st = min(0.16, abs(vy) / (700 * s)); sy *= 1 + st
+    if 'land' in p:
+        n = (u - p['land']) * nfr
+        if 0 <= n < 14:
+            sq = 0.24 * math.exp(-n / 3.5) * math.cos(n * 0.8)
+            if abs(rot) > 45: sx *= 1 - sq                                                   # yatan gövdede yere dik eksen gövdenin enidir
+            else: sy *= 1 - sq
+    if p['_t0'] is not None and e in ('shock', 'fear', 'wrath') and u > p['_t0']:        # abartı: irkilirken bir an uzar
+        sy *= 1 + 0.12 * math.exp(-(u - p['_t0']) * nfr / 4)
+    sx /= sy ** 0.5 if abs(rot) <= 45 else 1; 
+    # --- ardından gelme: sarkan parçalar gövdeden geç kalır, durunca bir iki kez sallanıp oturur
+    sw = clamp(vx * 0.3 / s + vr * 0.9 + (p.get('hr', 0) - q.get('hr', 0)) * 0.9, -24, 24) + 2.5 * math.sin(t * 1.7 + idx)
+    if kind in ('horse', 'rider'): sw += 9 * math.sin(t * (13 if p.get('gallop') else 2.3))
+    C.SWAY = -sw if p.get('flip') else sw
+    if 'hr' in p or kind in ('dumrul', 'azrail', 'father', 'mother', 'wife', 'dede'):
+        p['hr'] = p.get('hr', 0) + clamp(vx * 0.1 / s - vy * 0.08 / s, -9, 9)             # baş, gövdenin ardından gelir
+    body = group(fn(p, e), 0, 0, 0, sx, sy, 0, foot)
+    return (p.get('z', p['y'] + foot * s), at(body, x, y, s, rot, p.get('flip', False)))
 
 
 # ----------------------------------------------------------------------------- arka plan canlılığı
@@ -173,7 +232,7 @@ def compose(shot, u, w, h):
     if st['sky']:
         over(out, warp(shot['set'], 'sky', cam, 0.12, w, h)); over(out, warp(shot['set'], 'back', cam, 0.45, w, h))
     over(out, warp(shot['set'], 'mid', cam, 1.0, w, h))
-    items = [actor(a, u, i) for i, a in enumerate(shot.get('a', []))] + st['life'](F.NOW)
+    items = [actor(a, u, i, frames_of(shot)) for i, a in enumerate(shot.get('a', []))] + st['life'](F.NOW)
     body = F.layer(''.join(b for _, b in sorted(items, key=lambda it: it[0])), cam, 1.0, False) + (shot['fx'](u) if shot.get('fx') else '')
     fg = np.asarray(raster(head + f'<defs>{S.HALO}</defs>{body}</svg>', w, h)).astype(np.float32)
     fg[:, :, :3] *= fg[:, :, 3:4] / 255
@@ -191,7 +250,7 @@ def draw(shot, u):
     s = ''
     if st['sky']: s += F.layer(st['sky'](), cam, 0.12, blur) + F.layer(st['back'](), cam, 0.45, blur)
     s += F.layer(st['mid'](), cam, 1.0, blur)
-    items = [actor(a, u, i) for i, a in enumerate(shot.get('a', []))] + st['life'](F.NOW)
+    items = [actor(a, u, i, frames_of(shot)) for i, a in enumerate(shot.get('a', []))] + st['life'](F.NOW)
     s += F.layer(''.join(b for _, b in sorted(items, key=lambda it: it[0])), cam, 1.0, False)
     if st.get('fore') and not shot.get('nofore'): s += F.layer(st['fore'](), cam, 1.18, blur)
     if shot.get('fx'): s += shot['fx'](u)

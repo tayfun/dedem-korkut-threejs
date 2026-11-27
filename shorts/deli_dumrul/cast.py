@@ -7,6 +7,8 @@ COBALT, SKIN, PALE, GOLD, RED = '#2a3fa3', '#ee6f58', '#e7dcf2', '#e3a72c', '#b3
 SKIN_D, SKIN_L = '#c0473f', '#f89e84'      # gölgede koyu ten, ışıkta açık ten
 COAT, LEATHER = '#23130f', '#8a4b2c'       # Dumrul'un kara deri kaftanı (mürekkebin açığı) ve kayış kahvesi
 
+SWAY = 0.0   # sarkan parçaların (kanat, sakal, örgü, kuyruk) gövdenin ardından savrulma açısı; motor her oyuncu için ayarlar
+
 EXPR = {
     'neutral': dict(brow=0.32, by=4, open=0.9, pupil=4.2, mouth='closed', jaw=0),      # dinlenirken bile çatık
     'blink':   dict(brow=0.32, by=5, open=0.0, pupil=4.2, mouth='closed', jaw=0),
@@ -317,7 +319,7 @@ def azrail_arm(side=1, lit=True):
 
 
 def azrail(expr='neutral', armL=10, armR=-10, spread=1.0, hr=0):
-    s = group(wing(-1, spread), -40, 60) + group(wing(1, spread), 40, 60)
+    s = group(wing(-1, spread), -40, 60, SWAY * 0.7) + group(wing(1, spread), 40, 60, SWAY * 0.7)
     s += group(azrail_arm(-1, False), -84, 40, armL) + azrail_body() + group(azrail_arm(1, True), 84, 40, armR)
     s += group(azrail_head(expr), 0, -118, hr, 0.9, None, 0, 118)
     return s
@@ -383,6 +385,17 @@ def goblet():
 
 
 def feather(col=RED):
+    """Kanat tüyü: eğri sap, yanlara açılan ve yer yer yarılan tüy telleri, dipte ak hav. Sapın ortası (0,0)."""
     reseed('feather' + col)
-    f = [(0, -60), (16, -30), (14, 20), (0, 60), (-14, 20), (-16, -30)]
-    return blob(f, col, 2.6) + ink([(0, -56), (2, 58)], 1.8, wob=0.3) + dashrow([(0, -40), (0, 40)], 14, 10, 0.9, 1.8, smooth=False)
+    quill = [(4, 96), (0, 40), (-6, -30), (-2, -96)]
+    q = catmull(quill, False, 8)
+    left = [(4, 60), (-22, 44), (-18, 30), (-34, 8), (-28, -6), (-40, -34), (-30, -44), (-30, -70), (-14, -84), (-2, -98)]
+    right = [(-2, -98), (12, -86), (22, -62), (16, -50), (26, -28), (22, 0), (28, 14), (18, 38), (22, 48), (4, 60)]
+    s = fill(left + right, col, 0.8, smooth=False) + fill(left + [(-2, -98), (-6, -30), (0, 40)], COBALT, 0.6, smooth=False, op=0.28)
+    s += ink(left + right, 2.4, closed=True, smooth=False, wob=0.3)
+    for i in range(3, len(q) - 3, 3):                                   # tüy telleri: saptan dışa, uca doğru eğik
+        x, y = q[i]
+        s += ink([(x, y), (x - 24, y - 12)], 1.7, wob=0, taper=(0, 0.7), smooth=False) + ink([(x, y), (x + 20, y - 14)], 1.7, wob=0, taper=(0, 0.7), smooth=False)
+    s += ink(quill, 4.5, col=PALE, op=1, wob=0.2, taper=(0, 0.5)) + ink(quill, 1.6, wob=0.2, taper=(0, 0.5))
+    s += ''.join(ink([(4, 70 + k * 6), (4 + sx * (16 - k * 3), 62 + k * 10)], 2.2, col=PALE, op=1, wob=0, taper=(0, 0.6), smooth=False) for k in range(3) for sx in (-1, 1))
+    return s

@@ -2,6 +2,7 @@
 Ortak yüz kurucu (gface) her kişiye ayrı kafatası, burun ve kaş verir; ifadeler ortaktır."""
 import math
 from ..kit import *
+from . import cast as C0
 from .cast import COBALT, SKIN, SKIN_D, SKIN_L, PALE, GOLD, RED, COAT, LEATHER, hand, stud, strap
 
 EX = {
@@ -117,7 +118,7 @@ def father_head(expr='neutral'):
     s, d = gface('father', 104, 122, 0.92, (78, 28, 0.55), (0.3, -0.16, 12, 8), (PALE, 13), (0.4, 0.5), expr, bags=3, wrinkles=3)
     reseed('father-beard')
     beard = [(-100, 30), (-70, 78 + d), (0, 96 + d), (70, 78 + d), (100, 30), (112, 150 + d), (86, 140 + d), (92, 250 + d), (58, 226 + d), (44, 330 + d), (16, 286 + d), (0, 372 + d), (-20, 290 + d), (-46, 326 + d), (-58, 226 + d), (-92, 252 + d), (-84, 140 + d), (-112, 150 + d)]
-    s += barbed(beard, PALE, 2.6, [(-100, 30), (-70, 78 + d), (-30, 92 + d), (-30, 330 + d), (-112, 252 + d), (-112, 150 + d)]) + fur(beard, 8, 13, 12, 0.1, 1.9)
+    s += group(barbed(beard, PALE, 2.6, [(-100, 30), (-70, 78 + d), (-30, 92 + d), (-30, 330 + d), (-112, 252 + d), (-112, 150 + d)]) + fur(beard, 8, 13, 12, 0.1, 1.9), 0, 0, C0.SWAY * 0.6, 1, None, 0, 60)
     for sx in (-1, 1): s += barbed([(0, 52), (sx * 30, 46), (sx * 62, 70), (sx * 70, 120 + d), (sx * 48, 96 + d * 0.5), (sx * 22, 76), (0, 70)], PALE, 2.2)
     reseed('father-hat')
     dome = [(-84, -96), (-66, -200), (-10, -262), (40, -230), (80, -150), (90, -96)]
@@ -171,16 +172,18 @@ def wife_head(expr='neutral'):
     """İnce uzun yüz, kirpikli iri göz; yüksek altın başlık, arkadan dökülen duvak, iki uzun kara örgü."""
     reseed('wife-veil')
     veil = [(-70, -230), (0, -250), (70, -230), (130, -60), (150, 160), (110, 330), (40, 300), (-40, 300), (-110, 330), (-150, 160), (-130, -60)]
-    s = blob(veil, PALE, 3.0) + fill([(-70, -230), (-130, -60), (-150, 160), (-110, 330), (-70, 300), (-90, 0)], COBALT, 1.0, op=0.3) + ''.join(ink([(x, -40), (x * 1.15, 300)], 1.8, wob=0.6) for x in (-104, 100))
+    s = group(blob(veil, PALE, 3.0) + fill([(-70, -230), (-130, -60), (-150, 160), (-110, 330), (-70, 300), (-90, 0)], COBALT, 1.0, op=0.3) + ''.join(ink([(x, -40), (x * 1.15, 300)], 1.8, wob=0.6) for x in (-104, 100)), 0, 0, C0.SWAY * 0.5, 1, None, 0, -230)
     s += blob([(-26, 80), (26, 80), (30, 190), (-30, 190)], SKIN_D, 3.0)                                            # uzun boyun
     f, d = gface('wife', 88, 112, 0.84, (56, 16, 0.0), (0.34, -0.1, 15, 11), (INK, 6), (0.32, 0.5), expr, bags=0, wrinkles=0, lash=True)
     s += f + fill(ellipse(0, 62 + d * 0.45, 22, 7, 7), RED, 0.5, op=0.55 if EX[expr]['m'] in ('line', 'frown', 'purse') else 0)
     reseed('wife-hair')
     s += fill([(-92, -30), (-78, -96), (0, -118), (78, -96), (92, -30), (60, -70), (0, -84), (-60, -70)], INK, 0.8)
     for sx in (-1, 1):                                                                                                # örgüler
+        br = ''
         for k in range(9):
-            s += fill(ellipse(sx * (96 - k * 2), 10 + k * 40, 17 - k * 0.6, 22, 7, 0.1), INK, 0.6)
-        s += ''.join(ink([(sx * (84 - k * 2), 20 + k * 40), (sx * (108 - k * 2), 34 + k * 40)], 1.8, col=PALE, op=0.5, wob=0, smooth=False) for k in range(9)) + blob(ellipse(sx * 78, 376, 12, 14, 7), GOLD, 2.2)
+            br += fill(ellipse(sx * (96 - k * 2), 10 + k * 40, 17 - k * 0.6, 22, 7, 0.1), INK, 0.6)
+        br += ''.join(ink([(sx * (84 - k * 2), 20 + k * 40), (sx * (108 - k * 2), 34 + k * 40)], 1.8, col=PALE, op=0.5, wob=0, smooth=False) for k in range(9)) + blob(ellipse(sx * 78, 376, 12, 14, 7), GOLD, 2.2)
+        s += group(br, 0, 0, C0.SWAY * 0.9, 1, None, sx * 96, 10)
     reseed('wife-hat')
     hat = [(-74, -92), (-52, -200), (-24, -292), (24, -292), (52, -200), (74, -92), (0, -80)]
     s += blob(hat, GOLD, 3.2) + fill([(-74, -92), (-52, -200), (-24, -292), (-8, -292), (-18, -88)], COBALT, 0.8, op=0.3)
@@ -219,7 +222,7 @@ def dede_head(expr='joy'):
     s = f
     reseed('dede-beard')
     beard = [(-92, 30), (-62, 84 + d), (0, 100 + d), (62, 84 + d), (92, 30), (96, 170 + d), (70, 300 + d), (40, 420 + d), (24, 300 + d), (0, 250 + d), (-24, 300 + d), (-40, 420 + d), (-70, 300 + d), (-96, 170 + d)]
-    s += barbed(beard, PALE, 2.6, [(-92, 30), (-62, 84 + d), (-20, 98 + d), (-24, 300 + d), (-40, 420 + d), (-70, 300 + d), (-96, 170 + d)]) + fur(beard, 9, 13, 12, 0.1, 1.9)
+    s += group(barbed(beard, PALE, 2.6, [(-92, 30), (-62, 84 + d), (-20, 98 + d), (-24, 300 + d), (-40, 420 + d), (-70, 300 + d), (-96, 170 + d)]) + fur(beard, 9, 13, 12, 0.1, 1.9), 0, 0, C0.SWAY * 0.6, 1, None, 0, 60)
     for sx in (-1, 1): s += barbed([(0, 56), (sx * 30, 48), (sx * 66, 66), (sx * 86, 110 + d), (sx * 52, 92 + d * 0.5), (sx * 22, 80), (0, 74)], PALE, 2.2)
     reseed('dede-turban')
     tb = [(-150, -80), (-140, -170), (-70, -236), (20, -256), (110, -220), (156, -140), (150, -70), (60, -52), (-60, -56)]
@@ -321,7 +324,7 @@ def horse(spooked=False):
         return r + blob([(hx - 40, 296), (hx + 6, 296), (hx + 10, 330), (hx - 44, 330)], COAT, 2.6)
     s += leg(-150, True, False) + leg(210, True, True)
     tail = [(250, -50), (320, -60), (370, 40), (360, 190), (320, 250), (310, 120), (270, 20)]
-    s += fill(tail, COAT, 0.8) + ink(tail, 3.0, closed=True) + fur(tail, 6, 14, 14, 1.2, 2.0)
+    s += group(fill(tail, COAT, 0.8) + ink(tail, 3.0, closed=True) + fur(tail, 6, 14, 14, 1.2, 2.0), 0, 0, C0.SWAY * 1.2, 1, None, 250, -50)
     body = [(-246, -60), (-170, -124), (-60, -102), (60, -98), (170, -120), (252, -72), (278, 10), (244, 86), (120, 92), (0, 70), (-120, 104), (-226, 96), (-276, 10)]
     s += blob(body, PALE, 3.8) + fill([(-276, 10), (-226, 96), (-120, 104), (0, 70), (120, 92), (244, 86), (278, 10), (150, 40), (-150, 50)], COBALT, 1.0, op=0.32) + ink([(-210, -20), (-196, 40), (-216, 84)], 2.0, wob=0.3) + ink([(196, -40), (220, 20), (204, 70)], 2.0, wob=0.3)
     s += leg(-210, False, False) + leg(150, False, True)
