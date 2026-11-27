@@ -122,3 +122,14 @@ def steppe_night():
     s += ticks([(-200, 1240), (W + 200, 1240), (W + 200, H), (-200, H)], 120, (5, 11), 1.57, 0.5, 2.0)
     for x, y in ((520, 1640), (1180, 1560), (90, 1500)): s += blob(ellipse(x, y, 40, 22, 7, 0.2), COBALT, 2.8) + fill(ellipse(x + 8, y - 6, 20, 8, 6), SKIN_L, 0.6, op=0.8)
     return s
+
+
+def water(t=0.0):
+    """Coşkun akan su: kuru çay yatağını dolduran kobalt akıntı, soluk dalga çizgileri (köprü mekânının üstüne çizilir)."""
+    reseed('water')
+    bed = [(-200, 1560), (200, 1440), (700, 1400), (1300, 1450), (1700, 1560), (1700, 1780), (800, 1720), (-200, 1820)]
+    s = fill(bed, COBALT, 1.6, smooth=False) + fill([(280, 1560), (304, 1470), (760, 1486), (1196, 1470), (1220, 1560)], S.NIGHT, 1.0, smooth=False, op=0.5)
+    for i in range(16):
+        ph = R(0, 1); y = 1470 + R(0, 300); x = (t * R(120, 220) + ph * 1900) % 1900 - 200
+        s += ink([(x, y), (x + 40, y - 8), (x + 80, y), (x + 120, y - 8)], 4, col=PALE, op=0.85, wob=0, taper=(0.2, 0.3))
+    return s + ink(bed[:5], 3.0, smooth=False, wob=0.8, taper=(0, 0)) + sparkle(900 + math.sin(t * 3) * 60, 1560, 26)

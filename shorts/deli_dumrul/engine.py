@@ -37,6 +37,8 @@ KINDS = {
     'horse': (330, lambda p, e: K.horse(p.get('spooked', False))),
     'rider': (330, _rider),
     'falcon': (0, lambda p, e: K.falcon()),
+    'dove': (0, lambda p, e: C.dove(int(F.NOW * 9) % 2)),
+    'goblet': (40, lambda p, e: C.goblet()),
     'extra0': (230, lambda p, e: C.extra(0, p.get('robe'), e == 'fear')), 'extra1': (230, lambda p, e: C.extra(1, p.get('robe'), e == 'fear')), 'extra2': (230, lambda p, e: C.extra(2, p.get('robe'), e == 'fear')),
 }
 BLINKERS = ('neutral', 'smug', 'stern', 'joy', 'grief', 'anger')
@@ -54,7 +56,7 @@ def actor(spec, u, idx=0):
             if isinstance(v, bool) or not isinstance(v, (int, float)): p[key] = v if u > t0 else p0.get(key, v)
             else: p[key] = lerp(p0.get(key, v), v, k)
     e = p.get('e', 'neutral')
-    if e in BLINKERS and abs((F.NOW * 0.52 + idx * 0.37) % 1 - 0.5) < 0.03 and not kind.startswith(('extra', 'dead', 'horse', 'falcon', 'trav')): e = 'blink'
+    if e in BLINKERS and abs((F.NOW * 0.52 + idx * 0.37) % 1 - 0.5) < 0.03 and not kind.startswith(('extra', 'dead', 'horse', 'falcon', 'trav', 'dove', 'goblet', 'rider')): e = 'blink'
     s = p.get('s', 0.6)
     foot, fn = KINDS[kind]
     bob = math.sin(F.NOW * 2.1 + idx * 1.7) * 2.5 * s                                    # nefes
@@ -117,6 +119,7 @@ SETS = {
     'inside': dict(bg=C.COBALT, sky=None, back=None, mid=S2.tent_inside, life=lambda t: [(5000, motes(t))]),
     'steppe': dict(bg=S.NIGHT, sky=None, back=None, mid=S2.steppe_night, life=lambda t: [(5000, S.embers(1100, 1700, t * 0.7))]),
     'heaven': dict(bg=S.NIGHT, sky=None, back=None, mid=S2.heaven, life=lambda t: [(-10, shimmer(t))]),
+    'river': dict(bg=S2.DAY, sky=S2.day_sky, back=S2.day_hills, mid=S2.bridge, life=lambda t: [(-10, birds(t)), (-5, S2.water(t))]),
 }
 
 
