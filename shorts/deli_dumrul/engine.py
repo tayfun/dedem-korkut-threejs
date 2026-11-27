@@ -262,6 +262,7 @@ def chunks(shot):
 
 
 def frames_of(shot):
+    if 'nf' in shot: return shot['nf']                       # seslendirmeden gelen süre
     return round((len(chunks(shot)) * CHUNK + shot.get('hold', 0)) * FPS)
 
 
@@ -272,9 +273,14 @@ def frame(shots, i, u=0.6, scale=1.0, f=None):
     F.NOW = (start + (f if f is not None else u * n)) / FPS
     w, h = int(FW * scale), int(FH * scale)
     img = finish(compose(shot, u, w, h), int(F.NOW * FPS), grain=F.GRAIN * max(scale, 0.6))
-    if f is None: return F.caption(img, ch[min(len(ch) - 1, int(u * len(ch)))])
+    if 'starts' in shot:                                  # altyazı parçaları sesteki yerlerinde değişir
+        ff = f if f is not None else u * n
+        ci = max(i_ for i_, s_ in enumerate(shot['starts']) if s_ <= ff or i_ == 0)
+        if f is None: return F.caption(img, ch[ci])
+    elif f is None: return F.caption(img, ch[min(len(ch) - 1, int(u * len(ch)))])
     if f < 3 and i > 0: img = F.whip(img, (3 - f) / 3 * 0.9)
     if f >= n - 3 and i < len(shots) - 1: img = F.whip(img, (f - (n - 4)) / 3 * 0.9)
+    if 'starts' in shot: return F.caption(img, ch[ci], dim=0 <= f - shot['starts'][ci] < 3)
     per = CHUNK * FPS; ci = min(len(ch) - 1, int(f / per))
     return F.caption(img, ch[ci], dim=(f - ci * per) < 3 and f < len(ch) * per + 3)
 

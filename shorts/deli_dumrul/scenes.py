@@ -473,3 +473,7 @@ SCENES['dede'] = [
     dict(n='Yakın: son söz', c='Kadir Tanrı seni|namerde muhtaç etmesin.”', set='feast', cam=[(640, 1130, 2.0), (640, 1140, 1.7)], nofore=True, hold=1.5,
          a=[('dede', dict(DK, e='joy'))], fx=fx_rays(0.3)),
 ]
+
+
+from . import voice as _voice
+_voice.apply(SCENES)      # ses varsa çekim süreleri ve altyazı anları sesten gelir

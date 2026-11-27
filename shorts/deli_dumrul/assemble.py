@@ -5,7 +5,7 @@
 --reuse: daha önce çizilmiş sahne dosyalarını yeniden çizmez."""
 import os, subprocess, sys, tempfile
 from .. import credits
-from . import engine, film
+from . import engine, film, voice
 
 ORDER = ['kopru', 'ovunme', 'oba', 'soru', 'buyruk', 'sofra', 'at', 'yalvaris', 'dua', 'baba', 'ana', 'veda', 'es', 'ikinci-dua', 'bagis', 'dede']
 
@@ -24,7 +24,11 @@ def main(mode, reuse=False):
         with open(f'{work}/all.txt', 'w') as fh: fh.write(''.join(f"file '{os.path.abspath(f)}'\n" for f in files))
         out = 'shorts/out/deli-dumrul-taslak.mp4' if draft else 'shorts/out/deli-dumrul.mp4'
         fps = '15' if draft else '30'
-        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', f'{work}/all.txt', '-c:v', 'libx264', '-crf', '23' if draft else '17',
+        audio = []
+        if os.path.exists(voice.path(ORDER[0])):                      # anlatı kanalı: ayrı dosya olarak da saklanır
+            voice.track('shorts/deli_dumrul/audio/deli-dumrul-anlati.mp3', credits.SECONDS)
+            audio = ['-i', 'shorts/deli_dumrul/audio/deli-dumrul-anlati.mp3', '-map', '0:v', '-map', '1:a', '-c:a', 'aac', '-b:a', '192k', '-shortest']
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', f'{work}/all.txt'] + audio + ['-c:v', 'libx264', '-crf', '23' if draft else '17',
                         '-preset', 'veryfast' if draft else 'medium', '-pix_fmt', 'yuv420p', '-r', fps, '-movflags', '+faststart', out], check=True)
     print('bitti', out)
 

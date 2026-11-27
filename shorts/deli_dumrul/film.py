@@ -240,7 +240,11 @@ HOLD = {12: 1.0}   # son çekim, son altyazıdan sonra bir saniye daha durur
 FPS = 30
 
 
+VOICE = None   # seslendirme zamanlaması: [(kare sayısı, parça başlangıç kareleri)]; voice.apply_film doldurur
+
+
 def frames_of(i):
+    if VOICE: return VOICE[i][0]
     return round((len(SHOTS[i][1]) * CHUNK + HOLD.get(i, 0)) * FPS)
 
 
@@ -268,6 +272,9 @@ def frame(i, u, scale=1.0, frame_no=0, f=None):
     if f is not None:
         if f < 3 and i > 0: img = whip(img, (3 - f) / 3 * 0.9)                    # çekime girerken
         if f >= n - 3 and i < len(SHOTS) - 1: img = whip(img, -(f - (n - 4)) / 3 * 0.9)   # çıkarken
+        if VOICE:
+            st = VOICE[i][1]; ci = max(k for k, s_ in enumerate(st) if s_ <= f or k == 0)
+            return caption(img, chunks[ci], dim=0 <= f - st[ci] < 3)
         per = CHUNK * FPS
         ci = min(len(chunks) - 1, int(f / per))
         return caption(img, chunks[ci], dim=(f - ci * per) < 3 and f < len(chunks) * per + 3)
@@ -316,6 +323,10 @@ def contact(out):
         d.text((x, y + th + 40), f'{len(chunks) * CHUNK:.1f} sn — ' + ' / '.join(chunks), font=f2, fill=(77, 20, 10))
     sheet.save(out, quality=90)
     print('toplam', sum(len(c) for _, c, _ in SHOTS) * CHUNK, 'sn')
+
+
+from . import voice as _voice
+_voice.apply_film(sys.modules[__name__])
 
 
 if __name__ == '__main__':
