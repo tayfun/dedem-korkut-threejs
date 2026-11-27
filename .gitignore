@@ -5,3 +5,4 @@ shots
 __pycache__
 shorts/out
 .venv
+.env
