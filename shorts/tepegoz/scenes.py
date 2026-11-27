@@ -22,7 +22,34 @@ def _kepenek(p, e):
     return s + dashrow([(-196, -30), (196, -30)], 16, 9, 0.2, 2.0, smooth=False) + ink([(0, -20), (4, 200), (0, 440)], 2.2, wob=0.6, op=0.6)
 
 
+def _yarik(p, e):
+    """Ödü yarılan yiğit: gövde tepeden tırnağa zikzak bir çizgiyle ikiye ayrılır, yarılar iki yana devrilir. split: 0..1."""
+    k = max(0.0, min(1.0, g(p, 'split', 0.0)))
+    body = T.alp(1, e)
+    if k <= 0: return body
+    zz = [((14 if i % 2 else -14), -320 + i * 60) for i in range(15)]
+    s = '<defs>' + ''.join(f'<clipPath id="yarik{sx}"><path d="M' + ' L'.join(f'{x:.0f},{y:.0f}' for x, y in [(sx * 700, -400)] + zz + [(sx * 700, 540)]) + 'Z"/></clipPath>' for sx in (-1, 1)) + '</defs>'
+    for sx in (-1, 1):
+        half = f'<g clip-path="url(#yarik{sx})">{body}</g>' + ink(zz, 9, col=T.RED, op=1, wob=0, taper=(0, 0), smooth=False)
+        s += group(half, sx * 46 * k, 0, sx * 66 * k * k, 1, None, sx * 60, 480)
+    return s
+
+
+def fx_spurt(x=540, y=700, t0=0.35):
+    """Yarıktan fışkıran kan: t0'dan sonra yukarı ve iki yana saçılır, sonra düşer."""
+    def fx(u):
+        v = (u - t0) / (1 - t0)
+        if v <= 0: return ''
+        reseed('fx-spurt'); k = ease(min(1, v * 2.2)); s = ''
+        for _ in range(26):
+            a = R(-2.9, -0.25); d = R(120, 520) * k; r = R(9, 26) * (1 - 0.4 * v)
+            s += fill(ellipse(x + math.cos(a) * d, y + math.sin(a) * d + 700 * v * v, r, r * R(1.1, 1.9), 7, 0.2, a + 1.57), T.RED, 0.6)
+        return s
+    return fx
+
+
 E.KINDS.update({
+    'yarik': (480, _yarik),
     'tepegoz': (712, lambda p, e: T.tepegoz(e, g(p, 'armL', 10), g(p, 'armR', -10), g(p, 'hr'), g(p, 'poseR', 'open'), g(p, 'child', False))),
     'basat': (480, lambda p, e: T.basat(e, g(p, 'armL', 10), g(p, 'armR', -10), g(p, 'hr'), g(p, 'poseR', 'open'), g(p, 'bow', False), g(p, 'sword', False))),
     'aruz': (602, lambda p, e: T.aruz(e, g(p, 'armL', 12), g(p, 'armR', -12), g(p, 'hr'))),
@@ -206,8 +233,8 @@ SCENES['savas'] = [
          a=[('tepegoz', dict(RK_T, x=900, e='laugh', flip=True))], fx=fx_arrows(8)),
     dict(n='İkili: Aruz’a vurur', c='Aruz Koca’ya|kan kusturdu;', set='rock', cam=[(640, 1120, 1.4), (600, 1140, 1.5)], punch=True,
          a=[('tepegoz', dict(RK_T, x=900, e='anger', flip=True, armL=10), dict(armL=110, x=820), 0.1), ('aruz', dict(x=440, y=1190, s=0.5, e='anger'), dict(e='shock', rot=-84, x=300, y=1480, arc=90, land=0.8), 0.25)], fx=fx_impact(430, 800)),
-    dict(n='Yakın: Kıyan Selçuk', c='oğlu Kıyan Selçuk’un|ödü yarıldı.', set='rock', cam=[(300, 1260, 1.9), (300, 1380, 2.0)], blur=True,
-         a=[('alp1', dict(x=300, y=1280, s=0.5, e='fear', shake=1), dict(e='blink', rot=88, y=1520, land=0.75, arc=40, shake=0), 0.35)]),
+    dict(n='Yakın: Kıyan Selçuk', c='oğlu Kıyan Selçuk’un|ödü yarıldı.', set='rock', cam=[(300, 1220, 1.5), (300, 1240, 1.3)], blur=True,
+         a=[('yarik', dict(x=300, y=1330, s=0.5, e='fear', shake=1, split=0.0), dict(e='shock', split=1.0, shake=0), 0.5)], fx=fx_spurt(540, 880, 0.52)),
     dict(n='Geniş: yedi kez kaçar, yedi kez önünü alır', c='Oğuz yedi kez kaçtı;|Tepegöz yedi kez|önünü aldı.', set='rock', cam=[(800, 1150, 1.05), (620, 1150, 1.05)], hold=0.4,
          a=[('alp0', dict(x=1000, y=1260, s=0.48, e='fear', flip=True, walk=True), dict(x=640, glide=True), 0.0), ('alp2', dict(x=1160, y=1300, s=0.48, e='fear', flip=True, walk=True), dict(x=800, glide=True), 0.0),
             ('tepegoz', dict(RK_T, x=1500, y=1100, e='laugh'), dict(x=300, arc=520, land=0.8), 0.25)]),
