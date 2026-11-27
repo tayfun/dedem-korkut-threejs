@@ -1,0 +1,6 @@
+# Cel kısa film takımının hızlandırıcıları (hepsi isteğe bağlı; yoksa librsvg ve Pillow ile çalışır)
+#   uv venv --system-site-packages --python /usr/bin/python3 .venv && uv pip install --python .venv/bin/python -r shorts/requirements.txt
+# Sistem paketleri: python3-gi + gir1.2-rsvg-2.0 (librsvg), python3-pil, ffmpeg
+opencv-python-headless   # odak dışı arka plan önbelleği ve hızlı cila
+resvg-py                 # hızlı SVG çizici
+faster-whisper           # seslendirme gelince sözcük zamanlaması

@@ -6,7 +6,17 @@ from ..kit import *
 from . import cast as C, sets as S
 
 FW, FH = 1080, 1920
-FONT = '/usr/share/fonts/truetype/noto/NotoSansDisplay-Black.ttf'
+FONT = '/usr/share/fonts/truetype/noto/NotoSansDisplay-Black.ttf'      # etiketler için
+CAPTION_FONT = os.path.join(os.path.dirname(__file__), '..', 'fonts', 'Baloo2.ttf')   # altyazı: kalın, yuvarlak (Baloo 2, OFL)
+_cap = {}
+
+
+def caption_font(size):
+    if size not in _cap:
+        f = ImageFont.truetype(CAPTION_FONT, size)
+        f.set_variation_by_name('ExtraBold')
+        _cap[size] = f
+    return _cap[size]
 DEFS = S.HALO + '<filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="7"/></filter>'
 
 # Dünyadaki yerler (sahne 1500×1920)
@@ -46,10 +56,15 @@ def camera(cx, cy, z):
     return (min(max(cx, hw), S.W - hw), min(max(cy, hh), S.H - hh), z)
 
 
+def layer_cam(cam, p):
+    """Katmanın kendi kamerası: uzak katmanlar daha az kayar ve daha az büyür (paralaks)."""
+    cx, cy, z = cam
+    return 750 + (cx - 750) * p, 960 + (cy - 960) * p, 1 + (z - 1) * (0.35 + 0.65 * p if p < 1 else p)
+
+
 def layer(body, cam, p=1.0, blur=False):
     """Bir derinlik katmanını kamera matrisiyle çizer; p paralaks oranı."""
-    cx, cy, z = cam
-    lx, ly, lz = 750 + (cx - 750) * p, 960 + (cy - 960) * p, 1 + (z - 1) * (0.35 + 0.65 * p if p < 1 else p)
+    lx, ly, lz = layer_cam(cam, p)
     f = ' filter="url(#soft)"' if blur else ''
     return f'<g transform="translate({FW / 2:.1f},{FH / 2:.1f}) scale({lz:.4f}) translate({-lx:.2f},{-ly:.2f})"{f}>{body}</g>'
 
@@ -208,9 +223,12 @@ def caption(img, text, dim=False):
     """Altyazı ciladan sonra basılır: kalın sarı, koyu kenar, karenin alt ortası."""
     d = ImageDraw.Draw(img)
     w, h = img.size
-    f = ImageFont.truetype(FONT, int(w * 0.074))
+    size = int(w * 0.084)
+    f = caption_font(size)
+    while d.textlength(text, font=f) > w * 0.94 and size > 20:      # uzun parça kareye sığsın
+        size -= 2; f = caption_font(size)
     tw = d.textlength(text, font=f)
-    x, y = (w - tw) / 2, h * 0.705
+    x, y = (w - tw) / 2, h * 0.70
     col = (255, 226, 26) if not dim else (150, 132, 30)
     d.text((x, y), text, font=f, fill=col, stroke_width=max(3, int(w * 0.009)), stroke_fill=(23, 11, 8))
     return img

@@ -10,6 +10,7 @@ import math, os, sys
 from PIL import Image, ImageDraw, ImageFont
 from ..kit import *
 from . import cast as C, cast2 as K, sets as S, sets2 as S2, film as F
+from ..kit import cv2
 
 lerp, ease, spring, at = F.lerp, F.ease, F.spring, F.at
 FW, FH, FPS, CHUNK = F.FW, F.FH, F.FPS, F.CHUNK
@@ -123,6 +124,61 @@ SETS = {
 }
 
 
+# ----------------------------------------------------------------------------- odak dışı arka plan: önbellekli katmanlar
+RECT = (-300, -200, 2100, 2400)     # katmanların önbelleğe alındığı dünya dikdörtgeni
+KB = 0.6                            # önbellek ölçeği (bulanık olduğu için düşük çözünürlük yeter)
+_layers = {}
+
+
+def cached(setname, key):
+    """Bir mekân katmanını bir kez çizer, bulanıklaştırır ve saklar (önceden çarpılmış RGBA)."""
+    if (setname, key) not in _layers:
+        w, h = int(RECT[2] * KB), int(RECT[3] * KB)
+        s = f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="{RECT[0]} {RECT[1]} {RECT[2]} {RECT[3]}"><defs>{S.HALO}</defs>{SETS[setname][key]()}</svg>'
+        a = np.asarray(raster(s, w, h)).astype(np.float32)
+        a[:, :, :3] *= a[:, :, 3:4] / 255
+        _layers[(setname, key)] = cv2.GaussianBlur(a, (0, 0), 7 * KB)
+    return _layers[(setname, key)]
+
+
+def over(dst, src):
+    """Önceden çarpılmış RGBA'yı alttaki resmin üstüne bindirir."""
+    dst[:, :, :3] = src[:, :, :3] + dst[:, :, :3] * (1 - src[:, :, 3:4] / 255)
+    return dst
+
+
+def warp(setname, key, cam, p, w, h):
+    lx, ly, lz = F.layer_cam(cam, p)
+    k = w / FW
+    m = np.float32([[lz / KB * k, 0, ((RECT[0] - lx) * lz + FW / 2) * k], [0, lz / KB * k, ((RECT[1] - ly) * lz + FH / 2) * k]])
+    return cv2.warpAffine(cached(setname, key), m, (w, h), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_CONSTANT, borderValue=(0, 0, 0, 0))
+
+
+def compose(shot, u, w, h):
+    """Kareyi kurar (cilasız RGB). Odak dışı çekimlerde mekân önbellekten gelir ve yalnızca oyuncular çizilir;
+    öbür çekimlerde bütün sahne tek SVG olarak çizilir."""
+    st = SETS[shot['set']]
+    head = f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {FW} {FH}">'
+    if not shot.get('blur') or cv2 is None:
+        s = head + f'<defs>{F.DEFS}</defs><rect width="{FW}" height="{FH}" fill="{st["bg"]}"/>{draw(shot, u)}</svg>'
+        return raster(s, w, h).convert('RGB')
+    c0, c1 = shot['cam']
+    k = spring(u) if shot.get('punch') else ease(u)
+    cam = F.camera(*(lerp(a, b, k) for a, b in zip(c0, c1)))
+    bg = tuple(int(st['bg'][i:i + 2], 16) for i in (1, 3, 5))
+    out = np.empty((h, w, 3), np.float32); out[:] = bg
+    if st['sky']:
+        over(out, warp(shot['set'], 'sky', cam, 0.12, w, h)); over(out, warp(shot['set'], 'back', cam, 0.45, w, h))
+    over(out, warp(shot['set'], 'mid', cam, 1.0, w, h))
+    items = [actor(a, u, i) for i, a in enumerate(shot.get('a', []))] + st['life'](F.NOW)
+    body = F.layer(''.join(b for _, b in sorted(items, key=lambda it: it[0])), cam, 1.0, False) + (shot['fx'](u) if shot.get('fx') else '')
+    fg = np.asarray(raster(head + f'<defs>{S.HALO}</defs>{body}</svg>', w, h)).astype(np.float32)
+    fg[:, :, :3] *= fg[:, :, 3:4] / 255
+    over(out, fg)
+    if st.get('fore') and not shot.get('nofore'): over(out, warp(shot['set'], 'fore', cam, 1.18, w, h))
+    return Image.fromarray(np.clip(out, 0, 255).astype(np.uint8), 'RGB')
+
+
 def draw(shot, u):
     st = SETS[shot['set']]
     c0, c1 = shot['cam']
@@ -153,9 +209,7 @@ def frame(shots, i, u=0.6, scale=1.0, f=None):
     start = sum(frames_of(x) for x in shots[:i])
     F.NOW = (start + (f if f is not None else u * n)) / FPS
     w, h = int(FW * scale), int(FH * scale)
-    bg = SETS[shot['set']]['bg']
-    body = f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {FW} {FH}"><defs>{F.DEFS}</defs><rect width="{FW}" height="{FH}" fill="{bg}"/>{draw(shot, u)}</svg>'
-    img = finish(raster(body, w, h), int(F.NOW * FPS), grain=4.0 * max(scale, 0.6))
+    img = finish(compose(shot, u, w, h), int(F.NOW * FPS), grain=4.0 * max(scale, 0.6))
     if f is None: return F.caption(img, ch[min(len(ch) - 1, int(u * len(ch)))])
     if f < 3 and i > 0: img = F.whip(img, (3 - f) / 3 * 0.9)
     if f >= n - 3 and i < len(shots) - 1: img = F.whip(img, (f - (n - 4)) / 3 * 0.9)
@@ -179,30 +233,32 @@ def contact(shots, out, title=''):
 
 
 def _job(args):
-    slug, i, f, d = args
+    slug, i, f, d, scale, n = args
     from . import scenes
-    frame(scenes.SCENES[slug], i, f=f).save(f'{d}/s{i:02d}/{f:04d}.jpg', quality=96, subsampling=0)
+    frame(scenes.SCENES[slug], i, scale=scale, f=f).save(f'{d}/s{i:02d}/{n:04d}.jpg', quality=96 if scale >= 1 else 90, subsampling=0)
 
 
-def render(slug, out, work):
-    import multiprocessing as mp, subprocess
+def render(slug, out, work, draft=False):
+    """draft=True: yarı çözünürlük, saniyede 15 kare, hızlı kodlama — zamanlamayı ve oyunculuğu görmek için."""
+    import multiprocessing as mp, subprocess, shutil
     from . import scenes
     shots = scenes.SCENES[slug]
+    scale, step = (0.5, 2) if draft else (1.0, 1)
     jobs = []
     for i, shot in enumerate(shots):
-        os.makedirs(f'{work}/s{i:02d}', exist_ok=True)
-        jobs += [(slug, i, f, work) for f in range(frames_of(shot))]
+        shutil.rmtree(f'{work}/s{i:02d}', ignore_errors=True); os.makedirs(f'{work}/s{i:02d}')
+        jobs += [(slug, i, f, work, scale, n) for n, f in enumerate(range(0, frames_of(shot), step))]
     with mp.Pool(min(11, os.cpu_count() or 4)) as pool:
         for k, _ in enumerate(pool.imap_unordered(_job, jobs, chunksize=4)):
             if k % 150 == 0: print('kare', k, '/', len(jobs), flush=True)
     files = []
     for i in range(len(shots)):
         p = f'{work}/s{i:02d}.mp4'
-        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', str(FPS), '-i', f'{work}/s{i:02d}/%04d.jpg', '-c:v', 'libx264', '-crf', '17', '-pix_fmt', 'yuv420p', '-r', str(FPS), p], check=True)
+        subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-framerate', str(FPS // step), '-i', f'{work}/s{i:02d}/%04d.jpg', '-c:v', 'libx264', '-crf', '24' if draft else '17', '-preset', 'veryfast' if draft else 'medium', '-pix_fmt', 'yuv420p', '-r', str(FPS // step), p], check=True)
         files.append(p)
     with open(f'{work}/list.txt', 'w') as fh: fh.write(''.join(f"file '{os.path.abspath(p)}'\n" for p in files))
     subprocess.run(['ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', f'{work}/list.txt', '-c', 'copy', out], check=True)
-    print('bitti', out, len(jobs) / FPS, 'sn')
+    print('bitti', out, len(jobs) * step / FPS, 'sn', '(taslak)' if draft else '')
 
 
 if __name__ == '__main__':
@@ -210,4 +266,5 @@ if __name__ == '__main__':
     cmd, slug = sys.argv[1], sys.argv[2]
     if cmd == 'contact': contact(scenes.SCENES[slug], sys.argv[3], scenes.TITLES.get(slug, slug))
     elif cmd == 'render': render(slug, sys.argv[3], sys.argv[4])
+    elif cmd == 'draft': render(slug, sys.argv[3], sys.argv[4], draft=True)
     elif cmd == 'f': frame(scenes.SCENES[slug], int(sys.argv[3]), f=int(sys.argv[4])).save(sys.argv[5])

@@ -267,8 +267,22 @@ def svg(body, w, h, bg=None, defs=''):
     return f'<svg xmlns="http://www.w3.org/2000/svg" width="{w}" height="{h}" viewBox="0 0 {w} {h}"><defs>{defs}</defs>{r}{body}</svg>'
 
 
+try:
+    import resvg_py
+except Exception:        # resvg yoksa librsvg ile devam
+    resvg_py = None
+try:
+    import cv2
+except Exception:
+    cv2 = None
+
+
 def raster(svg_text, w, h):
-    """SVG'yi librsvg ile (rsvg-convert'in kullandığı kitaplık) RGBA resme çevirir. SVG'nin kendi boyutu w×h olmalı."""
+    """SVG'yi RGBA resme çevirir. resvg kuruluysa onu kullanır (librsvg'den ~2 kat hızlı); yazı ya da süzgeç içeren
+    SVG'lerde ve resvg yokken librsvg'ye (rsvg-convert'in kitaplığı) döner. SVG'nin kendi boyutu w×h olmalı."""
+    if resvg_py is not None and '<text' not in svg_text and 'filter=' not in svg_text:
+        import io
+        return Image.open(io.BytesIO(bytes(resvg_py.svg_to_bytes(svg_string=svg_text, skip_system_fonts=True)))).convert('RGBA')
     import gi
     gi.require_version('Rsvg', '2.0')
     from gi.repository import Rsvg
@@ -282,21 +296,50 @@ def raster(svg_text, w, h):
 _noise = {}
 
 
-def finish(img, frame=0, grain=4.0, seed=7):
-    """Eski çizgi film cilası: yumuşak mürekkep, soluk kenar, benekli dolgu, kayık renk baskısı, sıcak ton, kumlanma."""
-    im = img.convert('RGB')
-    w, h = im.size
-    im = im.filter(ImageFilter.GaussianBlur(0.8))                       # mürekkebi ~1 px yumuşat
-    im = im.filter(ImageFilter.UnsharpMask(radius=5, percent=60, threshold=0))   # çizginin çevresinde soluk kenar
-    a = np.asarray(im).astype(np.float32)
+def _maps(w, h, seed):
     key = (w, h, seed)
     if key not in _noise:
         rs = np.random.RandomState(seed)
         low = [np.asarray(Image.fromarray((rs.rand(h // 90 + 2, w // 90 + 2) * 255).astype(np.uint8)).resize((w, h), Image.BICUBIC)).astype(np.float32) / 255 - 0.5 for _ in range(2)]
         yy, xx = np.mgrid[0:h, 0:w]
         vig = 1 - 0.20 * (((xx - w / 2) / (w / 2)) ** 2 + ((yy - h / 2) / (h / 2)) ** 2) ** 1.2
-        _noise[key] = (low, vig.astype(np.float32))
-    low, vig = _noise[key]
+        grain = rs.randn(8, h, w).astype(np.float32)          # sekiz kum karesi; sırayla ve kaydırılarak kullanılır
+        _noise[key] = (low, vig.astype(np.float32), grain)
+    return _noise[key]
+
+
+def finish(img, frame=0, grain=4.0, seed=7):
+    """Eski çizgi film cilası: yumuşak mürekkep, soluk kenar, benekli dolgu, kayık renk baskısı, sıcak ton, kumlanma.
+    OpenCV kuruluysa onunla (birkaç kat hızlı), değilse Pillow ile yapılır; sonuç aynı görünümdedir."""
+    if cv2 is None: return _finish_pil(img, frame, grain, seed)
+    a = np.asarray(img.convert('RGB')).astype(np.float32)
+    h, w = a.shape[:2]
+    low, vig, gr = _maps(w, h, seed)
+    a = cv2.GaussianBlur(a, (0, 0), 0.8)                                   # mürekkebi ~1 px yumuşat
+    a = a + 0.6 * (a - cv2.GaussianBlur(a, (0, 0), 5))                     # keskinleştirme: çizginin çevresinde soluk kenar
+    k = 0.5 + 0.5 * math.sin(frame * 0.05)
+    a *= (1 + 0.07 * (low[0] * k + low[1] * (1 - k)))[:, :, None]          # yavaşça değişen benek
+    ycc = cv2.cvtColor(np.clip(a, 0, 255), cv2.COLOR_RGB2YCrCb)
+    y = ycc[:, :, 0] + np.roll(gr[frame % 8], (frame * 37) % h, 0) * grain  # kum yalnızca parlaklıkta
+    cr = np.roll(cv2.GaussianBlur(ycc[:, :, 1], (0, 0), 2.2), -2, 1)        # renk kanalları daha bulanık ve 2 px kayık
+    cb = np.roll(cv2.GaussianBlur(ycc[:, :, 2], (0, 0), 2.2), 2, 1)
+    a = cv2.cvtColor(np.dstack([np.clip(y, 0, 255), cr, cb]), cv2.COLOR_YCrCb2RGB)
+    small = cv2.resize(a, (w // 4, h // 4), interpolation=cv2.INTER_AREA)
+    glow = cv2.resize(cv2.GaussianBlur(small, (0, 0), max(6, w // 110) / 4), (w, h), interpolation=cv2.INTER_LINEAR)
+    a = 255 - (255 - a) * (255 - glow * 0.16) / 255                         # hafif parlama
+    a *= np.array([1.03, 1.0, 0.93], np.float32)                           # sıcak ton
+    lift = np.array([40, 24, 17], np.float32)                              # siyahlar koyu kahveye kalkar
+    a = (lift + a * (255 - lift) / 255) * vig[:, :, None]
+    return Image.fromarray(np.clip(a, 0, 255).astype(np.uint8), 'RGB')
+
+
+def _finish_pil(img, frame=0, grain=4.0, seed=7):
+    im = img.convert('RGB')
+    w, h = im.size
+    im = im.filter(ImageFilter.GaussianBlur(0.8))                       # mürekkebi ~1 px yumuşat
+    im = im.filter(ImageFilter.UnsharpMask(radius=5, percent=60, threshold=0))   # çizginin çevresinde soluk kenar
+    a = np.asarray(im).astype(np.float32)
+    low, vig, _ = _maps(w, h, seed)
     k = 0.5 + 0.5 * math.sin(frame * 0.05)                                 # benek yavaşça değişir
     a *= (1 + 0.07 * (low[0] * k + low[1] * (1 - k)))[:, :, None]
     ycc = np.asarray(Image.fromarray(a.clip(0, 255).astype(np.uint8)).convert('YCbCr')).astype(np.float32)
