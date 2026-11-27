@@ -3,7 +3,8 @@ import math
 from ..kit import *
 from .cast import COBALT, SKIN, SKIN_L, SKIN_D, PALE, GOLD, RED
 
-NIGHT = '#19246b'     # gök: mavinin koyu tonu
+from .. import palette as _pal
+NIGHT = _pal.get()['NIGHT']     # gök: mavinin koyu tonu
 W, H = 1500, 1920     # kamera kaysın diye sahne kareden geniştir (kare 1080×1920)
 
 

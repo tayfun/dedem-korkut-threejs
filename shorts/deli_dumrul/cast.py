@@ -3,9 +3,11 @@ import math
 from ..kit import *
 
 # Kilitli palet: bir mavi, bütün kadro için tek ten, bir soluk, iki vurgu.
-COBALT, SKIN, PALE, GOLD, RED = '#2a3fa3', '#ee6f58', '#e7dcf2', '#e3a72c', '#b3231c'
-SKIN_D, SKIN_L = '#c0473f', '#f89e84'      # gölgede koyu ten, ışıkta açık ten
-COAT, LEATHER = '#23130f', '#8a4b2c'       # Dumrul'un kara deri kaftanı (mürekkebin açığı) ve kayış kahvesi
+from .. import palette as _pal
+_p = _pal.get()                             # renkler shorts/palette.py içinde, hikâyeye göre
+COBALT, SKIN, PALE, GOLD, RED = _p['COBALT'], _p['SKIN'], _p['PALE'], _p['GOLD'], _p['RED']
+SKIN_D, SKIN_L = _p['SKIN_D'], _p['SKIN_L']      # gölgede koyu ten, ışıkta açık ten
+COAT, LEATHER = _p['COAT'], _p['LEATHER']       # kara deri (mürekkebin açığı) ve kayış kahvesi
 
 SWAY = 0.0   # sarkan parçaların (kanat, sakal, örgü, kuyruk) gövdenin ardından savrulma açısı; motor her oyuncu için ayarlar
 

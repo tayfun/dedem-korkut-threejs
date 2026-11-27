@@ -6,11 +6,12 @@ from . import sets as S
 from .cast import strap
 from ..kit import _scatter
 
-DAY = '#b7c4f0'       # gündüz göğü: mavinin açığı
+from .. import palette as _pal
+DAY = _pal.get()['DAY']       # gündüz göğü: mavinin açığı
 W, H = 1500, 1920
 
 
-EARTH, EARTH_D = '#b0683a', '#7a4426'   # toprak ve koyusu (yer, köprünün taşından ayrışsın diye)
+EARTH, EARTH_D = _pal.get()['EARTH'], _pal.get()['EARTH_D']   # toprak ve koyusu (yer, köprünün taşından ayrışsın diye)
 
 
 def cloud(cx, cy, k, name, col=PALE, lit=None, shade=COBALT):
