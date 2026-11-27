@@ -118,7 +118,15 @@ def steppe_night():
     s = S.sky() + S.back()
     s += fill([(-900, 1210), (W + 900, 1196), (W + 900, H + 900), (-900, H + 900)], COBALT, 1.5, smooth=False)
     s += fill([(300, 1500), (700, 1300), (1300, 1280), (1700, 1420), (1700, 1700), (900, 1820), (300, 1760)], SKIN, 1.4, smooth=False) + fill([(700, 1500), (1100, 1400), (1400, 1460), (1300, 1640), (860, 1700)], SKIN_L, 1.2, smooth=False)
-    s += ink([(210, 1300), (200, 1000), (230, 820)], 26, col=INK, taper=(0.02, 0.4), wob=1.2, press=0.2) + ''.join(ink([(214, 1040 - k * 60), (214 + (-1) ** k * (90 + k * 20), 960 - k * 70)], 9, col=INK, taper=(0.05, 0.8), wob=1.0, smooth=False) for k in range(4))
+    # ulu ağaç: kalın gövde, dallar, geniş gölgeli taç; aya bakan yanı somon
+    s += ink([(330, 1330), (322, 1100), (340, 900)], 54, col=INK, taper=(0.0, 0.3), wob=1.4, press=0.15) + ink([(300, 1340), (250, 1356)], 16, col=INK, taper=(0, 0.8), wob=0.6, smooth=False) + ink([(356, 1340), (410, 1352)], 16, col=INK, taper=(0, 0.8), wob=0.6, smooth=False)
+    s += ''.join(ink([(332, 1080 - k * 50), (332 + (-1) ** k * (130 + k * 26), 960 - k * 74)], 16, col=INK, taper=(0.02, 0.7), wob=1.0, smooth=False) for k in range(4))
+    for cx, cy, r in ((330, 660, 220), (150, 780, 150), (520, 770, 160), (240, 560, 150), (440, 560, 150), (330, 860, 150)):
+        s += fill(ellipse(cx, cy, r, r * 0.82, 11, 0.1), S.NIGHT, 2.0) + ink(ellipse(cx, cy, r, r * 0.82, 11, 0.1), 3.0, closed=True, wob=1.2, press=0.5)
+    for cx, cy, r in ((440, 540, 120), (540, 740, 120), (360, 640, 130)):
+        s += fill([(cx + r * 0.2, cy - r * 0.75), (cx + r * 0.8, cy - r * 0.3), (cx + r * 0.9, cy + r * 0.2), (cx + r * 0.5, cy - r * 0.1)], SKIN_L, 1.5, op=0.9)
+    s += fur([(60, 480), (640, 480), (640, 930), (60, 930)], 9, 34, 12, 0.7, 2.2).replace(f'fill="{INK}"', f'fill="{COBALT}"')
+    s += fill([(120, 1340), (560, 1330), (700, 1420), (200, 1440)], S.NIGHT, 1.2, smooth=False, op=0.6)                 # ağacın gölgesi
     s += ticks([(-200, 1240), (W + 200, 1240), (W + 200, H), (-200, H)], 120, (5, 11), 1.57, 0.5, 2.0)
     for x, y in ((520, 1640), (1180, 1560), (90, 1500)): s += blob(ellipse(x, y, 40, 22, 7, 0.2), COBALT, 2.8) + fill(ellipse(x + 8, y - 6, 20, 8, 6), SKIN_L, 0.6, op=0.8)
     return s

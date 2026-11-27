@@ -9,7 +9,7 @@ TITLES = {'kopru': '1. Köprü', 'ovunme': '2. Övünme', 'oba': '3. Oba', 'soru
 
 
 # ----------------------------------------------------------------------------- ekran uzayı çizimleri (eşya çekimleri)
-def fx_coins(n=9, big=False, palm=True):
+def fx_coins(n=9, big=False, palm=True, small=False):
     """Akçeler: avuç açıksa içine birikir, değilse karenin önünden yağar."""
     def fx(u):
         s = at(C.hand(True, 'open', True, 1), 560, 1180, 4.6, 196) if palm else ''
@@ -19,7 +19,7 @@ def fx_coins(n=9, big=False, palm=True):
             k = min(1.0, max(0.0, (u - t0) / 0.18))
             if k <= 0: continue
             y = lerp(-80, (1010 + dy * 0.8) if palm else 2100, ease(k) if palm else k) - (math.sin(k * 3.14) * 40 if k < 1 and palm else 0)
-            s += K.coin(540 + dx * (0.7 if palm else 2.4), y, 44 if big else 36)
+            s += K.coin(540 + dx * (0.7 if palm else 2.4), y, 44 if big else 24 if small else 36)
         return s
     return fx
 
@@ -81,7 +81,7 @@ SCENES['kopru'] = [
          a=[('dumrul', dict(D, e='smug', armR=-20), dict(armR=-96, hr=8), 0.2)]),
     dict(n='İkili: bezirgân köprüde', c='Geçenden', set='bridge', cam=[(560, 1020, 1.6), (620, 1000, 1.8)],
          a=[('dumrul', dict(D, x=800, y=826, e='smug', armL=10), dict(armL=74, hr=-5), 0.3), ('trav', dict(x=300, y=1010, s=0.42, e='fear', walk=True), dict(x=520, y=948, glide=True), 0.0)]),
-    dict(n='Eşya: otuz üç akçe', c='otuz üç akçe alır,', set='bridge', cam=[(700, 1000, 2.2), (720, 1000, 2.3)], blur=True, a=[], fx=fx_coins(11)),
+    dict(n='Eşya: otuz üç akçe', c='otuz üç akçe alır,', set='bridge', cam=[(700, 1000, 2.2), (720, 1000, 2.3)], blur=True, a=[], fx=fx_coins(33, small=True)),
     dict(n='Tepki: çayın içinden kaçan', c='geçmeyenden', set='bridge', cam=[(640, 1300, 1.35), (800, 1320, 1.5)],
          a=[('dumrul', dict(D, e='neutral'), dict(e='anger', armL=44, hr=10), 0.35), ('trav', dict(x=420, y=1420, s=0.36, e='fear', walk=True), dict(x=900, y=1400, glide=True), 0.0)]),
     dict(n='Yakın: döve döve', c='döve döve', set='bridge', cam=[(760, 1330, 1.8), (760, 1330, 2.05)], punch=True, still=0.5,
@@ -113,9 +113,9 @@ SCENES['oba'] = [
     dict(n='Geniş: oba', c='Bir gün köprüsünün yamacına|bir bölük oba konmuştu.', set='oba', cam=[(750, 1080, 1.0), (750, 1160, 1.2)],
          a=[('mourner0', dict(x=420, y=1330, s=0.42, e='neutral', walk=True), dict(x=560, glide=True), 0.0), ('extra1', dict(x=1080, y=1340, s=0.44)), ('boy0', dict(x=880, y=1440, s=0.5))]),
     dict(n='Yakın: hasta yiğit', c='O obada iyi, güzel|bir yiğit hastalandı;', set='oba', cam=[(560, 1640, 1.8), (640, 1650, 2.05)],
-         a=[DEAD, ('mourner1', dict(M[1], x=820, e='neutral'), dict(e='fear'), 0.5)]),
+         a=[('dead', dict(DEAD[1], sick=True)), ('mourner1', dict(M[1], x=820, e='neutral'), dict(e='fear'), 0.5)]),
     dict(n='Geniş: ışık söner', c='Allah’ın buyruğuyla öldü.', set='oba', cam=[(760, 1560, 1.5), (760, 1580, 1.6)],
-         a=[DEAD, ('mourner1', dict(M[1], x=820, e='fear'), dict(e='shock'), 0.4)], fx=fx_fade_beam()),
+         a=[('dead', dict(DEAD[1], sick=True), dict(sick=False), 0.55), ('mourner1', dict(M[1], x=820, e='fear'), dict(e='shock'), 0.6)], fx=fx_fade_beam()),
     dict(n='Yakın: “oğul”', c='Kimi “oğul” diye,', set='oba', cam=[(480, 1420, 2.2), (480, 1410, 2.5)], punch=True, blur=True,
          a=[('mourner0', dict(M[0], e='grief', shake=1))]),
     dict(n='Yakın: “kardeş”', c='kimi “kardeş” diye ağladı;', set='oba', cam=[(1040, 1420, 2.2), (1040, 1410, 2.5)], punch=True, blur=True,
@@ -244,8 +244,8 @@ def both(*fns):
 
 
 FD = dict(x=880, y=1215, s=0.6)                 # Dumrul sofrada
-LIE = dict(x=560, y=1600, s=0.5, rot=-90, z=1700)   # Dumrul sırtüstü yerde; başı solda
-AZC = dict(x=700, y=1280, s=0.34, z=1800)       # Azrail göğsünün üstünde
+LIE = dict(x=560, y=1400, s=0.5, rot=-90, z=1700)   # Dumrul sırtüstü yerde; başı solda
+AZC = dict(x=700, y=1080, s=0.34, z=1800)       # Azrail göğsünün üstünde
 CROWD = [('extra1', dict(x=620, y=1340, s=0.62, robe=C.GOLD)), ('extra0', dict(x=1180, y=1420, s=0.66, robe=C.COBALT, flip=True)), ('extra2', dict(x=110, y=1668, s=0.72)), ('extra2', dict(x=1390, y=1330, s=0.56, robe=C.RED, flip=True))]
 
 SCENES['at'] = [
@@ -266,38 +266,38 @@ SCENES['at'] = [
          a=[('rider', dict(x=900, y=1400, s=0.5, e='neutral', flip=True), dict(spooked=True, e='shock'), 0.2), ('azrail', dict(x=1330, y=1500, s=0.5, e='wrath', spread=0.4), dict(y=1160, spread=1.4, armL=40, armR=-40), 0.1)]),
     dict(n='Geniş: at şaha kalkar', c='At ürktü,', set='steppe', cam=[(900, 1200, 1.3), (880, 1180, 1.45)], punch=True,
          a=[('rider', dict(x=900, y=1400, s=0.5, e='shock', flip=True, spooked=True, armL=120, armR=-120), dict(rot=-26, y=1360), 0.05), ('azrail', dict(x=1330, y=1160, s=0.5, e='wrath', spread=1.4, armL=40, armR=-40))]),
-    dict(n='Geniş: yere çarpar', c='Dumrul’u kaldırıp|yere vurdu.', set='steppe', cam=[(700, 1300, 1.3), (640, 1420, 1.5)],
+    dict(n='Geniş: yere çarpar', c='Dumrul’u kaldırıp|yere vurdu.', set='steppe', cam=[(700, 1180, 1.3), (640, 1250, 1.5)],
          a=[('horse', dict(x=1080, y=1400, s=0.5, flip=True, spooked=True, rot=-14, gallop=True), dict(x=1500, glide=True), 0.2),
             ('dumrul', dict(x=860, y=1000, s=0.5, e='shock', rot=-30, armL=120, armR=-120, z=1700), dict(LIE, glide=True), 0.0)], fx=fx_impact(470, 1250), still=0.8),
-    dict(n='Yakın: sersemlemiş', c='Kara başı bunaldı;', set='steppe', cam=[(460, 1560, 2.4), (470, 1560, 2.6)], blur=True,
-         a=[('dumrul', dict(LIE, e='shock', shake=0.6))], fx=fx_stars(430, 800)),
-    dict(n='Geniş: Azrail göğsüne konar', c='ak göğsünün üstüne|Azrail basıp kondu.', set='steppe', cam=[(700, 1400, 1.5), (700, 1420, 1.7)], hold=0.8,
-         a=[('dumrul', dict(LIE, e='shock', armL=60, armR=-60)), ('azrail', dict(AZC, y=700, e='wrath', spread=1.4), dict(y=1280, spread=1.0), 0.05)]),
+    dict(n='Yakın: sersemlemiş', c='Kara başı bunaldı;', set='steppe', cam=[(500, 1320, 1.9), (500, 1320, 2.1)], blur=True,
+         a=[('dumrul', dict(LIE, e='shock', shake=0.6))], fx=fx_stars(470, 760)),
+    dict(n='Geniş: Azrail göğsüne konar', c='ak göğsünün üstüne|Azrail basıp kondu.', set='steppe', cam=[(700, 1200, 1.5), (700, 1220, 1.7)], hold=0.8,
+         a=[('dumrul', dict(LIE, e='shock', armL=60, armR=-60)), ('azrail', dict(AZC, y=500, e='wrath', spread=1.4), dict(y=1080, spread=1.0), 0.05)]),
 ]
 
 SCENES['yalvaris'] = [
-    dict(n='Yakın: “aman!”', c='“Bre Azrail, aman!', set='steppe', cam=[(460, 1560, 2.3), (470, 1556, 2.6)], punch=True, blur=True,
+    dict(n='Yakın: “aman!”', c='“Bre Azrail, aman!', set='steppe', cam=[(500, 1320, 1.9), (500, 1320, 2.2)], punch=True, blur=True,
          a=[('dumrul', dict(LIE, e='shock', shake=1))]),
-    dict(n='İkili: göğsünde Azrail', c='Ben seni böyle bilmezdim,', set='steppe', cam=[(680, 1400, 1.6), (700, 1390, 1.75)],
+    dict(n='İkili: göğsünde Azrail', c='Ben seni böyle bilmezdim,', set='steppe', cam=[(680, 1200, 1.6), (700, 1190, 1.75)],
          a=[('dumrul', dict(LIE, e='shock', armL=70, armR=-70)), ('azrail', dict(AZC, e='stern'))]),
-    dict(n='Yakın: Azrail, kıpırtısız', c='uğrulayın can aldığını|duymazdım.', set='steppe', cam=[(700, 1230, 3.2), (700, 1226, 3.5)], blur=True,
+    dict(n='Yakın: Azrail, kıpırtısız', c='uğrulayın can aldığını|duymazdım.', set='steppe', cam=[(700, 1030, 3.2), (700, 1026, 3.5)], blur=True,
          a=[('azrail', dict(AZC, e='stern'))]),
     dict(n='Geniş: dağlar, bağlar', c='Bizim dağlarımızın bağları,', set='bridge', cam=[(300, 860, 1.6), (1100, 840, 1.6)], a=[], fx=fx_big(grapes, 820, 1040, 1.6, 8, 8)),
     dict(n='Eşya: kara salkım', c='o bağların|kara salkımlı üzümü,', set='bridge', cam=[(700, 860, 1.8), (720, 850, 1.9)], blur=True, a=[], fx=fx_big(grapes, 540, 900, 3.6, 0, 10)),
     dict(n='Eşya: al şarap', c='o üzümün|al şarabı olur.', set='feast', cam=[(700, 1200, 1.8), (700, 1200, 1.9)], blur=True, nofore=True, a=[], fx=fx_pour()),
-    dict(n='Yakın: sarhoş bahanesi', c='Şaraplıydım,|ne söylediğimi bilmedim.', set='steppe', cam=[(460, 1560, 2.3), (480, 1556, 2.5)], blur=True,
-         a=[('dumrul', dict(LIE, e='smug', shake=0.5))], fx=fx_stars(430, 800, 3, 200)),
-    dict(n='İkili: iki eliyle yalvarır', c='Beyliğe usanmadım,|yiğitliğe doymadım;', set='steppe', cam=[(680, 1420, 1.6), (680, 1410, 1.75)],
+    dict(n='Yakın: sarhoş bahanesi', c='Şaraplıydım,|ne söylediğimi bilmedim.', set='steppe', cam=[(500, 1320, 1.9), (510, 1320, 2.1)], blur=True,
+         a=[('dumrul', dict(LIE, e='smug', shake=0.5))], fx=fx_stars(470, 760, 3, 200)),
+    dict(n='İkili: iki eliyle yalvarır', c='Beyliğe usanmadım,|yiğitliğe doymadım;', set='steppe', cam=[(680, 1220, 1.6), (680, 1210, 1.75)],
          a=[('dumrul', dict(LIE, e='shock', armL=40, armR=-40), dict(armL=130, armR=-130), 0.15), ('azrail', dict(AZC, e='stern'))]),
-    dict(n='Çok yakın: korku', c='canımı alma!”', set='steppe', cam=[(440, 1568, 3.6), (440, 1566, 4.2)], punch=True, blur=True,
+    dict(n='Çok yakın: korku', c='canımı alma!”', set='steppe', cam=[(470, 1350, 3.0), (470, 1350, 3.5)], punch=True, blur=True,
          a=[('dumrul', dict(LIE, e='shock', shake=1))]),
-    dict(n='Yakın: Azrail konuşur', c='Azrail dedi:|“Bre deli kavat,', set='steppe', cam=[(700, 1230, 3.0), (700, 1226, 3.3)], blur=True,
+    dict(n='Yakın: Azrail konuşur', c='Azrail dedi:|“Bre deli kavat,', set='steppe', cam=[(700, 1030, 3.0), (700, 1026, 3.3)], blur=True,
          a=[('azrail', dict(AZC, e='stern'), dict(e='speak'), 0.3)]),
-    dict(n='Geniş: göğü gösterir', c='bana ne yalvarırsın?|Allah’a yalvar.', set='steppe', cam=[(700, 1380, 1.5), (700, 1180, 1.5)],
+    dict(n='Geniş: göğü gösterir', c='bana ne yalvarırsın?|Allah’a yalvar.', set='steppe', cam=[(700, 1180, 1.5), (700, 980, 1.5)],
          a=[('dumrul', dict(LIE, e='shock')), ('azrail', dict(AZC, e='speak', armR=-10), dict(armR=-168), 0.15)], fx=fx_rays(0.35)),
-    dict(n='Yakın: boş eller', c='Benim elimde ne var;', set='steppe', cam=[(700, 1300, 2.4), (700, 1296, 2.6)], blur=True,
+    dict(n='Yakın: boş eller', c='Benim elimde ne var;', set='steppe', cam=[(700, 1100, 2.4), (700, 1096, 2.6)], blur=True,
          a=[('azrail', dict(AZC, e='neutral', armL=10, armR=-10), dict(armL=62, armR=-62), 0.15)]),
-    dict(n='Geniş: buyruk kulu', c='ben de bir|yumuş oğlanıyım.”', set='steppe', cam=[(700, 1400, 1.6), (700, 1340, 1.4)], hold=0.6,
+    dict(n='Geniş: buyruk kulu', c='ben de bir|yumuş oğlanıyım.”', set='steppe', cam=[(700, 1200, 1.6), (700, 1140, 1.4)], hold=0.6,
          a=[('dumrul', dict(LIE, e='shock')), ('azrail', dict(AZC, e='neutral', armL=62, armR=-62), dict(hr=16, spread=0.6), 0.2)], fx=fx_rays(0.4)),
 ]
 
@@ -401,7 +401,7 @@ SCENES['veda'] = [
 
 SCENES['es'] = [
     dict(n='Yakın: “ne dersin?”', c='Kadın dedi:|“Ne dersin, ne söylersin?', set='inside', cam=[(920, 1180, 2.3), (920, 1176, 2.6)], punch=True, blur=True,
-         a=[('wife', dict(WI, e='grief'), dict(e='anger'), 0.3)]),
+         a=[('wife', dict(WI, e='grief'), dict(e='scold'), 0.3)]),
     dict(n='İkili: elini uzatır', c='Göz açıp gördüğüm,|gönül verip sevdiğim|koç yiğidim!', set='inside', cam=[(760, 1220, 1.6), (760, 1216, 1.75)],
          a=[('dumrul', dict(DI, x=600, e='neutral', hr=10)), ('wife', dict(WI, e='grief', armL=12), dict(armL=96, e='joy'), 0.2)]),
     dict(n='Geniş: dağlar', c='Senden sonra kara dağlarını|ben neyleyim?', set='steppe', cam=[(1100, 880, 1.5), (500, 900, 1.5)], a=[]),
@@ -410,9 +410,9 @@ SCENES['es'] = [
     dict(n='Tepki: sırtını dönen ana baba', c='Senin o muhannet|anan baban', set='inside', cam=[(700, 1260, 1.4), (720, 1260, 1.5)],
          a=[('father', dict(FA, x=480, e='refuse', flip=True)), ('mother', dict(MO, x=900, e='refuse', hr=14))]),
     dict(n='Yakın: öfke', c='bir canda ne var ki|sana kıyamamışlar?', set='inside', cam=[(920, 1180, 2.5), (920, 1176, 2.8)], blur=True,
-         a=[('wife', dict(WI, e='anger', shake=0.6))]),
+         a=[('wife', dict(WI, e='scold', shake=0.6))]),
     dict(n='Geniş: yeri, göğü gösterir', c='Yer tanık olsun,|gök tanık olsun,', set='oba', cam=[(760, 1500, 1.3), (760, 1000, 1.3)],
-         a=[('wife', dict(x=760, y=1300, s=0.5, e='anger', armR=-12), dict(armR=-170, armL=30), 0.4)]),
+         a=[('wife', dict(x=760, y=1300, s=0.5, e='scold', armR=-12), dict(armR=-170, armL=30), 0.4)]),
     dict(n='Yakın: ışık altında', c='kadir Tanrı|tanık olsun:', set='oba', cam=[(760, 1230, 2.0), (760, 1220, 2.2)], blur=True,
          a=[('wife', dict(x=760, y=1300, s=0.5, e='grief', armL=150, armR=-150))], fx=fx_rays(0.5)),
     dict(n='İkili: canını sunar', c='benim canım|senin canına|kurban olsun!”', set='inside', cam=[(760, 1240, 1.5), (760, 1230, 1.65)], punch=True, hold=0.8,
@@ -467,7 +467,7 @@ SCENES['dede'] = [
     dict(n='Yakın: dua', c='Sonra dua etti:', set='feast', cam=[(640, 1130, 2.0), (640, 1100, 2.2)], blur=True, nofore=True,
          a=[('dede', dict(DK, e='neutral', hr=-10))], fx=fx_rays(0.35)),
     dict(n='Geniş: kara dağlar', c='“Yerli kara dağların|yıkılmasın.', set='steppe', cam=[(500, 900, 1.5), (1100, 880, 1.5)], a=[]),
-    dict(n='Eşya: ulu ağaç', c='Gölgeli ulu ağacın|kesilmesin.', set='steppe', cam=[(260, 1100, 1.6), (260, 980, 1.8)], a=[]),
+    dict(n='Eşya: ulu ağaç', c='Gölgeli ulu ağacın|kesilmesin.', set='steppe', cam=[(330, 980, 1.25), (330, 880, 1.45)], a=[]),
     dict(n='Eşya: coşkun su', c='Coşkun akan güzel suyun|kurumasın.', set='river', cam=[(560, 1500, 1.4), (940, 1500, 1.5)], a=[]),
     dict(n='Yakın: son söz', c='Kadir Tanrı seni|namerde muhtaç etmesin.”', set='feast', cam=[(640, 1130, 2.0), (640, 1140, 1.7)], nofore=True, hold=1.5,
          a=[('dede', dict(DK, e='joy'))], fx=fx_rays(0.3)),

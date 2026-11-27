@@ -20,8 +20,11 @@ def _rider(p, e):
     """Atlı Dumrul: at sola bakar; binici belden yukarı görünür."""
     h = K.horse(p.get('spooked', False))
     d = '<clipPath id="rc"><rect x="-500" y="-700" width="1000" height="1040"/></clipPath><g clip-path="url(#rc)">' + C.dumrul(e, p.get('armL', 30), p.get('armR', -30), p.get('hr', 0), p.get('poseR', 'open'), p.get('sword', False)) + '</g>'
-    boot = blob([(-40, 20), (20, 20), (30, 120), (70, 140), (66, 170), (-40, 170)], C.LEATHER, 3.0)
-    return group(d, 0, -330, p.get('lean', 0), 0.62, None, 0, 330) + h + group(boot, -10, -20)
+    reseed('rider-leg')
+    skirt = blob([(-104, -150), (96, -150), (124, -70), (70, -6), (-64, -14), (-124, -76)], C.COAT, 3.4) + ''.join(C.stud(x, -30 + abs(x) * 0.1, 3.4) for x in range(-90, 100, 36))   # atın sırtına yayılan etek
+    thigh = blob([(-10, -120), (60, -96), (10, 10), (-70, 40), (-110, 6), (-60, -70)], C.COAT, 3.2)                      # öne uzanan uyluk
+    boot = blob([(-112, 0), (-52, 18), (-50, 120), (-64, 150), (-150, 156), (-164, 132), (-108, 116)], C.LEATHER, 3.2) + ink([(-110, 40), (-54, 52)], 2.0, wob=0.3, smooth=False) + C.stud(-84, 30, 3.4)
+    return h + group(d, 0, -330, p.get('lean', 0), 0.62, None, 0, 330) + skirt + thigh + boot
 
 
 KINDS = {
@@ -34,7 +37,7 @@ KINDS = {
     'boy0': (0, lambda p, e: K.boy(0, e)), 'boy1': (0, lambda p, e: K.boy(1, e)),
     'mourner0': (250, lambda p, e: K.mourner(0, e)), 'mourner1': (250, lambda p, e: K.mourner(1, e)), 'mourner2': (250, lambda p, e: K.mourner(2, e)),
     'trav': (430, lambda p, e: K.traveller(e)),
-    'dead': (30, lambda p, e: K.dead_youth()),
+    'dead': (30, lambda p, e: K.dead_youth(p.get('sick', False))),
     'horse': (330, lambda p, e: K.horse(p.get('spooked', False))),
     'rider': (330, _rider),
     'falcon': (0, lambda p, e: K.falcon()),

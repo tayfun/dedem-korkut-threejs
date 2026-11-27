@@ -12,6 +12,7 @@ EX = {
     'anger':   dict(b=0.6, by=8, open=0.7, m='snarl'),
     'joy':     dict(b=-0.12, by=-5, open=0.5, m='smile'),
     'refuse':  dict(b=-0.35, by=-7, open=0.0, m='purse'),
+    'scold':   dict(b=0.5, by=6, open=0.85, m='frown'),            # çatık kaş, sıkılmış ağız: öfke ama diş göstermeden
     'shock':   dict(b=-0.3, by=-18, open=1.0, m='gape', shock=True),
 }
 DROP = {'o': 0.07, 'gape': 0.2, 'snarl': 0.05, 'grin': 0.04}
@@ -257,16 +258,30 @@ def mourner(kind=0, expr='grief'):
     s = robe(96, 132, 250, col, name)
     reseed(name + '-scarf')
     s += blob([(-120, -60), (-96, -170), (0, -200), (96, -170), (120, -60), (128, 60), (0, 96), (-128, 60)], PALE, 3.2)
-    f, d = gface(name, 78, 80, 1.0 + 0.1 * kind, (40 + kind * 8, 18, 0.1 * kind), (0.32, -0.1, 12, 8), (INK, 7), (0.36, 0.46), expr, bags=1, wrinkles=1)
+    f, d = gface(name, [78, 72, 82][kind % 3], [80, 88, 76][kind % 3], [1.0, 0.9, 1.15][kind % 3], ([40, 58, 34][kind % 3], [18, 22, 15][kind % 3], [0.0, 0.5, 0.0][kind % 3]), (0.32, -0.1, 12, 8),
+                 ((INK, 7), (PALE, 9), (INK, 6))[kind % 3], (0.36, 0.46), expr, bags=[1, 3, 0][kind % 3], wrinkles=[1, 3, 0][kind % 3], lash=kind % 3 == 2)
     s += group(f, 0, -78)
     s += blob([(-96, -100), (-80, -160), (0, -180), (80, -160), (96, -100), (60, -136), (0, -146), (-60, -136)], PALE, 2.8)
+    if kind % 3 == 1:    # yaşlı: sivri tepelikli örtü, alnında al bant
+        s += blob([(-60, -168), (0, -250), (60, -168), (0, -150)], PALE, 2.8) + blob([(-84, -128), (0, -150), (84, -128), (80, -110), (0, -130), (-80, -110)], RED if col != RED else COBALT, 2.4)
+    elif kind % 3 == 2:  # genç: örtünün altından iki örgü, altın pullar
+        for sx in (-1, 1):
+            s += ''.join(fill(ellipse(sx * (104 - k * 2), -40 + k * 34, 14, 19, 7, 0.1), INK, 0.5) for k in range(6)) + blob(ellipse(sx * 94, 170, 9, 11, 6), GOLD, 2.0)
+        s += ''.join(blob(ellipse(x, -134 + abs(x) * 0.2, 7, 7, 6), GOLD, 1.8) for x in range(-60, 70, 24))
     for sx in (-1, 1): s += group(sleeve(120, 26, col, name, sx > 0, 0.62, 'open', sx), sx * 90, 30, sx * (-150 + kind * 20))
     return s
 
 
-def dead_youth():
-    """Ölü yiğit: ak kefen altında yatar; yalnızca yüzü ve börkü görünür. Baş solda, (0,0) gövdenin ortası."""
+def dead_youth(sick=False):
+    """Yiğit: hastayken altın yorganın altında, gözü açık ve terli; ölünce ak kefen altında. Baş solda, (0,0) gövdenin ortası."""
     reseed('dead')
+    if sick:
+        bl = [(-250, 0), (-200, -54), (-100, -64), (120, -54), (290, -40), (330, 0), (290, 26), (-240, 26)]
+        s = blob([(-330, 6), (-300, -40), (-220, -44), (-200, 20), (-300, 30)], PALE, 3.0)                                # yastık
+        s += blob(bl, GOLD, 3.4) + fill([(-250, 0), (-240, 26), (290, 26), (330, 0), (200, 6), (-200, 8)], COBALT, 1.0, op=0.3) + ''.join(medallion(x, -22, 15, RED, 1.9) for x in range(-150, 280, 86))
+        f, d = gface('dead', 60, 62, 0.95, (34, 13, 0.0), (0.32, -0.1, 11, 8), (INK, 7), (0.3, 0.5), 'grief', bags=1, wrinkles=0)
+        s += group(f + blob([(-70, -30), (-50, -80), (0, -96), (50, -80), (70, -30), (0, -44)], RED, 2.8), -300, -34, -80, 0.9)
+        return s + ''.join(blob([(x, y), (x + 7, y + 16), (x, y + 24), (x - 7, y + 16)], PALE, 1.8) for x, y in ((-262, -96), (-236, -84)))   # ter
     sh = [(-300, 0), (-240, -50), (-100, -64), (120, -54), (290, -40), (330, 0), (290, 26), (-280, 26)]
     s = blob(sh, PALE, 3.4) + fill([(-300, 0), (-280, 26), (290, 26), (330, 0), (200, 6), (-200, 8)], COBALT, 1.0, op=0.3) + ''.join(ink([(x, -50), (x + 20, 14)], 2.0, wob=0.6) for x in (-160, -60, 40, 150, 240))
     f, d = gface('dead', 60, 62, 0.95, (34, 13, 0.0), (0.32, -0.1, 11, 8), (INK, 7), (0.3, 0.5), 'blink', bags=0, wrinkles=0)
