@@ -5,7 +5,9 @@
 Ses dosyasının yanına <çıktı>.json yazılır: metin, ses, model ve harf harf zamanlama (altyazıyı sese oturtmak için)."""
 import base64, json, os, sys, urllib.request
 
-MODEL = 'eleven_multilingual_v2'
+MODEL = os.environ.get('TTS_MODEL', 'eleven_multilingual_v2')
+if os.environ.get('TTS_SETTINGS'): SETTINGS_OVERRIDE = json.loads(os.environ['TTS_SETTINGS'])
+else: SETTINGS_OVERRIDE = None
 SETTINGS = dict(stability=0.45, similarity_boost=0.8, style=0.35, use_speaker_boost=True)
 
 
@@ -19,7 +21,9 @@ def key():
 
 
 def synth(text, voice, out, model=MODEL, settings=SETTINGS, previous=None):
-    body = dict(text=text, model_id=model, voice_settings=settings)
+    if SETTINGS_OVERRIDE is not None: settings = SETTINGS_OVERRIDE
+    body = dict(text=text, model_id=model)
+    if settings: body['voice_settings'] = settings
     if previous: body['previous_text'] = previous
     req = urllib.request.Request(f'https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps?output_format=mp3_44100_128',
                                  data=json.dumps(body).encode(), headers={'xi-api-key': key(), 'Content-Type': 'application/json'})
