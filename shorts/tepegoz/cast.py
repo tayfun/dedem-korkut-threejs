@@ -409,3 +409,37 @@ def yiginak(k=1.0, cracked=False):
     s += ''.join(fill(ellipse(x * k, y * k, 26 * k, 14 * k, 8, 0.1), PALE, 0.8, op=0.8) for x, y in ((-90, -110), (50, -170), (120, -80))) + ''.join(sparkle(x * k, y * k, 20 * k) for x, y in ((-110, -120), (60, -180), (140, -90), (0, -110), (-40, -20)))
     if cracked: s += fill([(0, -210 * k), (30 * k, -130 * k), (-20 * k, -90 * k), (24 * k, -30 * k), (60 * k, -30 * k), (20 * k, -90 * k), (70 * k, -130 * k), (40 * k, -210 * k)], INK, 0.8, smooth=False)
     return s
+
+
+# ----------------------------------------------------------------------------- bebek Basat, yumurta gibi yarılan yığınak
+def bebek(expr='neutral', ph=0.0):
+    """Emekleyen bebek: yüzü sağa dönük, ak zıbınlı. El ve dizlerinin bastığı yer y=0. ph: emekleme evresi (-1..1)."""
+    reseed('bebek')
+    s = ''
+    for x, d in ((-66, -ph), (64, ph)): s += blob(ellipse(x + d * 18, -36, 25, 40, 9, 0.06), C0.SKIN_D, 2.6)          # uzak kol ve bacak
+    s += blob(ellipse(0, -88, 106, 62, 14, 0.05), PALE, 3.2) + ink([(-70, -50), (-20, -40), (50, -44)], 1.8, wob=0.4, op=0.5)
+    s += blob(ellipse(-96, -96, 40, 44, 10, 0.05), PALE, 3.0)                                                          # bezli kıç
+    for x, d in ((-86, ph), (40, -ph)): s += blob(ellipse(x + d * 18, -32, 27, 42, 9, 0.06), C0.SKIN, 2.8)
+    f, _ = gface('bebek', 86, 82, 0.84, (20, 10, 0.1), (0.3, 0.06, 16, 12), (INK, 5), (0.3, 0.5), expr, bags=0, wrinkles=0)
+    reseed('bebek-hair')
+    tuft = fill([(-84, -40), (-70, -88), (-20, -112), (40, -108), (82, -78), (86, -40), (50, -70), (20, -56), (-10, -74), (-44, -56)], INK, 0.8, smooth=False)
+    tuft += ink([(0, -108), (10, -140), (30, -128)], 5, taper=(0, 0.7), wob=0.3)
+    s += group(f + tuft, 118, -150, 5 * ph, 0.8, None, 0, 60)
+    return s
+
+
+def yumurta(open=0.0):
+    """Yığınak: parıl parıl, yumurta gibi; open 0..1 iki yana yarılır. Taban ortası (0,0)."""
+    reseed('yumurta')
+    arc = [(150 * math.cos(a), -172 + 176 * math.sin(a)) for a in [-math.pi / 2 + math.pi * i / 13 for i in range(14)]]
+    zig = [(0, 4), (20, -60), (-18, -120), (22, -180), (-16, -240), (20, -296), (0, -348)]
+    shine = lambda sx: fill(ellipse(sx * 78, -250, 30, 16, 8, 0.1, -30 * sx), PALE, 0.8, op=0.8) + sparkle(sx * 90, -130, 20) + sparkle(sx * 50, -290, 14)
+    if open < 0.02:
+        whole = arc + [(-x, y) for x, y in reversed(arc)]
+        return fill(whole, C0.SKIN_L, 1.2) + fill([(-140, -110), (0, -80), (140, -110), (120, -20), (0, 4), (-120, -20)], RED, 1.2, op=0.3) + ink(whole, 3.6, closed=True, wob=0.8) + shine(-1) + shine(1)
+    s = ''
+    for sx in (-1, 1):
+        half = [(sx * x, y) for x, y in arc] + zig
+        body = fill(half, C0.SKIN_L, 1.0, smooth=False) + fill([(sx * 140, -110), (sx * 10, -80), (sx * 10, 0), (sx * 120, -20)], RED, 1.0, op=0.3) + ink(half, 3.4, closed=True, wob=0.5, smooth=False) + shine(sx)
+        s += group(body, sx * open * 90, 0, sx * open * 46, 1, None, sx * 120, 0)
+    return s
