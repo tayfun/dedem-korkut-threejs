@@ -16,8 +16,10 @@ g = lambda p, k, d=0: p.get(k, d)
 
 def _kepenek(p, e):
     reseed('kepenek-prop')
-    kep = [(-190, -40), (190, -40), (210, 60), (150, 150), (0, 120), (-150, 150), (-210, 60)]
-    return blob(kep, T.PALE, 4.0, 1.8) + ticks(kep, 40, (6, 12), 1.5, 0.5, 2.0)
+    # boy uzunluğunda keçe kepenek: çobanın sırtındakiyle aynı ölçü (omuz y=-30, etek y=460)
+    kep = [(-196, -30), (196, -30), (208, 30), (196, 250), (176, 450), (70, 470), (0, 452), (-70, 470), (-176, 450), (-196, 250), (-208, 30)]
+    s = blob(kep, T.PALE, 4.0, 1.8) + ticks(kep, 70, (6, 12), 1.5, 0.5, 2.0)
+    return s + dashrow([(-196, -30), (196, -30)], 16, 9, 0.2, 2.0, smooth=False) + ink([(0, -20), (4, 200), (0, 440)], 2.2, wob=0.6, op=0.6)
 
 
 E.KINDS.update({
@@ -145,9 +147,9 @@ SCENES['peri'] = [
     dict(n='Geniş: kepeneğini atar', c='kepeneğini üzerlerine attı,', set='spring', cam=[(760, 1000, 1.15), (780, 1000, 1.2)],
          a=[('coban', dict(SP_C, e='anger', cloak=True, armR=-10), dict(cloak=False, armR=-150), 0.15), ('peri', dict(x=640, y=820, s=0.42, e='joy'), dict(e='fear', y=300, x=520), 0.45),
             ('peri', dict(x=1150, y=840, s=0.4, e='joy', flip=True), dict(e='fear', y=300, x=1300), 0.45), ('peri', dict(x=900, y=780, s=0.46, e='joy'), dict(e='fear', y=1100), 0.5),
-            ('kepenek', dict(x=420, y=1200, s=0.5, z=3000), dict(x=900, y=1000, arc=300), 0.15)]),
+            ('kepenek', dict(x=400, y=1010, s=0.5, z=3000), dict(x=900, y=1080, s=0.42, rot=6, arc=300), 0.15)]),
     dict(n='İkili: birini tutar', c='birini tuttu,|onunla yattı.', set='spring', cam=[(760, 1120, 1.6), (780, 1110, 1.9)],
-         a=[('peri', dict(x=900, y=1250, s=0.46, e='fear', shake=0.8, armL=20, armR=-20, z=2000)), ('kepenek', dict(x=900, y=1215, s=0.4, rot=4, z=2500)),
+         a=[('peri', dict(x=900, y=1250, s=0.46, e='fear', shake=0.8, armL=20, armR=-20, z=2000)), ('kepenek', dict(x=900, y=1240, s=0.4, rot=3, z=2500)),
             ('coban', dict(SP_C, x=640, e='anger', cloak=False, armR=-10, z=3000), dict(armR=-78, x=700), 0.15)]),
     dict(n='Geniş: peri havalanır', c='Peri kanat vurup uçtu:', set='spring', cam=[(800, 1100, 1.3), (820, 880, 1.3)], punch=True,
          a=[('coban', dict(SP_C, x=520, e='neutral', cloak=False)), ('peri', dict(x=860, y=1150, s=0.46, e='anger'), dict(y=720), 0.1)]),

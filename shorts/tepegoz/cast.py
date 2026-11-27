@@ -412,14 +412,34 @@ def yiginak(k=1.0, cracked=False):
 
 
 # ----------------------------------------------------------------------------- bebek Basat, yumurta gibi yarılan yığınak
+def _seg(a, b, w, col, lw=2.8):
+    """İki nokta arasında yuvarlak uçlu uzuv parçası."""
+    L = math.hypot(b[0] - a[0], b[1] - a[1])
+    return blob(ellipse((a[0] + b[0]) / 2, (a[1] + b[1]) / 2, L / 2 + w * 0.6, w, 10, 0.05, math.atan2(b[1] - a[1], b[0] - a[0])), col, lw)
+
+
 def bebek(expr='neutral', ph=0.0):
-    """Emekleyen bebek: yüzü sağa dönük, ak zıbınlı. El ve dizlerinin bastığı yer y=0. ph: emekleme evresi (-1..1)."""
+    """Emekleyen bebek: yüzü sağa dönük, ak zıbınlı. El ve dizlerinin bastığı yer y=0. ph: emekleme evresi (-1..1).
+    Kol omuzdan ele iner; bacak kalçadan dize iner, dizde bükülür, baldır yerde geriye uzanır, ucunda ayak durur."""
     reseed('bebek')
-    s = ''
-    for x, d in ((-66, -ph), (64, ph)): s += blob(ellipse(x + d * 18, -36, 25, 40, 9, 0.06), C0.SKIN_D, 2.6)          # uzak kol ve bacak
-    s += blob(ellipse(0, -88, 106, 62, 14, 0.05), PALE, 3.2) + ink([(-70, -50), (-20, -40), (50, -44)], 1.8, wob=0.4, op=0.5)
-    s += blob(ellipse(-96, -96, 40, 44, 10, 0.05), PALE, 3.0)                                                          # bezli kıç
-    for x, d in ((-86, ph), (40, -ph)): s += blob(ellipse(x + d * 18, -32, 27, 42, 9, 0.06), C0.SKIN, 2.8)
+
+    def arm(d, col, lw):
+        lift = max(0.0, d) * 10                                   # öne uzanan el yerden kalkar
+        sh, el, ha = (58, -84), (66 + d * 14, -46 - lift), (74 + d * 30, -9 - lift)
+        return _seg(sh, el, 15, col, lw) + _seg(el, ha, 13, col, lw) + blob(ellipse(ha[0] + 9, ha[1] + 1, 17, 10, 9, 0.06), col, lw)
+
+    def leg(d, col, lw):
+        lift = max(0.0, d) * 8                                    # öne çekilen diz yerden kalkar
+        hip, kn = (-74, -78), (-44 + d * 26, -16 - lift)
+        ft = (kn[0] - 74, -13 - lift * 0.4)                       # baldır yerde geriye uzanır
+        s = _seg(kn, ft, 14, col, lw)
+        s += blob(ellipse(ft[0] - 8, ft[1] - 15, 12, 21, 9, 0.06, -0.3 - d * 0.2), col, lw)   # ayak: taban yukarı, parmaklar yerde
+        return s + _seg(hip, kn, 20, col, lw) + blob(ellipse(kn[0] + 3, kn[1] + 2, 17, 15, 9, 0.05), col, lw)
+
+    s = leg(-ph, C0.SKIN_D, 2.6) + arm(ph, C0.SKIN_D, 2.6)                                                             # uzak bacak ve kol
+    s += blob(ellipse(0, -90, 100, 54, 14, 0.05, -0.05), PALE, 3.2) + ink([(-70, -54), (-20, -46), (50, -50)], 1.8, wob=0.4, op=0.5)
+    s += blob(ellipse(-92, -94, 40, 42, 10, 0.05), PALE, 3.0)                                                          # bezli kıç
+    s += leg(ph, C0.SKIN, 2.8) + arm(-ph, C0.SKIN, 2.8)
     f, _ = gface('bebek', 86, 82, 0.84, (20, 10, 0.1), (0.3, 0.06, 16, 12), (INK, 5), (0.3, 0.5), expr, bags=0, wrinkles=0)
     reseed('bebek-hair')
     tuft = fill([(-84, -40), (-70, -88), (-20, -112), (40, -108), (82, -78), (86, -40), (50, -70), (20, -56), (-10, -74), (-44, -56)], INK, 0.8, smooth=False)
