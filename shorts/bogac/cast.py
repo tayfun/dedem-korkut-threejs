@@ -191,9 +191,10 @@ def mounted(rider, name, col, seat=250, horse_col=None, dy=0):
     return s + blob([(-64, 30), (-16, 44), (-30, 130), (-96, 140), (-100, 116), (-66, 106)], LEATHER, 3.0)
 
 
-def bull(charge=False, head=True, snort=0.0):
+def bull(charge=False, head=True, snort=0.0, only_head=False):
     """Bayındır Han'ın boğası: yandan, sola bakar; kara, koca hörgüç, ak boynuz, kızıl göz, burnunda halka. Sırtın ortası (0,0); tırnak y=250.
     charge: baş eğik, saldırır. head=False: başı kesilmiş."""
+    if only_head: return _bull_head(snort)
     reseed('bull')
     s = ''
     for x, back in ((-130, True), (180, True), (-190, False), (120, False)):
@@ -206,6 +207,11 @@ def bull(charge=False, head=True, snort=0.0):
     s += ink([(-150, -100), (-140, -20), (-170, 60)], 2.4, col=LEATHER, op=0.9, wob=0.4) + ink([(180, -70), (206, 0), (190, 70)], 2.4, col=LEATHER, op=0.9, wob=0.4)
     if not head:
         return s + blob(ellipse(-268, 0, 34, 70, 10, 0.06), RED, 3.0) + fill(ellipse(-272, 0, 16, 34, 8, 0.08), SKIN_L, 0.5)
+    return s + group(_bull_head(snort), -250, -40, -34 if charge else 0, 1, None, 40, 0)
+
+
+def _bull_head(snort=0.0):
+    """Boğanın başı: boyun kökü (0,0) sağda, burun solda."""
     reseed('bull-head')
     far = blob([(10, -80), (50, -150), (-20, -210), (-90, -214), (-30, -180), (-10, -130), (-30, -76)], PALE, 2.8) + fill([(10, -80), (50, -150), (20, -170), (-4, -84)], COBALT, 0.6, op=0.4)
     skull = [(60, -80), (-30, -100), (-110, -50), (-170, 30), (-176, 90), (-130, 124), (-60, 110), (0, 70), (70, 20)]
@@ -216,7 +222,7 @@ def bull(charge=False, head=True, snort=0.0):
     h += blob([(-30, -90), (-10, -160), (-90, -226), (-170, -224), (-104, -190), (-70, -140), (-66, -84)], PALE, 3.0) + ink([(-60, -150), (-100, -196)], 1.8, wob=0.3)
     if snort > 0:
         for k in range(3): h += fill(ellipse(-200 - k * 44 * snort, 96 + k * 16, 16 + k * 8, 12 + k * 6, 8, 0.2), PALE, 0.6, op=0.8 - k * 0.2)
-    return s + group(h, -250, -40, -34 if charge else 0, 1, None, 40, 0)
+    return h
 
 
 def deer():
